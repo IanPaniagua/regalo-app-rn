@@ -6,8 +6,9 @@ export default function Index() {
   const router = useRouter();
 
   useEffect(() => {
-    // @ts-ignore - Expo Router typed routes don't include nested groups yet
-    router.replace('/(drawer)/(tabs)/calendar');
+    // Redirigir a la pantalla de bienvenida
+    // @ts-ignore - Expo Router typed routes
+    router.replace('/welcome');
   }, []);
 
   return <View />;

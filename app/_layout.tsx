@@ -18,6 +18,9 @@ export default function RootLayout() {
     <NavigationThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
       <ThemeProvider>
         <Stack screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="welcome" />
+          <Stack.Screen name="login" />
+          <Stack.Screen name="create-profile" />
           <Stack.Screen name="(drawer)" />
           <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
         </Stack>

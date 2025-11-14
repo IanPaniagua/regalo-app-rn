@@ -25,7 +25,7 @@ export default function DrawerLayout() {
           title: '',
           headerTitle: () => (
             <Image
-              source={require('@/assets/icono.svg')}
+              source={require('@/assets/logo.svg')}
               style={{ width: 32, height: 32, tintColor: '#FFFFFF' }}
               contentFit="contain"
             />
