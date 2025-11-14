@@ -1,5 +1,6 @@
 import { Drawer } from 'expo-router/drawer';
 import { Ionicons } from '@expo/vector-icons';
+import { Image } from 'expo-image';
 
 export default function DrawerLayout() {
   return (
@@ -21,7 +22,14 @@ export default function DrawerLayout() {
         name="(tabs)"
         options={{
           drawerLabel: 'Home',
-          title: 'Home',
+          title: '',
+          headerTitle: () => (
+            <Image
+              source={require('@/assets/icono.svg')}
+              style={{ width: 32, height: 32, tintColor: '#FFFFFF' }}
+              contentFit="contain"
+            />
+          ),
           drawerIcon: ({ color, size }) => (
             <Ionicons name="home-outline" size={size} color={color} />
           ),
