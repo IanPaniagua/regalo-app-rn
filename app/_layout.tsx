@@ -6,6 +6,7 @@ import 'react-native-gesture-handler';
 
 import { ThemeProvider } from '@/src/theme/ThemeProvider';
 import { UserProvider } from '@/src/context/UserContext';
+import { BirthdaysProvider } from '@/src/context/BirthdaysContext';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 
 export const unstable_settings = {
@@ -17,20 +18,22 @@ export default function RootLayout() {
 
   return (
     <NavigationThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <UserProvider>
-        <ThemeProvider>
-          <Stack screenOptions={{ headerShown: false }}>
-            <Stack.Screen name="welcome" />
-            <Stack.Screen name="login" />
-            <Stack.Screen name="create-profile/index" />
-            <Stack.Screen name="create-profile/hobbies" />
-            <Stack.Screen name="create-profile/email" />
-            <Stack.Screen name="(drawer)" />
-            <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
-          </Stack>
-          <StatusBar style="auto" />
-        </ThemeProvider>
-      </UserProvider>
+      <BirthdaysProvider>
+        <UserProvider>
+          <ThemeProvider>
+            <Stack screenOptions={{ headerShown: false }}>
+              <Stack.Screen name="welcome" />
+              <Stack.Screen name="login" />
+              <Stack.Screen name="create-profile/index" />
+              <Stack.Screen name="create-profile/hobbies" />
+              <Stack.Screen name="create-profile/email" />
+              <Stack.Screen name="(drawer)" />
+              <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
+            </Stack>
+            <StatusBar style="auto" />
+          </ThemeProvider>
+        </UserProvider>
+      </BirthdaysProvider>
     </NavigationThemeProvider>
   );
 }

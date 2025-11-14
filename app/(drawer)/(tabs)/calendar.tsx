@@ -1,10 +1,12 @@
 import { useState } from 'react';
-import { View, StyleSheet, ScrollView, Pressable, Dimensions } from 'react-native';
+import { View, StyleSheet, ScrollView, Pressable, Dimensions, Modal } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { AppContainer } from '@/src/components/ui/AppContainer';
 import { AppTitle } from '@/src/components/ui/AppTitle';
 import { AppText } from '@/src/components/ui/AppText';
+import { AppButton } from '@/src/components/ui/AppButton';
 import { colors } from '@/src/theme';
+import { useBirthdays, BirthdayUser } from '@/src/context/BirthdaysContext';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const CALENDAR_PADDING = 32; // padding horizontal del scroll (16 * 2)
@@ -18,15 +20,13 @@ const MONTHS = [
   'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
 ];
 
-// Datos de ejemplo: iconos en días específicos (simulando cumpleaños)
-const MOCK_BIRTHDAYS: { [key: string]: string[] } = {
-  '15': ['👤', '🎂'], // Día 15: 2 cumpleaños
-  '23': ['👤'], // Día 23: 1 cumpleaño
-};
-
 export default function CalendarTabScreen() {
+  const { getUsersByDate } = useBirthdays();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDay, setSelectedDay] = useState<number | null>(null);
+  const [showBirthdaysModal, setShowBirthdaysModal] = useState(false);
+  const [selectedDayBirthdays, setSelectedDayBirthdays] = useState<BirthdayUser[]>([]);
+  const [selectedUser, setSelectedUser] = useState<BirthdayUser | null>(null);
 
   const getDaysInMonth = (date: Date) => {
     const year = date.getFullYear();
@@ -50,6 +50,26 @@ export default function CalendarTabScreen() {
     setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1));
   };
 
+  const handleDayPress = (day: number) => {
+    setSelectedDay(day);
+    const date = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
+    const birthdays = getUsersByDate(date);
+    
+    if (birthdays.length > 0) {
+      setSelectedDayBirthdays(birthdays);
+      setShowBirthdaysModal(true);
+    }
+  };
+
+  const handleUserSelect = (user: BirthdayUser) => {
+    setSelectedUser(user);
+  };
+
+  const closeModals = () => {
+    setShowBirthdaysModal(false);
+    setSelectedUser(null);
+  };
+
   const renderCalendarDays = () => {
     const daysInMonth = getDaysInMonth(currentDate);
     const firstDay = getFirstDayOfMonth(currentDate);
@@ -71,7 +91,10 @@ export default function CalendarTabScreen() {
     for (let day = 1; day <= daysInMonth; day++) {
       const isToday = isCurrentMonth && day === today.getDate();
       const isSelected = day === selectedDay;
-      const hasBirthdays = MOCK_BIRTHDAYS[day.toString()];
+      
+      // Obtener cumpleaños para este día
+      const date = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
+      const birthdays = getUsersByDate(date);
 
       days.push(
         <Pressable
@@ -81,7 +104,7 @@ export default function CalendarTabScreen() {
             isToday && styles.todayCell,
             isSelected && styles.selectedCell,
           ]}
-          onPress={() => setSelectedDay(day)}
+          onPress={() => handleDayPress(day)}
         >
           <AppText style={[
             styles.dayNumber,
@@ -91,14 +114,22 @@ export default function CalendarTabScreen() {
             {day}
           </AppText>
           
-          {/* Iconos de cumpleaños */}
-          {hasBirthdays && (
+          {/* Avatares de cumpleaños con contador */}
+          {birthdays.length > 0 && (
             <View style={styles.iconsContainer}>
-              {hasBirthdays.map((icon, index) => (
-                <View key={index} style={styles.iconWrapper}>
-                  <AppText style={styles.iconEmoji}>{icon}</AppText>
+              <View style={styles.avatarWithCounter}>
+                {/* Siempre mostrar el primer avatar */}
+                <View style={styles.iconWrapper}>
+                  <AppText style={styles.iconEmoji}>{birthdays[0].avatar}</AppText>
                 </View>
-              ))}
+                
+                {/* Si hay más de uno, mostrar contador */}
+                {birthdays.length > 1 && (
+                  <View style={styles.counterBadgeSmall}>
+                    <AppText style={styles.counterTextSmall}>+{birthdays.length - 1}</AppText>
+                  </View>
+                )}
+              </View>
             </View>
           )}
         </Pressable>
@@ -149,16 +180,142 @@ export default function CalendarTabScreen() {
             <View style={styles.legendIcon}>
               <AppText style={styles.iconEmoji}>👤</AppText>
             </View>
-            <AppText style={styles.legendText}>Cumpleaños de usuario</AppText>
+            <AppText style={styles.legendText}>Un cumpleaños</AppText>
           </View>
           <View style={styles.legendItem}>
             <View style={styles.legendIcon}>
-              <AppText style={styles.iconEmoji}>🎂</AppText>
+              <View style={styles.avatarWithCounter}>
+                <AppText style={styles.iconEmoji}>👤</AppText>
+                <View style={styles.counterBadgeSmall}>
+                  <AppText style={styles.counterTextSmall}>+1</AppText>
+                </View>
+              </View>
             </View>
-            <AppText style={styles.legendText}>Evento especial</AppText>
+            <AppText style={styles.legendText}>Múltiples cumpleaños</AppText>
           </View>
+          <AppText style={styles.legendHint}>
+            Toca un día con iconos para ver los cumpleaños
+          </AppText>
         </View>
       </ScrollView>
+
+      {/* Modal: Lista de cumpleaños del día */}
+      <Modal
+        visible={showBirthdaysModal && !selectedUser}
+        transparent
+        animationType="fade"
+        onRequestClose={closeModals}
+      >
+        <Pressable style={styles.modalOverlay} onPress={closeModals}>
+          <Pressable style={styles.modalContent} onPress={(e) => e.stopPropagation()}>
+            <View style={styles.modalHeader}>
+              <AppText style={styles.modalTitle}>
+                Cumpleaños - {selectedDay} de {MONTHS[currentDate.getMonth()]}
+              </AppText>
+              <Pressable onPress={closeModals}>
+                <Ionicons name="close" size={24} color={colors.white} />
+              </Pressable>
+            </View>
+
+            <ScrollView style={styles.birthdaysList}>
+              {selectedDayBirthdays.map((user) => (
+                <Pressable
+                  key={user.id}
+                  style={styles.birthdayItem}
+                  onPress={() => handleUserSelect(user)}
+                >
+                  <View style={styles.userAvatar}>
+                    <AppText style={styles.userAvatarText}>{user.avatar}</AppText>
+                  </View>
+                  <View style={styles.userInfo}>
+                    <AppText style={styles.userName}>{user.name}</AppText>
+                    <AppText style={styles.userAge}>
+                      {new Date().getFullYear() - user.birthdate.getFullYear()} años
+                    </AppText>
+                  </View>
+                  <Ionicons name="chevron-forward" size={20} color={colors.primary} />
+                </Pressable>
+              ))}
+            </ScrollView>
+          </Pressable>
+        </Pressable>
+      </Modal>
+
+      {/* Modal: Detalles del usuario */}
+      <Modal
+        visible={!!selectedUser}
+        transparent
+        animationType="slide"
+        onRequestClose={closeModals}
+      >
+        <Pressable style={styles.modalOverlay} onPress={closeModals}>
+          <Pressable style={styles.modalContent} onPress={(e) => e.stopPropagation()}>
+            {selectedUser && (
+              <>
+                <View style={styles.modalHeader}>
+                  <Pressable onPress={() => setSelectedUser(null)}>
+                    <Ionicons name="arrow-back" size={24} color={colors.white} />
+                  </Pressable>
+                  <AppText style={styles.modalTitle}>Perfil</AppText>
+                  <Pressable onPress={closeModals}>
+                    <Ionicons name="close" size={24} color={colors.white} />
+                  </Pressable>
+                </View>
+
+                <ScrollView style={styles.userDetails}>
+                  <View style={styles.userAvatarLarge}>
+                    <AppText style={styles.userAvatarLargeText}>{selectedUser.avatar}</AppText>
+                  </View>
+
+                  <AppText style={styles.userNameLarge}>{selectedUser.name}</AppText>
+
+                  <View style={styles.detailSection}>
+                    <AppText style={styles.detailLabel}>Fecha de nacimiento</AppText>
+                    <AppText style={styles.detailValue}>
+                      {selectedUser.birthdate.toLocaleDateString('es-ES', {
+                        day: 'numeric',
+                        month: 'long',
+                        year: 'numeric',
+                      })}
+                    </AppText>
+                  </View>
+
+                  <View style={styles.detailSection}>
+                    <AppText style={styles.detailLabel}>Edad</AppText>
+                    <AppText style={styles.detailValue}>
+                      {new Date().getFullYear() - selectedUser.birthdate.getFullYear()} años
+                    </AppText>
+                  </View>
+
+                  {selectedUser.email && (
+                    <View style={styles.detailSection}>
+                      <AppText style={styles.detailLabel}>Email</AppText>
+                      <AppText style={styles.detailValue}>{selectedUser.email}</AppText>
+                    </View>
+                  )}
+
+                  <View style={styles.detailSection}>
+                    <AppText style={styles.detailLabel}>Hobbies</AppText>
+                    <View style={styles.hobbiesContainer}>
+                      {selectedUser.hobbies.map((hobby, index) => (
+                        <View key={index} style={styles.hobbyBadge}>
+                          <AppText style={styles.hobbyText}>{hobby}</AppText>
+                        </View>
+                      ))}
+                    </View>
+                  </View>
+
+                  <AppButton
+                    title="Cerrar"
+                    onPress={closeModals}
+                    style={styles.closeButton}
+                  />
+                </ScrollView>
+              </>
+            )}
+          </Pressable>
+        </Pressable>
+      </Modal>
     </View>
   );
 }
@@ -250,6 +407,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 4,
   },
+  avatarWithCounter: {
+    position: 'relative',
+    width: 28,
+    height: 28,
+  },
   iconWrapper: {
     width: 28,
     height: 28,
@@ -260,6 +422,37 @@ const styles = StyleSheet.create({
   },
   iconEmoji: {
     fontSize: 16,
+  },
+  counterBadge: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#E74C3C', // Rojo
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  counterText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: colors.white,
+  },
+  counterBadgeSmall: {
+    position: 'absolute',
+    top: -4,
+    right: -4,
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    backgroundColor: '#E74C3C', // Rojo
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#1C1C1C',
+  },
+  counterTextSmall: {
+    fontSize: 9,
+    fontWeight: '700',
+    color: colors.white,
   },
   legendContainer: {
     marginTop: 20,
@@ -291,5 +484,134 @@ const styles = StyleSheet.create({
   legendText: {
     fontSize: 15,
     color: '#CCC',
+  },
+  legendHint: {
+    fontSize: 13,
+    color: '#999',
+    marginTop: 8,
+    fontStyle: 'italic',
+  },
+  // Estilos para modales
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  modalContent: {
+    backgroundColor: '#1C1C1C',
+    borderRadius: 20,
+    width: '100%',
+    maxHeight: '80%',
+    overflow: 'hidden',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#333',
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: colors.white,
+    flex: 1,
+    textAlign: 'center',
+  },
+  birthdaysList: {
+    padding: 20,
+  },
+  birthdayItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+    backgroundColor: '#2A2A2A',
+    borderRadius: 12,
+    marginBottom: 12,
+  },
+  userAvatar: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: 'rgba(212, 175, 55, 0.3)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 16,
+  },
+  userAvatarText: {
+    fontSize: 28,
+  },
+  userInfo: {
+    flex: 1,
+  },
+  userName: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.white,
+    marginBottom: 4,
+  },
+  userAge: {
+    fontSize: 14,
+    color: '#999',
+  },
+  userDetails: {
+    padding: 20,
+  },
+  userAvatarLarge: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: 'rgba(212, 175, 55, 0.3)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    alignSelf: 'center',
+    marginBottom: 20,
+  },
+  userAvatarLargeText: {
+    fontSize: 50,
+  },
+  userNameLarge: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: colors.white,
+    textAlign: 'center',
+    marginBottom: 24,
+  },
+  detailSection: {
+    marginBottom: 20,
+  },
+  detailLabel: {
+    fontSize: 14,
+    color: '#999',
+    marginBottom: 8,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  detailValue: {
+    fontSize: 16,
+    color: colors.white,
+  },
+  hobbiesContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  hobbyBadge: {
+    backgroundColor: colors.primary,
+    borderRadius: 16,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+  },
+  hobbyText: {
+    fontSize: 14,
+    color: colors.secondary,
+    fontWeight: '600',
+  },
+  closeButton: {
+    marginTop: 20,
+    marginBottom: 10,
   },
 });
