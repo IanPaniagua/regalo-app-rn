@@ -1,22 +1,65 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { View, StyleSheet, ActivityIndicator, Alert } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { AppContainer } from '@/src/components/ui/AppContainer';
 import { AppText } from '@/src/components/ui/AppText';
 import { colors } from '@/src/theme';
 import { useUser } from '@/src/context/UserContext';
 import { authService } from '@/src/services/auth.service';
+import { useCallback } from 'react';
 
 export default function LogoutScreen() {
   const router = useRouter();
   const { clearUser } = useUser();
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [dialogShown, setDialogShown] = useState(false);
 
-  useEffect(() => {
-    handleLogout();
-  }, []);
+  // Mostrar diálogo cada vez que la pantalla recibe foco
+  useFocusEffect(
+    useCallback(() => {
+      setDialogShown(false);
+      setIsLoggingOut(false);
+      showLogoutConfirmation();
+      
+      return () => {
+        // Cleanup cuando la pantalla pierde foco
+        setDialogShown(false);
+      };
+    }, [])
+  );
+
+  const showLogoutConfirmation = () => {
+    if (dialogShown) return;
+    
+    setDialogShown(true);
+    
+    Alert.alert(
+      '¿Cerrar sesión?',
+      '¿Estás seguro de que quieres cerrar sesión?',
+      [
+        {
+          text: 'Cancelar',
+          style: 'cancel',
+          onPress: () => {
+            console.log('Logout cancelled');
+            setDialogShown(false);
+            router.back();
+          },
+        },
+        {
+          text: 'Cerrar sesión',
+          style: 'destructive',
+          onPress: handleLogout,
+        },
+      ],
+      { cancelable: false }
+    );
+  };
 
   const handleLogout = async () => {
     try {
+      setIsLoggingOut(true);
+      
       // Cerrar sesión en Firebase Auth
       await authService.signOut();
       
@@ -32,8 +75,14 @@ export default function LogoutScreen() {
       console.error('❌ Error logging out:', error);
       Alert.alert('Error', 'No se pudo cerrar sesión');
       router.back();
+    } finally {
+      setIsLoggingOut(false);
     }
   };
+
+  if (!isLoggingOut) {
+    return null; // No mostrar nada mientras se muestra el diálogo
+  }
 
   return (
     <AppContainer>

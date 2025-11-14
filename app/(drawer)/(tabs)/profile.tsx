@@ -18,8 +18,10 @@ import { AppTitle } from '@/src/components/ui/AppTitle';
 import { AppText } from '@/src/components/ui/AppText';
 import { AppButton } from '@/src/components/ui/AppButton';
 import { useUser } from '@/src/context/UserContext';
+import { useBirthdays } from '@/src/context/BirthdaysContext';
 import { colors, fonts } from '@/src/theme';
 import { Ionicons } from '@expo/vector-icons';
+import { db } from '@/src/database';
 
 const HOBBIES = [
   'Deportes',
@@ -36,7 +38,9 @@ const HOBBIES = [
 
 export default function ProfileScreen() {
   const { user, setUser } = useUser();
+  const { refreshUsers } = useBirthdays();
   const [isEditing, setIsEditing] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [editedName, setEditedName] = useState(user?.name || '');
   const [editedBirthdate, setEditedBirthdate] = useState(user?.birthdate || new Date());
   const [editedHobbies, setEditedHobbies] = useState<string[]>(user?.hobbies || []);
@@ -68,21 +72,46 @@ export default function ProfileScreen() {
     }
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!editedName.trim()) {
       Alert.alert('Error', 'El nombre no puede estar vacío');
       return;
     }
 
-    if (user) {
+    if (!user?.id) {
+      Alert.alert('Error', 'No se encontró el ID del usuario');
+      return;
+    }
+
+    try {
+      setIsSaving(true);
+
+      // Actualizar en Firebase
+      await db.getAdapter().updateUser(user.id, {
+        name: editedName,
+        birthdate: editedBirthdate,
+        hobbies: editedHobbies,
+      });
+
+      // Actualizar contexto local
       setUser({
         ...user,
         name: editedName,
         birthdate: editedBirthdate,
         hobbies: editedHobbies,
       });
+
+      // Refrescar calendario para mostrar cambios
+      await refreshUsers();
+
       setIsEditing(false);
+      console.log('✅ Profile updated successfully');
       Alert.alert('Éxito', 'Perfil actualizado correctamente');
+    } catch (error: any) {
+      console.error('❌ Error updating profile:', error);
+      Alert.alert('Error', 'No se pudo actualizar el perfil');
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -249,8 +278,9 @@ export default function ProfileScreen() {
               {isEditing && (
                 <View style={styles.actions}>
                   <AppButton
-                    title="Guardar"
+                    title={isSaving ? "Guardando..." : "Guardar"}
                     onPress={handleSave}
+                    disabled={isSaving}
                     style={styles.saveButton}
                   />
                   <Pressable style={styles.cancelButton} onPress={handleCancel}>
