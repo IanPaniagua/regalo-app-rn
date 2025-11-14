@@ -1,4 +1,5 @@
-import { createContext, useContext, ReactNode } from 'react';
+import { createContext, useContext, ReactNode, useState, useEffect } from 'react';
+import { useUser } from './UserContext';
 
 export interface BirthdayUser {
   id: string;
@@ -12,10 +13,11 @@ export interface BirthdayUser {
 interface BirthdaysContextType {
   users: BirthdayUser[];
   getUsersByDate: (date: Date) => BirthdayUser[];
+  addUser: (user: BirthdayUser) => void;
 }
 
 // Usuarios mock con cumpleaños en noviembre
-const MOCK_USERS: BirthdayUser[] = [
+const INITIAL_MOCK_USERS: BirthdayUser[] = [
   {
     id: '1',
     name: 'María García',
@@ -45,19 +47,29 @@ const MOCK_USERS: BirthdayUser[] = [
 const BirthdaysContext = createContext<BirthdaysContextType | undefined>(undefined);
 
 export function BirthdaysProvider({ children }: { children: ReactNode }) {
+  const [users, setUsers] = useState<BirthdayUser[]>(INITIAL_MOCK_USERS);
+
   const getUsersByDate = (date: Date): BirthdayUser[] => {
     const day = date.getDate();
     const month = date.getMonth();
     
-    return MOCK_USERS.filter(user => {
+    return users.filter(user => {
       const userDay = user.birthdate.getDate();
       const userMonth = user.birthdate.getMonth();
       return userDay === day && userMonth === month;
     });
   };
 
+  const addUser = (user: BirthdayUser) => {
+    // Verificar si el usuario ya existe (por email)
+    const exists = users.some(u => u.email === user.email);
+    if (!exists) {
+      setUsers(prev => [...prev, user]);
+    }
+  };
+
   return (
-    <BirthdaysContext.Provider value={{ users: MOCK_USERS, getUsersByDate }}>
+    <BirthdaysContext.Provider value={{ users, getUsersByDate, addUser }}>
       {children}
     </BirthdaysContext.Provider>
   );

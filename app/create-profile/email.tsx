@@ -7,10 +7,12 @@ import { AppText } from '@/src/components/ui/AppText';
 import { AppButton } from '@/src/components/ui/AppButton';
 import { colors, fonts } from '@/src/theme';
 import { useUser } from '@/src/context/UserContext';
+import { useBirthdays } from '@/src/context/BirthdaysContext';
 
 export default function CreateProfileStep3() {
   const router = useRouter();
   const { user, setUser } = useUser();
+  const { addUser } = useBirthdays();
   const [email, setEmail] = useState('');
 
   const validateEmail = (email: string) => {
@@ -31,9 +33,20 @@ export default function CreateProfileStep3() {
 
     // Guardar email y completar perfil en el contexto
     if (user) {
-      setUser({
+      const completeUser = {
         ...user,
         email,
+      };
+      setUser(completeUser);
+
+      // Añadir usuario al calendario de cumpleaños
+      addUser({
+        id: `user-${Date.now()}`, // ID único basado en timestamp
+        name: completeUser.name,
+        avatar: '🎉', // Avatar por defecto para usuarios creados
+        birthdate: completeUser.birthdate,
+        hobbies: completeUser.hobbies,
+        email: completeUser.email,
       });
     }
 

@@ -6,16 +6,20 @@ import { AppTitle } from '@/src/components/ui/AppTitle';
 import { AppText } from '@/src/components/ui/AppText';
 import { colors, fonts } from '@/src/theme';
 import { useUser } from '@/src/context/UserContext';
+import { useBirthdays } from '@/src/context/BirthdaysContext';
 
 // Mock user data
 const MOCK_USER = {
   email: 'usuario@ejemplo.com',
   name: 'Usuario Demo',
+  birthdate: new Date(1990, 0, 1),
+  hobbies: ['Tecnología', 'Lectura'],
 };
 
 export default function LoginScreen() {
   const router = useRouter();
   const { setUser } = useUser();
+  const { addUser } = useBirthdays();
   const [email, setEmail] = useState('');
 
   const handleLogin = () => {
@@ -26,12 +30,24 @@ export default function LoginScreen() {
 
     if (email.toLowerCase() === MOCK_USER.email) {
       // Usuario existe, guardar en contexto y redirigir
-      setUser({
+      const userData = {
         name: MOCK_USER.name,
         email: MOCK_USER.email,
-        birthdate: new Date(1990, 0, 1),
-        hobbies: ['Tecnología', 'Lectura'],
+        birthdate: MOCK_USER.birthdate,
+        hobbies: MOCK_USER.hobbies,
+      };
+      setUser(userData);
+
+      // Añadir usuario al calendario de cumpleaños
+      addUser({
+        id: 'demo-user',
+        name: userData.name,
+        avatar: '👤',
+        birthdate: userData.birthdate,
+        hobbies: userData.hobbies,
+        email: userData.email,
       });
+
       // @ts-ignore - Expo Router typed routes
       router.replace('/(drawer)/(tabs)/calendar');
     } else {

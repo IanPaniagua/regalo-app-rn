@@ -9,9 +9,9 @@ import { colors } from '@/src/theme';
 import { useBirthdays, BirthdayUser } from '@/src/context/BirthdaysContext';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const CALENDAR_PADDING = 32; // padding horizontal del scroll (16 * 2)
-const GRID_PADDING = 12; // padding del grid (6 * 2)
-const GAP = 6;
+const CALENDAR_PADDING = 20; // padding horizontal del scroll (10 * 2) - reducido
+const GRID_PADDING = 16; // padding del grid (8 * 2)
+const GAP = 4; // gap reducido
 const DAY_SIZE = (SCREEN_WIDTH - CALENDAR_PADDING - GRID_PADDING - (GAP * 6)) / 7;
 
 const DAYS_OF_WEEK = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
@@ -326,18 +326,18 @@ const styles = StyleSheet.create({
     backgroundColor: colors.secondary,
   },
   scrollContent: {
-    padding: 16,
+    padding: 10,
   },
   title: {
     marginTop: 10,
-    marginBottom: 20,
+    marginBottom: 16,
     textAlign: 'center',
   },
   monthHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: 12,
   },
   arrowButton: {
     padding: 12,
@@ -349,15 +349,15 @@ const styles = StyleSheet.create({
   },
   weekDaysContainer: {
     flexDirection: 'row',
-    marginBottom: 6,
+    marginBottom: 4,
   },
   weekDayCell: {
     flex: 1,
     alignItems: 'center',
-    paddingVertical: 10,
+    paddingVertical: 8,
   },
   weekDayText: {
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: '700',
     color: colors.primary,
   },
@@ -366,15 +366,15 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     backgroundColor: '#2A2A2A',
     borderRadius: 16,
-    padding: 6,
-    gap: 6,
+    padding: 8,
+    gap: 4,
   },
   dayCell: {
     width: DAY_SIZE,
     height: DAY_SIZE,
     backgroundColor: '#1C1C1C',
-    borderRadius: 12,
-    padding: 8,
+    borderRadius: 10,
+    padding: 6,
     alignItems: 'center',
     justifyContent: 'flex-start',
   },
@@ -386,10 +386,10 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primary,
   },
   dayNumber: {
-    fontSize: 12,
+    fontSize: 13,
     color: colors.white,
     fontWeight: '700',
-    marginBottom: 4,
+    marginBottom: 2,
     alignSelf: 'flex-start',
   },
   todayText: {
@@ -409,19 +409,19 @@ const styles = StyleSheet.create({
   },
   avatarWithCounter: {
     position: 'relative',
-    width: 28,
-    height: 28,
+    width: 36,
+    height: 36,
   },
   iconWrapper: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     backgroundColor: 'rgba(212, 175, 55, 0.3)',
     justifyContent: 'center',
     alignItems: 'center',
   },
   iconEmoji: {
-    fontSize: 16,
+    fontSize: 20,
   },
   counterBadge: {
     width: 32,
@@ -438,28 +438,28 @@ const styles = StyleSheet.create({
   },
   counterBadgeSmall: {
     position: 'absolute',
-    top: -4,
-    right: -4,
-    width: 18,
-    height: 18,
-    borderRadius: 9,
+    top: -5,
+    right: -5,
+    width: 20,
+    height: 20,
+    borderRadius: 10,
     backgroundColor: '#E74C3C', // Rojo
     justifyContent: 'center',
     alignItems: 'center',
-    borderWidth: 1,
+    borderWidth: 1.5,
     borderColor: '#1C1C1C',
   },
   counterTextSmall: {
-    fontSize: 9,
+    fontSize: 10,
     fontWeight: '700',
     color: colors.white,
   },
   legendContainer: {
-    marginTop: 20,
-    padding: 18,
+    marginTop: 16,
+    padding: 16,
     backgroundColor: '#2A2A2A',
     borderRadius: 16,
-    marginBottom: 20,
+    marginBottom: 16,
   },
   legendTitle: {
     fontSize: 17,
