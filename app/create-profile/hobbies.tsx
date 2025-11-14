@@ -23,8 +23,8 @@ const HOBBIES = [
 
 export default function CreateProfileStep2() {
   const router = useRouter();
-  const { user, setUser } = useUser();
-  const [selectedHobbies, setSelectedHobbies] = useState<string[]>([]);
+  const { tempUser, setTempUser } = useUser();
+  const [selectedHobbies, setSelectedHobbies] = useState<string[]>(tempUser?.hobbies || []);
   const [customHobby, setCustomHobby] = useState('');
   const [showCustomInput, setShowCustomInput] = useState(false);
 
@@ -45,14 +45,14 @@ export default function CreateProfileStep2() {
   };
 
   const handleContinue = () => {
-    // Guardar hobbies en el contexto
-    if (user) {
-      setUser({
-        ...user,
+    // Guardar hobbies TEMPORALES en el contexto (no en DB todavía)
+    if (tempUser) {
+      setTempUser({
+        ...tempUser,
         hobbies: selectedHobbies,
       });
     }
-    // @ts-ignore
+
     router.push('/create-profile/email');
   };
 

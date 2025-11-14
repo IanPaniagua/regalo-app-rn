@@ -1,5 +1,5 @@
 import { createContext, useContext, ReactNode, useState, useEffect } from 'react';
-import { useUser } from './UserContext';
+import { db } from '@/src/database';
 
 export interface BirthdayUser {
   id: string;
@@ -12,64 +12,88 @@ export interface BirthdayUser {
 
 interface BirthdaysContextType {
   users: BirthdayUser[];
-  getUsersByDate: (date: Date) => BirthdayUser[];
-  addUser: (user: BirthdayUser) => void;
+  getUsersByDate: (date: Date) => Promise<BirthdayUser[]>;
+  addUser: (user: BirthdayUser) => Promise<void>;
+  refreshUsers: () => Promise<void>;
+  loading: boolean;
 }
-
-// Usuarios mock con cumpleaños en noviembre
-const INITIAL_MOCK_USERS: BirthdayUser[] = [
-  {
-    id: '1',
-    name: 'María García',
-    avatar: '👩',
-    birthdate: new Date(1995, 10, 15), // 15 de noviembre
-    hobbies: ['Lectura', 'Cocina', 'Viajes'],
-    email: 'maria@ejemplo.com',
-  },
-  {
-    id: '2',
-    name: 'Carlos López',
-    avatar: '👨',
-    birthdate: new Date(1990, 10, 15), // 15 de noviembre
-    hobbies: ['Deportes', 'Gaming', 'Tecnología'],
-    email: 'carlos@ejemplo.com',
-  },
-  {
-    id: '3',
-    name: 'Ana Martínez',
-    avatar: '👧',
-    birthdate: new Date(1998, 10, 23), // 23 de noviembre
-    hobbies: ['Música', 'Arte', 'Fotografía'],
-    email: 'ana@ejemplo.com',
-  },
-];
 
 const BirthdaysContext = createContext<BirthdaysContextType | undefined>(undefined);
 
 export function BirthdaysProvider({ children }: { children: ReactNode }) {
-  const [users, setUsers] = useState<BirthdayUser[]>(INITIAL_MOCK_USERS);
+  const [users, setUsers] = useState<BirthdayUser[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const getUsersByDate = (date: Date): BirthdayUser[] => {
-    const day = date.getDate();
-    const month = date.getMonth();
-    
-    return users.filter(user => {
-      const userDay = user.birthdate.getDate();
-      const userMonth = user.birthdate.getMonth();
-      return userDay === day && userMonth === month;
-    });
+  // Cargar usuarios desde la base de datos
+  const refreshUsers = async () => {
+    try {
+      setLoading(true);
+      const dbUsers = await db.getAdapter().getAllUsers();
+      
+      // Convertir usuarios de la DB al formato BirthdayUser
+      const birthdayUsers: BirthdayUser[] = dbUsers.map(user => ({
+        id: user.id,
+        name: user.name,
+        avatar: user.avatar || '🎉',
+        birthdate: user.birthdate,
+        hobbies: user.hobbies,
+        email: user.email,
+      }));
+      
+      setUsers(birthdayUsers);
+      console.log('✅ Loaded', birthdayUsers.length, 'users from database');
+    } catch (error: any) {
+      console.error('❌ Error loading users:', error);
+      
+      // Si es error de permisos, mostrar mensaje útil
+      if (error.code === 'permission-denied' || error.message?.includes('permissions')) {
+        console.error('⚠️ FIRESTORE PERMISSIONS ERROR:');
+        console.error('   Go to Firebase Console → Firestore → Rules');
+        console.error('   Set: allow read, write: if true; (for development)');
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const addUser = (user: BirthdayUser) => {
-    // Verificar si el usuario ya existe (por email)
-    const exists = users.some(u => u.email === user.email);
-    if (!exists) {
-      setUsers(prev => [...prev, user]);
+  // Cargar usuarios al montar el componente
+  useEffect(() => {
+    refreshUsers();
+  }, []);
+
+  const getUsersByDate = async (date: Date): Promise<BirthdayUser[]> => {
+    try {
+      const birthdays = await db.getAdapter().getBirthdaysByDate(date);
+      return birthdays.map(b => ({
+        id: b.id,
+        name: b.userName,
+        avatar: b.userAvatar,
+        birthdate: b.birthdate,
+        hobbies: b.hobbies,
+        email: b.email,
+      }));
+    } catch (error) {
+      console.error('❌ Error getting birthdays by date:', error);
+      return [];
+    }
+  };
+
+  const addUser = async (user: BirthdayUser) => {
+    try {
+      console.log('🔄 Adding user to birthday calendar:', user.name);
+      
+      // El usuario ya fue creado en la DB por authService.createUserProfile
+      // Solo necesitamos refrescar la lista para mostrarlo en el calendario
+      await refreshUsers();
+      
+      console.log('✅ Birthday calendar refreshed, user should appear:', user.name);
+    } catch (error) {
+      console.error('❌ Error refreshing birthday calendar:', error);
     }
   };
 
   return (
-    <BirthdaysContext.Provider value={{ users, getUsersByDate, addUser }}>
+    <BirthdaysContext.Provider value={{ users, getUsersByDate, addUser, refreshUsers, loading }}>
       {children}
     </BirthdaysContext.Provider>
   );

@@ -22,21 +22,25 @@ import { useUser } from '@/src/context/UserContext';
 
 export default function CreateProfileStep1() {
   const router = useRouter();
-  const { user, setUser } = useUser();
-  const [name, setName] = useState('');
-  const [birthdate, setBirthdate] = useState(new Date(2000, 0, 1)); // Fecha por defecto más razonable
+  const { tempUser, setTempUser } = useUser();
+  const [name, setName] = useState(tempUser?.name || '');
+  const [birthdate, setBirthdate] = useState(tempUser?.birthdate || new Date(2000, 0, 1)); // Fecha por defecto más razonable
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [skipPressed, setSkipPressed] = useState(false);
 
   const handleContinue = () => {
-    // Guardar datos en el contexto
-    setUser({
-      name: name || 'Usuario',
+    if (!name.trim()) {
+      Alert.alert('Error', 'Por favor ingresa tu nombre');
+      return;
+    }
+
+    // Guardar datos TEMPORALES en el contexto (no en DB todavía)
+    setTempUser({
+      name,
       birthdate,
-      hobbies: user?.hobbies || [],
-      email: user?.email || '',
+      hobbies: [], // Se añadirán en el siguiente paso
     });
-    // @ts-ignore
+
     router.push('/create-profile/hobbies');
   };
 

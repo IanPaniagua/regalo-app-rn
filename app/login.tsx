@@ -7,51 +7,64 @@ import { AppText } from '@/src/components/ui/AppText';
 import { colors, fonts } from '@/src/theme';
 import { useUser } from '@/src/context/UserContext';
 import { useBirthdays } from '@/src/context/BirthdaysContext';
-
-// Mock user data
-const MOCK_USER = {
-  email: 'usuario@ejemplo.com',
-  name: 'Usuario Demo',
-  birthdate: new Date(1990, 0, 1),
-  hobbies: ['Tecnología', 'Lectura'],
-};
+import { authService } from '@/src/services/auth.service';
+import { db } from '@/src/database';
 
 export default function LoginScreen() {
   const router = useRouter();
   const { setUser } = useUser();
-  const { addUser } = useBirthdays();
+  const { refreshUsers } = useBirthdays();
   const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleLogin = () => {
+  const handleLogin = async () => {
     if (!email.trim()) {
       Alert.alert('Error', 'Por favor ingresa tu email');
       return;
     }
 
-    if (email.toLowerCase() === MOCK_USER.email) {
-      // Usuario existe, guardar en contexto y redirigir
-      const userData = {
-        name: MOCK_USER.name,
-        email: MOCK_USER.email,
-        birthdate: MOCK_USER.birthdate,
-        hobbies: MOCK_USER.hobbies,
-      };
-      setUser(userData);
+    if (!password.trim()) {
+      Alert.alert('Error', 'Por favor ingresa tu contraseña');
+      return;
+    }
 
-      // Añadir usuario al calendario de cumpleaños
-      addUser({
-        id: 'demo-user',
-        name: userData.name,
-        avatar: '👤',
-        birthdate: userData.birthdate,
-        hobbies: userData.hobbies,
-        email: userData.email,
+    try {
+      setIsLoading(true);
+
+      // Iniciar sesión con Firebase Auth
+      const authUser = await authService.signIn(email, password);
+      
+      // Obtener perfil del usuario desde Firestore
+      const dbUser = await db.getAdapter().getUserByEmail(email);
+      
+      if (!dbUser) {
+        Alert.alert('Error', 'No se encontró el perfil del usuario');
+        return;
+      }
+
+      // Guardar en contexto
+      setUser({
+        id: dbUser.id,
+        authUid: authUser.uid,
+        name: dbUser.name,
+        email: dbUser.email,
+        birthdate: dbUser.birthdate,
+        hobbies: dbUser.hobbies,
       });
+
+      // Refrescar calendario
+      await refreshUsers();
+
+      console.log('✅ User logged in:', authUser.uid);
 
       // @ts-ignore - Expo Router typed routes
       router.replace('/(drawer)/(tabs)/calendar');
-    } else {
-      Alert.alert('Error', 'Usuario no encontrado. Por favor crea un perfil primero.');
+    } catch (error: any) {
+      console.error('❌ Error logging in:', error);
+      Alert.alert('Error', error.message || 'No se pudo iniciar sesión');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -60,24 +73,46 @@ export default function LoginScreen() {
       <View style={styles.content}>
         <AppTitle style={styles.title}>Iniciar Sesión</AppTitle>
         
-        <AppText style={styles.label}>Email</AppText>
-        <TextInput
-          style={styles.input}
-          value={email}
-          onChangeText={setEmail}
-          placeholder="Ingresa tu email"
-          placeholderTextColor="#666"
-          keyboardType="email-address"
-          autoCapitalize="none"
-          autoCorrect={false}
-        />
-
-        <AppText style={styles.hint}>
-          Usuario de prueba: {MOCK_USER.email}
+        <AppText style={styles.subtitle}>
+          Ingresa con tu email y contraseña
         </AppText>
 
-        <Pressable style={styles.button} onPress={handleLogin}>
-          <AppText style={styles.buttonText}>Entrar</AppText>
+        <View style={styles.inputContainer}>
+          <AppText style={styles.label}>Email</AppText>
+          <TextInput
+            style={styles.input}
+            value={email}
+            onChangeText={setEmail}
+            placeholder="tu@email.com"
+            placeholderTextColor="#666"
+            keyboardType="email-address"
+            autoCapitalize="none"
+            autoCorrect={false}
+          />
+        </View>
+
+        <View style={styles.inputContainer}>
+          <AppText style={styles.label}>Contraseña</AppText>
+          <TextInput
+            style={styles.input}
+            value={password}
+            onChangeText={setPassword}
+            placeholder="Tu contraseña"
+            placeholderTextColor="#666"
+            secureTextEntry
+            autoCapitalize="none"
+            autoCorrect={false}
+          />
+        </View>
+
+        <Pressable
+          style={[styles.button, (!email.trim() || !password.trim() || isLoading) && styles.buttonDisabled]}
+          onPress={handleLogin}
+          disabled={!email.trim() || !password.trim() || isLoading}
+        >
+          <AppText style={styles.buttonText}>
+            {isLoading ? 'Iniciando sesión...' : 'Iniciar Sesión'}
+          </AppText>
         </Pressable>
 
         <Pressable
@@ -95,47 +130,53 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     justifyContent: 'center',
+    paddingHorizontal: 20,
   },
   title: {
-    marginBottom: 40,
+    marginBottom: 16,
     textAlign: 'center',
   },
+  subtitle: {
+    fontSize: 14,
+    color: '#999',
+    textAlign: 'center',
+    marginBottom: 32,
+  },
+  inputContainer: {
+    marginBottom: 20,
+  },
   label: {
+    fontSize: 14,
+    color: colors.white,
     marginBottom: 8,
-    fontSize: 16,
+    fontWeight: '600',
   },
   input: {
     backgroundColor: '#2A2A2A',
     borderWidth: 1,
-    borderColor: colors.primary,
+    borderColor: '#444',
     borderRadius: 12,
-    paddingVertical: 16,
-    paddingHorizontal: 16,
-    color: colors.white,
-    fontFamily: fonts.text,
+    padding: 16,
     fontSize: 16,
-    marginBottom: 12,
-  },
-  hint: {
-    fontSize: 14,
-    color: '#999',
-    marginBottom: 32,
-    fontStyle: 'italic',
+    color: colors.white,
   },
   button: {
     backgroundColor: colors.primary,
-    paddingVertical: 16,
+    padding: 16,
     borderRadius: 12,
     alignItems: 'center',
-    marginBottom: 16,
+    marginTop: 8,
+  },
+  buttonDisabled: {
+    opacity: 0.5,
   },
   buttonText: {
-    fontSize: 18,
-    fontWeight: '600',
     color: colors.secondary,
+    fontSize: 16,
+    fontWeight: '700',
   },
   backButton: {
-    paddingVertical: 12,
+    marginTop: 16,
     alignItems: 'center',
   },
   backButtonText: {

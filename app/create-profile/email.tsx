@@ -8,19 +8,22 @@ import { AppButton } from '@/src/components/ui/AppButton';
 import { colors, fonts } from '@/src/theme';
 import { useUser } from '@/src/context/UserContext';
 import { useBirthdays } from '@/src/context/BirthdaysContext';
+import { authService } from '@/src/services/auth.service';
 
 export default function CreateProfileStep3() {
   const router = useRouter();
-  const { user, setUser } = useUser();
+  const { tempUser, setUser, clearTempUser } = useUser();
   const { addUser } = useBirthdays();
   const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [isCreating, setIsCreating] = useState(false);
 
   const validateEmail = (email: string) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
   };
 
-  const handleContinue = () => {
+  const handleContinue = async () => {
     if (!email.trim()) {
       Alert.alert('Error', 'Por favor ingresa tu email');
       return;
@@ -31,38 +34,86 @@ export default function CreateProfileStep3() {
       return;
     }
 
-    // Guardar email y completar perfil en el contexto
-    if (user) {
+    if (!password.trim()) {
+      Alert.alert('Error', 'Por favor ingresa una contraseña');
+      return;
+    }
+
+    if (password.length < 6) {
+      Alert.alert('Error', 'La contraseña debe tener al menos 6 caracteres');
+      return;
+    }
+
+    if (!tempUser) {
+      Alert.alert('Error', 'No se encontraron datos del perfil. Por favor vuelve a empezar.');
+      router.replace('/create-profile');
+      return;
+    }
+
+    try {
+      setIsCreating(true);
+
+      // Crear usuario completo: Firebase Auth + Database
+      const { authUser, dbUserId } = await authService.createUserProfile({
+        email,
+        password,
+        name: tempUser.name,
+        birthdate: tempUser.birthdate,
+        hobbies: tempUser.hobbies,
+        avatar: '🎉',
+      });
+
+      // Guardar en el contexto de usuario autenticado
       const completeUser = {
-        ...user,
+        id: dbUserId,
+        authUid: authUser.uid,
+        name: tempUser.name,
+        birthdate: tempUser.birthdate,
+        hobbies: tempUser.hobbies,
         email,
       };
       setUser(completeUser);
 
-      // Añadir usuario al calendario de cumpleaños
-      addUser({
-        id: `user-${Date.now()}`, // ID único basado en timestamp
+      // Añadir al calendario de cumpleaños
+      await addUser({
+        id: dbUserId,
         name: completeUser.name,
-        avatar: '🎉', // Avatar por defecto para usuarios creados
+        avatar: '🎉',
         birthdate: completeUser.birthdate,
         hobbies: completeUser.hobbies,
         email: completeUser.email,
       });
-    }
 
-    Alert.alert(
-      'Perfil creado',
-      '¡Tu perfil ha sido creado exitosamente!',
-      [
-        {
-          text: 'OK',
-          onPress: () => {
-            // @ts-ignore
-            router.replace('/(drawer)/(tabs)/calendar');
+      // Limpiar datos temporales
+      clearTempUser();
+
+      console.log('✅ Complete user profile created:', {
+        authUid: authUser.uid,
+        dbUserId,
+      });
+
+      Alert.alert(
+        'Perfil creado',
+        '¡Tu perfil ha sido creado exitosamente!',
+        [
+          {
+            text: 'OK',
+            onPress: () => {
+              // @ts-ignore
+              router.replace('/(drawer)/(tabs)/calendar');
+            },
           },
-        },
-      ]
-    );
+        ]
+      );
+    } catch (error: any) {
+      console.error('❌ Error creating profile:', error);
+      Alert.alert(
+        'Error',
+        error.message || 'Hubo un problema al crear tu perfil. Por favor intenta de nuevo.'
+      );
+    } finally {
+      setIsCreating(false);
+    }
   };
 
   return (
@@ -71,10 +122,10 @@ export default function CreateProfileStep3() {
         <AppTitle style={styles.title}>¿Cuál es tu email?</AppTitle>
 
         <AppText style={styles.subtitle}>
-          Lo usaremos para identificarte en la app
+          Crea tu cuenta para acceder a la app
         </AppText>
 
-        <View style={styles.inputGroup}>
+        <View style={styles.inputContainer}>
           <AppText style={styles.label}>Email</AppText>
           <TextInput
             style={styles.input}
@@ -88,16 +139,30 @@ export default function CreateProfileStep3() {
           />
         </View>
 
+        <View style={styles.inputContainer}>
+          <AppText style={styles.label}>Contraseña</AppText>
+          <TextInput
+            style={styles.input}
+            value={password}
+            onChangeText={setPassword}
+            placeholder="Mínimo 6 caracteres"
+            placeholderTextColor="#666"
+            secureTextEntry
+            autoCapitalize="none"
+            autoCorrect={false}
+          />
+        </View>
+
         <AppButton
-          title="Ir a la app"
+          title={isCreating ? "Creando perfil..." : "Crear cuenta"}
           onPress={handleContinue}
+          disabled={!email.trim() || !password.trim() || isCreating}
           style={styles.button}
-          disabled={!email.trim()}
         />
 
-        {!email.trim() && (
+        {(!email.trim() || !password.trim()) && (
           <AppText style={styles.hint}>
-            Debes ingresar un email para continuar
+            Debes ingresar email y contraseña para continuar
           </AppText>
         )}
       </View>
@@ -109,43 +174,41 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     justifyContent: 'center',
-    paddingBottom: 40,
+    paddingHorizontal: 20,
   },
   title: {
-    marginBottom: 16,
-    textAlign: 'center',
+    marginBottom: 8,
   },
   subtitle: {
-    textAlign: 'center',
     fontSize: 16,
-    marginBottom: 40,
     color: '#999',
+    marginBottom: 32,
   },
-  inputGroup: {
-    marginBottom: 24,
+  inputContainer: {
+    marginBottom: 20,
   },
   label: {
+    fontSize: 14,
+    color: colors.white,
     marginBottom: 8,
-    fontSize: 16,
+    fontWeight: '600',
   },
   input: {
     backgroundColor: '#2A2A2A',
-    borderWidth: 1,
-    borderColor: colors.primary,
     borderRadius: 12,
-    paddingVertical: 16,
-    paddingHorizontal: 16,
-    color: colors.white,
-    fontFamily: fonts.text,
+    padding: 16,
     fontSize: 16,
+    color: colors.white,
+    borderWidth: 1,
+    borderColor: '#444',
   },
   button: {
-    marginTop: 16,
+    marginTop: 8,
   },
   hint: {
-    textAlign: 'center',
     fontSize: 14,
-    color: '#FF6B6B',
+    color: '#666',
+    textAlign: 'center',
     marginTop: 16,
     fontStyle: 'italic',
   },

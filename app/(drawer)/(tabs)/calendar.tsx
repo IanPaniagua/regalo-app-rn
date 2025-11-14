@@ -21,7 +21,7 @@ const MONTHS = [
 ];
 
 export default function CalendarTabScreen() {
-  const { getUsersByDate } = useBirthdays();
+  const { users, getUsersByDate } = useBirthdays();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDay, setSelectedDay] = useState<number | null>(null);
   const [showBirthdaysModal, setShowBirthdaysModal] = useState(false);
@@ -50,10 +50,10 @@ export default function CalendarTabScreen() {
     setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1));
   };
 
-  const handleDayPress = (day: number) => {
+  const handleDayPress = async (day: number) => {
     setSelectedDay(day);
     const date = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
-    const birthdays = getUsersByDate(date);
+    const birthdays = await getUsersByDate(date);
     
     if (birthdays.length > 0) {
       setSelectedDayBirthdays(birthdays);
@@ -92,9 +92,13 @@ export default function CalendarTabScreen() {
       const isToday = isCurrentMonth && day === today.getDate();
       const isSelected = day === selectedDay;
       
-      // Obtener cumpleaños para este día
+      // Filtrar cumpleaños del mes actual para este día
       const date = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
-      const birthdays = getUsersByDate(date);
+      const birthdays = users.filter(user => {
+        const userDay = user.birthdate.getDate();
+        const userMonth = user.birthdate.getMonth();
+        return userDay === day && userMonth === currentDate.getMonth();
+      });
 
       days.push(
         <Pressable
