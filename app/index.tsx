@@ -1,14 +1,14 @@
-import { AppContainer } from '@/src/components/ui/AppContainer';
-import { AppText } from '@/src/components/ui/AppText';
-import { AppTitle } from '@/src/components/ui/AppTitle';
+import { useEffect } from 'react';
+import { useRouter } from 'expo-router';
+import { View } from 'react-native';
 
-export default function Home() {
-  return (
-    <AppContainer>
-      <AppTitle className="text-primary">Título de Prueba</AppTitle>
-      <AppText className="text-white mt-2">
-        Este es un texto de prueba usando el sistema de diseño.
-      </AppText>
-    </AppContainer>
-  );
+export default function Index() {
+  const router = useRouter();
+
+  useEffect(() => {
+    // @ts-ignore - Expo Router typed routes don't include nested groups yet
+    router.replace('/(drawer)/(tabs)/calendar');
+  }, []);
+
+  return <View />;
 }
