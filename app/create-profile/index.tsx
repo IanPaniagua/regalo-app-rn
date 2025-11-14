@@ -93,6 +93,22 @@ export default function CreateProfileStep1() {
                   <AppText>{formatDate(birthdate)}</AppText>
                 </Pressable>
               </View>
+
+              <AppButton
+                title="Save and Continue"
+                onPress={handleContinue}
+                style={styles.button}
+              />
+
+              <Pressable
+                onPress={handleSkip}
+                onPressIn={() => setSkipPressed(true)}
+                onPressOut={() => setSkipPressed(false)}
+              >
+                <AppText style={[styles.skipText, skipPressed && styles.skipTextPressed]}>
+                  Saltar
+                </AppText>
+              </Pressable>
             </View>
           </TouchableWithoutFeedback>
 
@@ -149,22 +165,6 @@ export default function CreateProfileStep1() {
             maximumDate={new Date()}
           />
         )}
-
-          <AppButton
-            title="Save and Continue"
-            onPress={handleContinue}
-            style={styles.button}
-          />
-
-          <Pressable
-            onPress={handleSkip}
-            onPressIn={() => setSkipPressed(true)}
-            onPressOut={() => setSkipPressed(false)}
-          >
-            <AppText style={[styles.skipText, skipPressed && styles.skipTextPressed]}>
-              Saltar
-            </AppText>
-          </Pressable>
         </ScrollView>
       </KeyboardAvoidingView>
     </AppContainer>
