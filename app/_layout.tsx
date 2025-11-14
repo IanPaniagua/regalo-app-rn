@@ -5,6 +5,7 @@ import 'react-native-reanimated';
 import 'react-native-gesture-handler';
 
 import { ThemeProvider } from '@/src/theme/ThemeProvider';
+import { UserProvider } from '@/src/context/UserContext';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 
 export const unstable_settings = {
@@ -16,16 +17,20 @@ export default function RootLayout() {
 
   return (
     <NavigationThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <ThemeProvider>
-        <Stack screenOptions={{ headerShown: false }}>
-          <Stack.Screen name="welcome" />
-          <Stack.Screen name="login" />
-          <Stack.Screen name="create-profile" />
-          <Stack.Screen name="(drawer)" />
-          <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
-        </Stack>
-        <StatusBar style="auto" />
-      </ThemeProvider>
+      <UserProvider>
+        <ThemeProvider>
+          <Stack screenOptions={{ headerShown: false }}>
+            <Stack.Screen name="welcome" />
+            <Stack.Screen name="login" />
+            <Stack.Screen name="create-profile/index" />
+            <Stack.Screen name="create-profile/hobbies" />
+            <Stack.Screen name="create-profile/email" />
+            <Stack.Screen name="(drawer)" />
+            <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
+          </Stack>
+          <StatusBar style="auto" />
+        </ThemeProvider>
+      </UserProvider>
     </NavigationThemeProvider>
   );
 }

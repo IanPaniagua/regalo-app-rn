@@ -1,8 +1,14 @@
 import { Drawer } from 'expo-router/drawer';
 import { Ionicons } from '@expo/vector-icons';
 import { Image } from 'expo-image';
+import { View, StyleSheet } from 'react-native';
+import { AppText } from '@/src/components/ui/AppText';
+import { useUser } from '@/src/context/UserContext';
+import { colors } from '@/src/theme';
 
 export default function DrawerLayout() {
+  const { user } = useUser();
+
   return (
     <Drawer
       screenOptions={{
@@ -16,6 +22,13 @@ export default function DrawerLayout() {
           backgroundColor: '#1C1C1C',
         },
         headerTintColor: '#FFFFFF',
+        headerRight: () => (
+          user ? (
+            <View style={styles.userContainer}>
+              <AppText style={styles.userName}>{user.name}</AppText>
+            </View>
+          ) : null
+        ),
       }}
     >
       <Drawer.Screen
@@ -39,7 +52,7 @@ export default function DrawerLayout() {
         name="profile"
         options={{
           drawerLabel: 'Profile',
-          title: 'Profile',
+          title: 'Mi Perfil',
           drawerIcon: ({ color, size }) => (
             <Ionicons name="person-outline" size={size} color={color} />
           ),
@@ -88,3 +101,18 @@ export default function DrawerLayout() {
     </Drawer>
   );
 }
+
+const styles = StyleSheet.create({
+  userContainer: {
+    marginRight: 16,
+    paddingVertical: 4,
+    paddingHorizontal: 12,
+    backgroundColor: colors.primary,
+    borderRadius: 16,
+  },
+  userName: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.secondary,
+  },
+});

@@ -5,6 +5,7 @@ import { AppContainer } from '@/src/components/ui/AppContainer';
 import { AppTitle } from '@/src/components/ui/AppTitle';
 import { AppText } from '@/src/components/ui/AppText';
 import { colors, fonts } from '@/src/theme';
+import { useUser } from '@/src/context/UserContext';
 
 // Mock user data
 const MOCK_USER = {
@@ -14,6 +15,7 @@ const MOCK_USER = {
 
 export default function LoginScreen() {
   const router = useRouter();
+  const { setUser } = useUser();
   const [email, setEmail] = useState('');
 
   const handleLogin = () => {
@@ -23,7 +25,13 @@ export default function LoginScreen() {
     }
 
     if (email.toLowerCase() === MOCK_USER.email) {
-      // Usuario existe, redirigir al drawer/home
+      // Usuario existe, guardar en contexto y redirigir
+      setUser({
+        name: MOCK_USER.name,
+        email: MOCK_USER.email,
+        birthdate: new Date(1990, 0, 1),
+        hobbies: ['Tecnología', 'Lectura'],
+      });
       // @ts-ignore - Expo Router typed routes
       router.replace('/(drawer)/(tabs)/calendar');
     } else {
