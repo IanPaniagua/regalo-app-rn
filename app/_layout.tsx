@@ -10,6 +10,7 @@ import { ThemeProvider } from '@/src/theme/ThemeProvider';
 import { UserProvider } from '@/src/context/UserContext';
 import { BirthdaysProvider } from '@/src/context/BirthdaysContext';
 import { ConnectionsProvider } from '@/src/context/ConnectionsContext';
+import { NotificationsProvider } from '@/src/context/NotificationsContext';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { db } from '@/src/database';
 import { DATABASE_TYPE } from '@/src/database/database.config';
@@ -78,21 +79,23 @@ export default function RootLayout() {
       ) : (
         // Providers solo se montan después de que la DB esté lista
         <UserProvider>
-          <ConnectionsProvider>
-            <BirthdaysProvider>
-              <ThemeProvider>
-                <Stack screenOptions={{ headerShown: false }}>
-                  <Stack.Screen name="index" />
-                  <Stack.Screen name="welcome" />
-                  <Stack.Screen name="login" />
-                  <Stack.Screen name="create-profile" />
-                  <Stack.Screen name="(drawer)" />
-                  <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
-                </Stack>
-                <StatusBar style="light" />
-              </ThemeProvider>
-            </BirthdaysProvider>
-          </ConnectionsProvider>
+          <NotificationsProvider>
+            <ConnectionsProvider>
+              <BirthdaysProvider>
+                <ThemeProvider>
+                  <Stack screenOptions={{ headerShown: false }}>
+                    <Stack.Screen name="index" />
+                    <Stack.Screen name="welcome" />
+                    <Stack.Screen name="login" />
+                    <Stack.Screen name="create-profile" />
+                    <Stack.Screen name="(drawer)" />
+                    <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
+                  </Stack>
+                  <StatusBar style="light" />
+                </ThemeProvider>
+              </BirthdaysProvider>
+            </ConnectionsProvider>
+          </NotificationsProvider>
         </UserProvider>
       )}
     </NavigationThemeProvider>

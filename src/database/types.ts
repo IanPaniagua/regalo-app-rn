@@ -11,6 +11,8 @@ export interface User {
   hideAgeLastChangeDate?: Date; // Fecha del último cambio de privacidad
   nameChangesCount?: number; // Contador de cambios de nombre
   nameLastChangeDate?: Date; // Fecha del último cambio de nombre
+  fcmToken?: string; // Token de Firebase Cloud Messaging para notificaciones push
+  fcmTokenUpdatedAt?: Date; // Fecha de última actualización del token
   createdAt?: Date;
   updatedAt?: Date;
 }
