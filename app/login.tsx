@@ -51,6 +51,7 @@ export default function LoginScreen() {
         email: dbUser.email,
         birthdate: dbUser.birthdate,
         hobbies: dbUser.hobbies,
+        avatar: dbUser.avatar || '👤',
       });
 
       // Refrescar calendario

@@ -17,8 +17,11 @@ import {
   getAuth,
   Auth,
   signInAnonymously,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
   onAuthStateChanged,
   indexedDBLocalPersistence,
+  User as FirebaseUser,
 } from 'firebase/auth';
 import { DatabaseAdapter, User, BirthdayEvent, Connection, ConnectionInvitation } from '../types';
 import { firebaseConfig } from '../config';
@@ -43,17 +46,9 @@ export class FirebaseAdapter implements DatabaseAdapter {
         this.app = getApp();
       }
 
-      // Inicializar Auth (opcional)
+      // Inicializar Auth (se usa desde authService, no aquí)
       this.auth = getAuth(this.app);
-      console.log('✅ Firebase Auth initialized');
-
-      // Intentar autenticar anónimamente (no crítico)
-      try {
-        await this.ensureAuthenticated();
-      } catch (authError: any) {
-        console.warn('⚠️ Auth failed, continuing without authentication:', authError.code);
-        console.warn('   To enable: Firebase Console → Authentication → Sign-in method → Anonymous → Enable');
-      }
+      console.log('✅ Firebase Auth initialized (managed by authService)');
 
       this.db = getFirestore(this.app);
       this.initialized = true;
@@ -75,17 +70,48 @@ export class FirebaseAdapter implements DatabaseAdapter {
           console.log('✅ User already authenticated:', user.uid);
           resolve();
         } else {
-          try {
-            console.log('🔐 Signing in anonymously...');
-            const result = await signInAnonymously(this.auth!);
-            console.log('✅ Anonymous sign-in successful:', result.user.uid);
-            resolve();
-          } catch (error) {
-            reject(error);
-          }
+          console.log('⚠️ No authenticated user, waiting for login...');
+          // No autenticar automáticamente, esperar a que el usuario cree cuenta
+          resolve();
         }
       });
     });
+  }
+
+  // Método para autenticar con email/contraseña
+  async signInWithEmail(email: string, password: string): Promise<FirebaseUser> {
+    if (!this.auth) throw new Error('Auth not initialized');
+    
+    try {
+      const result = await signInWithEmailAndPassword(this.auth, email, password);
+      console.log('✅ Sign-in successful:', result.user.uid);
+      return result.user;
+    } catch (error: any) {
+      console.error('❌ Sign-in error:', error.code);
+      throw error;
+    }
+  }
+
+  // Método para crear cuenta con email/contraseña
+  async createAccountWithEmail(email: string, password: string): Promise<FirebaseUser> {
+    if (!this.auth) throw new Error('Auth not initialized');
+    
+    try {
+      const result = await createUserWithEmailAndPassword(this.auth, email, password);
+      console.log('✅ Account created:', result.user.uid);
+      return result.user;
+    } catch (error: any) {
+      console.error('❌ Account creation error:', error.code);
+      throw error;
+    }
+  }
+
+  // Generar contraseña automática basada en email (para simplificar UX)
+  generatePasswordFromEmail(email: string): string {
+    // Usar una combinación del email + salt para generar contraseña consistente
+    // Esto permite que el usuario use el mismo email en múltiples dispositivos
+    const salt = 'RegaloApp2024!';
+    return `${email.split('@')[0]}${salt}`;
   }
 
   async disconnect(): Promise<void> {
@@ -114,6 +140,9 @@ export class FirebaseAdapter implements DatabaseAdapter {
   // USUARIOS
   async createUser(userData: Omit<User, 'id' | 'createdAt' | 'updatedAt'>): Promise<User> {
     const db = this.ensureInitialized();
+    
+    // Crear documento en Firestore
+    // NOTA: La autenticación se maneja por separado en authService
     const usersRef = collection(db, 'users');
     const newUserRef = doc(usersRef);
 
@@ -134,7 +163,7 @@ export class FirebaseAdapter implements DatabaseAdapter {
     };
 
     await setDoc(newUserRef, firestoreData);
-    console.log('✅ User created:', user.id);
+    console.log('✅ User created in Firestore:', user.id);
     return user;
   }
 

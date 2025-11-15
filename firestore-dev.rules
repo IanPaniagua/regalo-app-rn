@@ -1,0 +1,10 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // REGLAS DE DESARROLLO - COMPLETAMENTE ABIERTAS
+    // ⚠️ SOLO PARA DESARROLLO - NO USAR EN PRODUCCIÓN
+    match /{document=**} {
+      allow read, write: if true;
+    }
+  }
+}

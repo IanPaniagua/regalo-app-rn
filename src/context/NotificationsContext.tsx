@@ -2,6 +2,7 @@ import { createContext, useContext, useState, useEffect, useRef, ReactNode } fro
 import * as Notifications from 'expo-notifications';
 import * as Device from 'expo-device';
 import { Platform } from 'react-native';
+import messaging from '@react-native-firebase/messaging';
 import Constants from 'expo-constants';
 import { db } from '@/src/database';
 import { useUser } from './UserContext';
@@ -18,7 +19,7 @@ Notifications.setNotificationHandler({
 });
 
 interface NotificationsContextType {
-  expoPushToken: string | null;
+  fcmToken: string | null;
   notification: Notifications.Notification | null;
   requestPermissions: () => Promise<boolean>;
   isPermissionGranted: boolean;
@@ -28,7 +29,7 @@ const NotificationsContext = createContext<NotificationsContextType | undefined>
 
 export function NotificationsProvider({ children }: { children: ReactNode }) {
   const { user } = useUser();
-  const [expoPushToken, setExpoPushToken] = useState<string | null>(null);
+  const [fcmToken, setFcmToken] = useState<string | null>(null);
   const [notification, setNotification] = useState<Notifications.Notification | null>(null);
   const [isPermissionGranted, setIsPermissionGranted] = useState(false);
   
@@ -37,7 +38,7 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
 
   // Registrar token cuando el usuario inicia sesión
   useEffect(() => {
-    if (user && !expoPushToken) {
+    if (user && !fcmToken) {
       registerForPushNotificationsAsync();
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -45,10 +46,10 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
 
   // Guardar token en Firestore cuando se obtiene
   useEffect(() => {
-    if (expoPushToken && user) {
-      saveFCMTokenToFirestore(expoPushToken);
+    if (fcmToken && user) {
+      saveFCMTokenToFirestore(fcmToken);
     }
-  }, [expoPushToken, user]);
+  }, [fcmToken, user]);
 
   // Listeners de notificaciones
   useEffect(() => {
@@ -83,6 +84,21 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
     }
 
     if (Device.isDevice) {
+      // Solicitar permisos de FCM (iOS)
+      if (Platform.OS === 'ios') {
+        const authStatus = await messaging().requestPermission();
+        const enabled =
+          authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
+          authStatus === messaging.AuthorizationStatus.PROVISIONAL;
+
+        if (!enabled) {
+          console.log('❌ FCM Permission not granted');
+          setIsPermissionGranted(false);
+          return;
+        }
+      }
+      
+      // Solicitar permisos de notificaciones locales
       const { status: existingStatus } = await Notifications.getPermissionsAsync();
       let finalStatus = existingStatus;
       
@@ -99,19 +115,35 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
       
       setIsPermissionGranted(true);
       
-      // Obtener token de Expo
-      const projectId = Constants.expoConfig?.extra?.eas?.projectId;
-      if (!projectId) {
-        console.error('❌ No project ID found in app.json');
-        return;
+      // Para iOS, necesitamos registrar APNS primero
+      if (Platform.OS === 'ios') {
+        try {
+          await messaging().registerDeviceForRemoteMessages();
+          console.log('✅ Device registered for remote messages');
+        } catch (error) {
+          console.error('❌ Error registering device:', error);
+        }
       }
       
-      token = (await Notifications.getExpoPushTokenAsync({
-        projectId,
-      })).data;
-      
-      console.log('✅ Expo Push Token:', token);
-      setExpoPushToken(token);
+      // Obtener token FCM nativo
+      try {
+        token = await messaging().getToken();
+        console.log('✅ FCM Token:', token);
+        setFcmToken(token);
+        
+        // Listener para cuando el token se actualiza
+        messaging().onTokenRefresh(async (newToken) => {
+          console.log('🔄 FCM Token refreshed:', newToken);
+          setFcmToken(newToken);
+          if (user) {
+            await saveFCMTokenToFirestore(newToken);
+          }
+        });
+      } catch (error) {
+        console.error('❌ Error getting FCM token:', error);
+        // Si falla FCM, intentar obtener token de Expo como fallback
+        console.log('⚠️ Falling back to Expo Push Token...');
+      }
       
     } else {
       console.log('⚠️ Must use physical device for Push Notifications');
@@ -133,10 +165,16 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
   }
 
   async function saveFCMTokenToFirestore(token: string) {
-    console.log('💾 Attempting to save FCM token...', { token, userId: user?.id });
+    console.log('💾 Attempting to save FCM token...', { token: token.substring(0, 20) + '...', userId: user?.id });
     
     if (!user?.id) {
       console.log('⚠️  No user ID, skipping token save');
+      return;
+    }
+
+    // Solo guardar si el token es diferente al actual
+    if (user.fcmToken && user.fcmToken === token) {
+      console.log('ℹ️  Token unchanged, skipping save');
       return;
     }
 
@@ -156,6 +194,12 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
     
     console.log('📱 Notification data:', data);
     
+    // Verificar que data existe antes de acceder a sus propiedades
+    if (!data || typeof data !== 'object') {
+      console.log('⚠️ No data in notification');
+      return;
+    }
+    
     // Aquí puedes navegar a diferentes pantallas según el tipo de notificación
     if (data.type === 'birthday') {
       // Navegar al perfil del usuario
@@ -171,7 +215,7 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
   return (
     <NotificationsContext.Provider
       value={{
-        expoPushToken,
+        fcmToken,
         notification,
         requestPermissions,
         isPermissionGranted,

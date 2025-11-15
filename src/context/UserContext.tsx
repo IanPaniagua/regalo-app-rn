@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { db } from '@/src/database';
 
 // Datos completos del usuario (con email confirmado)
 interface UserData {
@@ -15,6 +16,8 @@ interface UserData {
   hideAgeLastChangeDate?: Date; // Fecha del último cambio de privacidad
   nameChangesCount?: number; // Contador de cambios de nombre
   nameLastChangeDate?: Date; // Fecha del último cambio de nombre
+  fcmToken?: string; // Token de Firebase Cloud Messaging para notificaciones push
+  fcmTokenUpdatedAt?: Date; // Fecha de última actualización del token
 }
 
 // Datos temporales durante el funnel (sin email)
@@ -72,6 +75,21 @@ export function UserProvider({ children }: { children: ReactNode }) {
         if (parsedUser.nameLastChangeDate) {
           parsedUser.nameLastChangeDate = new Date(parsedUser.nameLastChangeDate);
         }
+        
+        // IMPORTANTE: Verificar si hay sesión activa en Firebase Auth
+        // Si no hay sesión, redirigir a login
+        const { authService } = await import('@/src/services/auth.service');
+        const currentUser = authService.getCurrentUser();
+        
+        if (!currentUser) {
+          console.log('⚠️ No Firebase Auth session, user needs to login');
+          // Limpiar usuario guardado y redirigir a login
+          await AsyncStorage.removeItem(USER_STORAGE_KEY);
+          setUser(null);
+          setIsLoading(false);
+          return;
+        }
+        
         setUser(parsedUser);
         console.log('✅ User loaded from storage:', parsedUser.email);
       }

@@ -9,7 +9,9 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.manolodev.regalo-app",
+      "googleServicesFile": "./GoogleService-Info.plist"
     },
     "android": {
       "adaptiveIcon": {
@@ -19,7 +21,9 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "googleServicesFile": "./google-services.json",
+      "package": "com.manolodev.regaloapp"
     },
     "web": {
       "output": "static",
@@ -39,21 +43,20 @@
           }
         }
       ],
+      "expo-notifications",
       [
-        "expo-notifications",
+        "@react-native-firebase/app",
         {
-          "icon": "./assets/images/notification-icon.png",
-          "color": "#D4AF37",
-          "sounds": []
+          "ios": {
+            "googleServicesFile": "./GoogleService-Info.plist"
+          },
+          "android": {
+            "googleServicesFile": "./google-services.json"
+          }
         }
-      ]
+      ],
+      "@react-native-firebase/messaging"
     ],
-    "notification": {
-      "icon": "./assets/images/notification-icon.png",
-      "color": "#D4AF37",
-      "androidMode": "default",
-      "androidCollapsedTitle": "Regalo App"
-    },
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
