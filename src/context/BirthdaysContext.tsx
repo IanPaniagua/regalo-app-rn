@@ -1,5 +1,6 @@
 import { createContext, useContext, ReactNode, useState, useEffect } from 'react';
 import { db } from '@/src/database';
+import { useUser } from './UserContext';
 
 export interface BirthdayUser {
   id: string;
@@ -21,14 +22,22 @@ interface BirthdaysContextType {
 const BirthdaysContext = createContext<BirthdaysContextType | undefined>(undefined);
 
 export function BirthdaysProvider({ children }: { children: ReactNode }) {
+  const { user } = useUser();
   const [users, setUsers] = useState<BirthdayUser[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Cargar usuarios desde la base de datos
+  // Cargar usuarios conectados desde la base de datos
   const refreshUsers = async () => {
+    if (!user?.id) {
+      setUsers([]);
+      setLoading(false);
+      return;
+    }
+
     try {
       setLoading(true);
-      const dbUsers = await db.getAdapter().getAllUsers();
+      // Solo cargar usuarios conectados con el usuario actual
+      const dbUsers = await db.getAdapter().getConnectedUsers(user.id);
       
       // Convertir usuarios de la DB al formato BirthdayUser
       const birthdayUsers: BirthdayUser[] = dbUsers.map(user => ({
@@ -56,22 +65,25 @@ export function BirthdaysProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  // Cargar usuarios al montar el componente
+  // Cargar usuarios al montar el componente o cuando cambie el usuario
   useEffect(() => {
     refreshUsers();
-  }, []);
+  }, [user?.id]);
 
   const getUsersByDate = async (date: Date): Promise<BirthdayUser[]> => {
     try {
-      const birthdays = await db.getAdapter().getBirthdaysByDate(date);
-      return birthdays.map(b => ({
-        id: b.id,
-        name: b.userName,
-        avatar: b.userAvatar,
-        birthdate: b.birthdate,
-        hobbies: b.hobbies,
-        email: b.email,
-      }));
+      // Filtrar de los usuarios conectados en lugar de consultar la DB
+      const day = date.getDate();
+      const month = date.getMonth();
+
+      const birthdaysToday = users.filter(user => {
+        const userDay = user.birthdate.getDate();
+        const userMonth = user.birthdate.getMonth();
+        return userDay === day && userMonth === month;
+      });
+
+      console.log(`📅 Birthdays on ${date.toLocaleDateString()}:`, birthdaysToday.length);
+      return birthdaysToday;
     } catch (error) {
       console.error('❌ Error getting birthdays by date:', error);
       return [];

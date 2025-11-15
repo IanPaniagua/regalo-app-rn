@@ -9,6 +9,7 @@ import 'react-native-gesture-handler';
 import { ThemeProvider } from '@/src/theme/ThemeProvider';
 import { UserProvider } from '@/src/context/UserContext';
 import { BirthdaysProvider } from '@/src/context/BirthdaysContext';
+import { ConnectionsProvider } from '@/src/context/ConnectionsContext';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { db } from '@/src/database';
 import { DATABASE_TYPE } from '@/src/database/database.config';
@@ -76,21 +77,23 @@ export default function RootLayout() {
         </View>
       ) : (
         // Providers solo se montan después de que la DB esté lista
-        <BirthdaysProvider>
-          <UserProvider>
-            <ThemeProvider>
-              <Stack screenOptions={{ headerShown: false }}>
-                <Stack.Screen name="index" />
-                <Stack.Screen name="welcome" />
-                <Stack.Screen name="login" />
-                <Stack.Screen name="create-profile" />
-                <Stack.Screen name="(drawer)" />
-                <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
-              </Stack>
-              <StatusBar style="auto" />
-            </ThemeProvider>
-          </UserProvider>
-        </BirthdaysProvider>
+        <UserProvider>
+          <ConnectionsProvider>
+            <BirthdaysProvider>
+              <ThemeProvider>
+                <Stack screenOptions={{ headerShown: false }}>
+                  <Stack.Screen name="index" />
+                  <Stack.Screen name="welcome" />
+                  <Stack.Screen name="login" />
+                  <Stack.Screen name="create-profile" />
+                  <Stack.Screen name="(drawer)" />
+                  <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
+                </Stack>
+                <StatusBar style="auto" />
+              </ThemeProvider>
+            </BirthdaysProvider>
+          </ConnectionsProvider>
+        </UserProvider>
       )}
     </NavigationThemeProvider>
   );

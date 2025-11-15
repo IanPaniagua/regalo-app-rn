@@ -25,6 +25,31 @@ export interface BirthdayEvent {
   email?: string;
 }
 
+// Sistema de conexiones entre usuarios
+export interface Connection {
+  id: string;
+  userId1: string; // Usuario que envió la invitación
+  userId2: string; // Usuario que recibió la invitación
+  status: 'pending' | 'accepted' | 'rejected';
+  createdAt: Date;
+  updatedAt: Date;
+  // Notificaciones
+  viewedByUser1?: boolean; // Si userId1 vio la respuesta (aceptada/rechazada)
+  viewedByUser2?: boolean; // Si userId2 vio la invitación pendiente
+}
+
+// Invitación para conectar (con link único)
+export interface ConnectionInvitation {
+  id: string; // ID único para el link
+  fromUserId: string;
+  fromUserName: string;
+  fromUserAvatar: string;
+  expiresAt: Date; // Expira después de 14 días
+  used: boolean; // Si ya fue usada
+  usedBy?: string; // ID del usuario que la usó
+  createdAt: Date;
+}
+
 // Interfaz genérica para operaciones de base de datos
 export interface DatabaseAdapter {
   // Usuarios
@@ -38,6 +63,19 @@ export interface DatabaseAdapter {
   // Eventos de cumpleaños
   getBirthdaysByDate(date: Date): Promise<BirthdayEvent[]>;
   getBirthdaysByMonth(year: number, month: number): Promise<BirthdayEvent[]>;
+  
+  // Conexiones entre usuarios
+  createConnectionInvitation(invitation: Omit<ConnectionInvitation, 'id' | 'createdAt'>): Promise<ConnectionInvitation>;
+  getConnectionInvitation(invitationId: string): Promise<ConnectionInvitation | null>;
+  createConnection(userId1: string, userId2: string): Promise<Connection>;
+  getConnectionsByUser(userId: string): Promise<Connection[]>;
+  getConnectedUsers(userId: string): Promise<User[]>; // Solo usuarios conectados
+  updateConnectionStatus(connectionId: string, status: 'accepted' | 'rejected'): Promise<Connection>;
+  getPendingInvitations(userId: string): Promise<Connection[]>;
+  getAcceptedConnections(userId: string): Promise<Connection[]>; // Conexiones aceptadas (para notificaciones)
+  markConnectionAsViewed(connectionId: string, userId: string): Promise<void>; // Marcar como visto
+  deleteConnection(connectionId: string): Promise<void>; // Para desconectar usuarios
+  sendConnectionRequestByEmail(fromUserId: string, toEmail: string): Promise<Connection>; // Enviar invitación por email
   
   // Utilidades
   initialize(): Promise<void>;
