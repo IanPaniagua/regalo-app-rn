@@ -7,7 +7,13 @@ interface UserData {
   name: string;
   birthdate: Date;
   hobbies: string[];
+  avatar: string;
   email: string;
+  hideAge?: boolean; // Preferencia de privacidad para ocultar edad
+  hideAgeChangesCount?: number; // Contador de cambios de privacidad
+  hideAgeLastChangeDate?: Date; // Fecha del último cambio de privacidad
+  nameChangesCount?: number; // Contador de cambios de nombre
+  nameLastChangeDate?: Date; // Fecha del último cambio de nombre
 }
 
 // Datos temporales durante el funnel (sin email)
@@ -15,6 +21,8 @@ interface TempUserData {
   name: string;
   birthdate: Date;
   hobbies: string[];
+  avatar: string;
+  hideAge?: boolean;
 }
 
 interface UserContextType {

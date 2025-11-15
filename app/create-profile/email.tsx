@@ -44,7 +44,7 @@ export default function CreateProfileStep3() {
       return;
     }
 
-    if (!tempUser) {
+    if (!tempUser || !tempUser.avatar) {
       Alert.alert('Error', 'No se encontraron datos del perfil. Por favor vuelve a empezar.');
       router.replace('/create-profile');
       return;
@@ -57,19 +57,20 @@ export default function CreateProfileStep3() {
       const { authUser, dbUserId } = await authService.createUserProfile({
         email,
         password,
-        name: tempUser.name,
-        birthdate: tempUser.birthdate,
-        hobbies: tempUser.hobbies,
-        avatar: '🎉',
+        name: tempUser.name!,
+        birthdate: tempUser.birthdate!,
+        hobbies: tempUser.hobbies!,
+        avatar: tempUser.avatar!,
       });
 
       // Guardar en el contexto de usuario autenticado
       const completeUser = {
         id: dbUserId,
         authUid: authUser.uid,
-        name: tempUser.name,
-        birthdate: tempUser.birthdate,
-        hobbies: tempUser.hobbies,
+        name: tempUser.name!,
+        birthdate: tempUser.birthdate!,
+        hobbies: tempUser.hobbies!,
+        avatar: tempUser.avatar!,
         email,
       };
       setUser(completeUser);
@@ -77,11 +78,11 @@ export default function CreateProfileStep3() {
       // Añadir al calendario de cumpleaños
       await addUser({
         id: dbUserId,
-        name: completeUser.name,
-        avatar: '🎉',
-        birthdate: completeUser.birthdate,
-        hobbies: completeUser.hobbies,
-        email: completeUser.email,
+        name: tempUser.name!,
+        avatar: tempUser.avatar!,
+        birthdate: tempUser.birthdate!,
+        hobbies: tempUser.hobbies!,
+        email: email,
       });
 
       // Limpiar datos temporales

@@ -11,6 +11,7 @@ import {
   KeyboardAvoidingView,
   TouchableWithoutFeedback,
   Keyboard,
+  Switch,
 } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { AppContainer } from '@/src/components/ui/AppContainer';
@@ -22,6 +23,7 @@ import { useBirthdays } from '@/src/context/BirthdaysContext';
 import { colors, fonts } from '@/src/theme';
 import { Ionicons } from '@expo/vector-icons';
 import { db } from '@/src/database';
+import { useDailyChangeLimit } from '@/src/hooks/useDailyChangeLimit';
 
 const HOBBIES = [
   'Deportes',
@@ -36,15 +38,37 @@ const HOBBIES = [
   'Tecnología',
 ];
 
+const AVATARS = [
+  '👨', '👩', '🧑', '👴', '👵', '🧓',
+  '👨‍🦱', '👩‍🦱', '🧑‍🦱', '👨‍🦰', '👩‍🦰', '🧑‍🦰',
+  '👨‍🦳', '👩‍🦳', '🧑‍🦳', '👨‍🦲', '👩‍🦲', '🧑‍🦲',
+  '👱‍♂️', '👱‍♀️', '👱', '🧔', '🧔‍♂️', '🧔‍♀️',
+  '👨‍⚕️', '👩‍⚕️', '🧑‍⚕️', '👨‍🎓', '👩‍🎓', '🧑‍🎓',
+  '👨‍🏫', '👩‍🏫', '🧑‍🏫', '👨‍⚖️', '👩‍⚖️', '🧑‍⚖️',
+  '👨‍🌾', '👩‍🌾', '🧑‍🌾', '👨‍🍳', '👩‍🍳', '🧑‍🍳',
+  '👨‍🔧', '👩‍🔧', '🧑‍🔧', '👨‍🏭', '👩‍🏭', '🧑‍🏭',
+  '👨‍💼', '👩‍💼', '🧑‍💼', '👨‍🔬', '👩‍🔬', '🧑‍🔬',
+  '👨‍💻', '👩‍💻', '🧑‍💻', '👨‍🎤', '👩‍🎤', '🧑‍🎤',
+  '👨‍🎨', '👩‍🎨', '🧑‍🎨', '👨‍✈️', '👩‍✈️', '🧑‍✈️',
+  '👨‍🚀', '👩‍🚀', '🧑‍🚀', '👨‍🚒', '👩‍🚒', '🧑‍🚒',
+  '👮‍♂️', '👮‍♀️', '👮', '🕵️‍♂️', '🕵️‍♀️', '🕵️',
+  '💂‍♂️', '💂‍♀️', '💂', '👷‍♂️', '👷‍♀️', '👷',
+  '🤴', '👸', '👳‍♂️', '👳‍♀️', '👳', '👲',
+  '🧕', '🤵‍♂️', '🤵‍♀️', '🤵', '👰‍♂️', '👰‍♀️',
+  '🤰', '🤱', '👼', '🎅', '🤶', '🧑‍🎄',
+];
+
 export default function ProfileScreen() {
   const { user, setUser } = useUser();
   const { refreshUsers } = useBirthdays();
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [editedName, setEditedName] = useState(user?.name || '');
-  const [editedBirthdate, setEditedBirthdate] = useState(user?.birthdate || new Date());
+  const [editedAvatar, setEditedAvatar] = useState(user?.avatar || '');
   const [editedHobbies, setEditedHobbies] = useState<string[]>(user?.hobbies || []);
-  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [hideAge, setHideAge] = useState(user?.hideAge || false);
+  const [showAvatarPicker, setShowAvatarPicker] = useState(false);
+  const [showBirthdayInfo, setShowBirthdayInfo] = useState(false);
   const [customHobby, setCustomHobby] = useState('');
   const [showCustomInput, setShowCustomInput] = useState(false);
 
@@ -55,6 +79,46 @@ export default function ProfileScreen() {
       year: 'numeric',
     });
   };
+
+  const getNextBirthday = (birthdate: Date) => {
+    const today = new Date();
+    const nextBirthday = new Date(
+      today.getFullYear(),
+      birthdate.getMonth(),
+      birthdate.getDate()
+    );
+    
+    // Si el cumpleaños ya pasó este año, usar el del próximo año
+    if (nextBirthday < today) {
+      nextBirthday.setFullYear(today.getFullYear() + 1);
+    }
+    
+    return nextBirthday;
+  };
+
+  const formatNextBirthday = (birthdate: Date) => {
+    const nextBirthday = getNextBirthday(birthdate);
+    return nextBirthday.toLocaleDateString('es-ES', {
+      day: '2-digit',
+      month: 'long',
+    });
+  };
+
+  // Hook para límite de cambios de privacidad
+  const privacyChangeLimit = useDailyChangeLimit({
+    currentCount: user?.hideAgeChangesCount || 0,
+    lastChangeDate: user?.hideAgeLastChangeDate,
+    maxChanges: 3,
+    fieldName: 'la configuración de privacidad',
+  });
+
+  // Hook para límite de cambios de nombre
+  const nameChangeLimit = useDailyChangeLimit({
+    currentCount: user?.nameChangesCount || 0,
+    lastChangeDate: user?.nameLastChangeDate,
+    maxChanges: 3,
+    fieldName: 'tu nombre',
+  });
 
   const toggleHobby = (hobby: string) => {
     if (editedHobbies.includes(hobby)) {
@@ -83,22 +147,43 @@ export default function ProfileScreen() {
       return;
     }
 
+    // Verificar si el nombre cambió
+    const nameChanged = editedName !== user.name;
+    
+    // Si el nombre cambió, verificar límite
+    if (nameChanged && !nameChangeLimit.checkAndNotify()) {
+      return;
+    }
+
     try {
       setIsSaving(true);
 
-      // Actualizar en Firebase
-      await db.getAdapter().updateUser(user.id, {
+      const updateData: any = {
         name: editedName,
-        birthdate: editedBirthdate,
+        avatar: editedAvatar,
         hobbies: editedHobbies,
-      });
+      };
+
+      // Si el nombre cambió, actualizar contador
+      if (nameChanged) {
+        const nameLimitData = nameChangeLimit.getNewChangeLimitData();
+        updateData.nameChangesCount = nameLimitData.count;
+        updateData.nameLastChangeDate = nameLimitData.lastChangeDate;
+      }
+
+      // Actualizar en Firebase
+      await db.getAdapter().updateUser(user.id, updateData);
 
       // Actualizar contexto local
       setUser({
         ...user,
         name: editedName,
-        birthdate: editedBirthdate,
+        avatar: editedAvatar,
         hobbies: editedHobbies,
+        ...(nameChanged && {
+          nameChangesCount: updateData.nameChangesCount,
+          nameLastChangeDate: updateData.nameLastChangeDate,
+        }),
       });
 
       // Refrescar calendario para mostrar cambios
@@ -106,7 +191,13 @@ export default function ProfileScreen() {
 
       setIsEditing(false);
       console.log('✅ Profile updated successfully');
-      Alert.alert('Éxito', 'Perfil actualizado correctamente');
+      
+      // Notificar cambios restantes si el nombre cambió
+      if (nameChanged) {
+        nameChangeLimit.notifyRemainingChanges(updateData.nameChangesCount);
+      } else {
+        Alert.alert('Éxito', 'Perfil actualizado correctamente');
+      }
     } catch (error: any) {
       console.error('❌ Error updating profile:', error);
       Alert.alert('Error', 'No se pudo actualizar el perfil');
@@ -117,8 +208,9 @@ export default function ProfileScreen() {
 
   const handleCancel = () => {
     setEditedName(user?.name || '');
-    setEditedBirthdate(user?.birthdate || new Date());
+    setEditedAvatar(user?.avatar || '');
     setEditedHobbies(user?.hobbies || []);
+    setHideAge(user?.hideAge || false);
     setIsEditing(false);
   };
 
@@ -181,6 +273,27 @@ export default function ProfileScreen() {
                 )}
               </View>
 
+              {/* Avatar */}
+              <View style={styles.section}>
+                <AppText style={styles.label}>Avatar</AppText>
+                {isEditing ? (
+                  <Pressable
+                    style={styles.avatarButton}
+                    onPress={() => {
+                      Keyboard.dismiss();
+                      setShowAvatarPicker(true);
+                    }}
+                  >
+                    <AppText style={styles.avatarEmoji}>{editedAvatar}</AppText>
+                    <AppText style={styles.changeAvatarText}>Cambiar avatar</AppText>
+                  </Pressable>
+                ) : (
+                  <View style={styles.valueContainer}>
+                    <AppText style={styles.avatarEmoji}>{user.avatar}</AppText>
+                  </View>
+                )}
+              </View>
+
               {/* Email (no editable) */}
               <View style={styles.section}>
                 <AppText style={styles.label}>Email</AppText>
@@ -193,19 +306,81 @@ export default function ProfileScreen() {
               {/* Fecha de nacimiento */}
               <View style={styles.section}>
                 <AppText style={styles.label}>Fecha de nacimiento</AppText>
-                {isEditing ? (
-                  <Pressable
-                    style={styles.dateButton}
-                    onPress={() => {
-                      Keyboard.dismiss();
-                      setShowDatePicker(true);
+                <View style={[styles.valueContainer, styles.disabledContainer]}>
+                  <AppText style={styles.value}>{formatDate(user.birthdate)}</AppText>
+                  <Ionicons name="lock-closed" size={16} color="#666" />
+                </View>
+              </View>
+
+              {/* Privacidad: No revelar edad */}
+              <View style={styles.section}>
+                <View style={styles.privacyRow}>
+                  <View style={styles.privacyLabelContainer}>
+                    <AppText style={styles.privacyLabel}>No revelar edad</AppText>
+                    <Pressable 
+                      onPress={() => setShowBirthdayInfo(!showBirthdayInfo)}
+                      hitSlop={8}
+                    >
+                      <Ionicons name="information-circle-outline" size={18} color="#999" />
+                    </Pressable>
+                  </View>
+                  <Switch
+                    value={hideAge}
+                    onValueChange={async (value) => {
+                      // Verificar límite de cambios
+                      if (!privacyChangeLimit.checkAndNotify()) {
+                        return;
+                      }
+
+                      setHideAge(value);
+                      // Guardar inmediatamente en la base de datos
+                      try {
+                        const limitData = privacyChangeLimit.getNewChangeLimitData();
+
+                        await db.getAdapter().updateUser(user.id!, {
+                          hideAge: value,
+                          hideAgeChangesCount: limitData.count,
+                          hideAgeLastChangeDate: limitData.lastChangeDate,
+                        });
+                        
+                        // Actualizar contexto local
+                        setUser({
+                          ...user,
+                          hideAge: value,
+                          hideAgeChangesCount: limitData.count,
+                          hideAgeLastChangeDate: limitData.lastChangeDate,
+                        });
+                        
+                        console.log(`✅ Privacy setting updated`);
+                        
+                        // Notificar cambios restantes
+                        privacyChangeLimit.notifyRemainingChanges(limitData.count);
+                      } catch (error) {
+                        console.error('❌ Error updating privacy setting:', error);
+                        Alert.alert('Error', 'No se pudo actualizar la configuración');
+                        // Revertir el cambio en caso de error
+                        setHideAge(!value);
+                      }
                     }}
-                  >
-                    <AppText>{formatDate(editedBirthdate)}</AppText>
-                  </Pressable>
-                ) : (
-                  <View style={styles.valueContainer}>
-                    <AppText style={styles.value}>{formatDate(user.birthdate)}</AppText>
+                    trackColor={{ false: '#3A3A3A', true: colors.primary }}
+                    thumbColor={hideAge ? colors.secondary : '#f4f3f4'}
+                    ios_backgroundColor="#3A3A3A"
+                  />
+                </View>
+                
+                {showBirthdayInfo && (
+                  <View style={styles.infoBox}>
+                    <Ionicons name="information-circle" size={16} color={colors.primary} />
+                    <AppText style={styles.infoText}>
+                      Al activar esta opción, otros usuarios verán solo tu próximo cumpleaños (día y mes) en lugar de tu fecha de nacimiento completa.
+                    </AppText>
+                  </View>
+                )}
+
+                {hideAge && (
+                  <View style={styles.previewContainer}>
+                    <AppText style={styles.previewLabel}>Los demás verán:</AppText>
+                    <AppText style={styles.previewValue}>{formatNextBirthday(user.birthdate)}</AppText>
                   </View>
                 )}
               </View>
@@ -291,58 +466,48 @@ export default function ProfileScreen() {
             </View>
           </TouchableWithoutFeedback>
 
-          {/* Modal para iOS con DatePicker */}
-          {Platform.OS === 'ios' && showDatePicker && (
+
+          {/* Modal para seleccionar Avatar */}
+          {showAvatarPicker && (
             <Modal
               transparent
               animationType="slide"
-              visible={showDatePicker}
-              onRequestClose={() => setShowDatePicker(false)}
+              visible={showAvatarPicker}
+              onRequestClose={() => setShowAvatarPicker(false)}
             >
               <View style={styles.modalOverlay}>
-                <View style={styles.modalContent}>
+                <View style={[styles.modalContent, styles.avatarModalContent]}>
                   <View style={styles.modalHeader}>
-                    <Pressable onPress={() => setShowDatePicker(false)}>
-                      <AppText style={styles.modalButton}>Cancelar</AppText>
-                    </Pressable>
-                    <Pressable onPress={() => setShowDatePicker(false)}>
-                      <AppText style={[styles.modalButton, styles.modalButtonDone]}>
-                        Listo
-                      </AppText>
+                    <AppText style={styles.modalTitle}>Selecciona tu avatar</AppText>
+                    <Pressable onPress={() => setShowAvatarPicker(false)}>
+                      <Ionicons name="close" size={24} color={colors.white} />
                     </Pressable>
                   </View>
-                  <DateTimePicker
-                    value={editedBirthdate}
-                    mode="date"
-                    display="spinner"
-                    onChange={(_event: any, selectedDate?: Date) => {
-                      if (selectedDate) {
-                        setEditedBirthdate(selectedDate);
-                      }
-                    }}
-                    maximumDate={new Date()}
-                    textColor={colors.white}
-                    style={styles.datePicker}
-                  />
+                  <ScrollView 
+                    style={styles.avatarScrollView}
+                    showsVerticalScrollIndicator={false}
+                  >
+                    <View style={styles.avatarsGrid}>
+                      {AVATARS.map((avatar, index) => (
+                        <Pressable
+                          key={index}
+                          style={[
+                            styles.avatarOption,
+                            editedAvatar === avatar && styles.avatarOptionSelected,
+                          ]}
+                          onPress={() => {
+                            setEditedAvatar(avatar);
+                            setShowAvatarPicker(false);
+                          }}
+                        >
+                          <AppText style={styles.avatarOptionEmoji}>{avatar}</AppText>
+                        </Pressable>
+                      ))}
+                    </View>
+                  </ScrollView>
                 </View>
               </View>
             </Modal>
-          )}
-
-          {/* DatePicker para Android */}
-          {Platform.OS === 'android' && showDatePicker && (
-            <DateTimePicker
-              value={editedBirthdate}
-              mode="date"
-              display="default"
-              onChange={(_event: any, selectedDate?: Date) => {
-                setShowDatePicker(false);
-                if (selectedDate) {
-                  setEditedBirthdate(selectedDate);
-                }
-              }}
-              maximumDate={new Date()}
-            />
           )}
         </ScrollView>
       </KeyboardAvoidingView>
@@ -417,14 +582,6 @@ const styles = StyleSheet.create({
   },
   value: {
     fontSize: 16,
-  },
-  dateButton: {
-    backgroundColor: '#2A2A2A',
-    borderWidth: 1,
-    borderColor: colors.primary,
-    borderRadius: 12,
-    paddingVertical: 16,
-    paddingHorizontal: 16,
   },
   hobbiesGrid: {
     flexDirection: 'row',
@@ -556,5 +713,113 @@ const styles = StyleSheet.create({
   },
   datePicker: {
     backgroundColor: '#1C1C1C',
+  },
+  avatarButton: {
+    backgroundColor: '#2A2A2A',
+    borderWidth: 1,
+    borderColor: colors.primary,
+    borderRadius: 12,
+    paddingVertical: 16,
+    paddingHorizontal: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  avatarEmoji: {
+    fontSize: 32,
+  },
+  changeAvatarText: {
+    fontSize: 16,
+    color: colors.primary,
+  },
+  avatarModalContent: {
+    maxHeight: '80%',
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+  },
+  avatarScrollView: {
+    maxHeight: 500,
+  },
+  avatarsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+    padding: 20,
+    justifyContent: 'center',
+  },
+  avatarOption: {
+    width: 60,
+    height: 60,
+    backgroundColor: '#2A2A2A',
+    borderWidth: 2,
+    borderColor: '#444',
+    borderRadius: 30,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  avatarOptionSelected: {
+    borderColor: colors.primary,
+    backgroundColor: '#3A3A3A',
+  },
+  avatarOptionEmoji: {
+    fontSize: 32,
+  },
+  privacyRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: '#2A2A2A',
+    borderRadius: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    marginBottom: 12,
+  },
+  privacyLabelContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  privacyLabel: {
+    fontSize: 16,
+    color: colors.white,
+  },
+  infoBox: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 8,
+    backgroundColor: 'rgba(255, 107, 0, 0.1)',
+    borderLeftWidth: 3,
+    borderLeftColor: colors.primary,
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 12,
+  },
+  infoText: {
+    flex: 1,
+    fontSize: 13,
+    color: '#CCC',
+    lineHeight: 18,
+  },
+  previewContainer: {
+    backgroundColor: '#2A2A2A',
+    borderRadius: 12,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: colors.primary,
+    borderStyle: 'dashed',
+  },
+  previewLabel: {
+    fontSize: 12,
+    color: '#999',
+    marginBottom: 4,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  previewValue: {
+    fontSize: 16,
+    color: colors.primary,
+    fontWeight: '600',
   },
 });

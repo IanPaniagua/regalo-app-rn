@@ -1,5 +1,15 @@
 import { useState } from 'react';
-import { View, StyleSheet, TextInput, Pressable, ScrollView } from 'react-native';
+import { 
+  View, 
+  StyleSheet, 
+  TextInput, 
+  Pressable, 
+  ScrollView, 
+  KeyboardAvoidingView,
+  Platform,
+  TouchableWithoutFeedback,
+  Keyboard
+} from 'react-native';
 import { useRouter } from 'expo-router';
 import { AppContainer } from '@/src/components/ui/AppContainer';
 import { AppTitle } from '@/src/components/ui/AppTitle';
@@ -27,6 +37,7 @@ export default function CreateProfileStep2() {
   const [selectedHobbies, setSelectedHobbies] = useState<string[]>(tempUser?.hobbies || []);
   const [customHobby, setCustomHobby] = useState('');
   const [showCustomInput, setShowCustomInput] = useState(false);
+  const [skipPressed, setSkipPressed] = useState(false);
 
   const toggleHobby = (hobby: string) => {
     if (selectedHobbies.includes(hobby)) {
@@ -53,89 +64,129 @@ export default function CreateProfileStep2() {
       });
     }
 
-    router.push('/create-profile/email');
+    router.push('/create-profile/avatar');
+  };
+
+  const handleSkip = () => {
+    // Saltar hobbies (guardar array vacío)
+    if (tempUser) {
+      setTempUser({
+        ...tempUser,
+        hobbies: [],
+      });
+    }
+    router.push('/create-profile/avatar');
   };
 
   return (
     <AppContainer>
-      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-        <AppTitle style={styles.title}>¿Cuáles son tus hobbies?</AppTitle>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={styles.keyboardView}
+      >
+        <ScrollView 
+          contentContainerStyle={styles.scrollContent}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
+          <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+            <View style={styles.content}>
+              <AppTitle style={styles.title}>¿Cuáles son tus hobbies?</AppTitle>
 
-        <View style={styles.hobbiesGrid}>
-          {HOBBIES.map((hobby) => (
-            <Pressable
-              key={hobby}
-              style={[
-                styles.hobbyChip,
-                selectedHobbies.includes(hobby) && styles.hobbyChipSelected,
-              ]}
-              onPress={() => toggleHobby(hobby)}
-            >
-              <AppText
-                style={[
-                  styles.hobbyText,
-                  selectedHobbies.includes(hobby) && styles.hobbyTextSelected,
-                ]}
-              >
-                {hobby}
-              </AppText>
-            </Pressable>
-          ))}
+              <View style={styles.hobbiesGrid}>
+                {HOBBIES.map((hobby) => (
+                  <Pressable
+                    key={hobby}
+                    style={[
+                      styles.hobbyChip,
+                      selectedHobbies.includes(hobby) && styles.hobbyChipSelected,
+                    ]}
+                    onPress={() => toggleHobby(hobby)}
+                  >
+                    <AppText
+                      style={[
+                        styles.hobbyText,
+                        selectedHobbies.includes(hobby) && styles.hobbyTextSelected,
+                      ]}
+                    >
+                      {hobby}
+                    </AppText>
+                  </Pressable>
+                ))}
 
-          <Pressable
-            style={[styles.hobbyChip, styles.hobbyChipOther]}
-            onPress={() => setShowCustomInput(!showCustomInput)}
-          >
-            <AppText style={styles.hobbyText}>Otro</AppText>
-          </Pressable>
-        </View>
+                <Pressable
+                  style={[styles.hobbyChip, styles.hobbyChipOther]}
+                  onPress={() => setShowCustomInput(!showCustomInput)}
+                >
+                  <AppText style={styles.hobbyText}>Otro</AppText>
+                </Pressable>
+              </View>
 
-        {showCustomInput && (
-          <View style={styles.customInputContainer}>
-            <TextInput
-              style={styles.input}
-              value={customHobby}
-              onChangeText={setCustomHobby}
-              placeholder="Escribe tu hobby"
-              placeholderTextColor="#666"
-              onSubmitEditing={addCustomHobby}
-            />
-            <Pressable style={styles.addButton} onPress={addCustomHobby}>
-              <AppText style={styles.addButtonText}>Añadir</AppText>
-            </Pressable>
-          </View>
-        )}
-
-        {selectedHobbies.length > 0 && (
-          <View style={styles.selectedContainer}>
-            <AppText style={styles.selectedLabel}>Seleccionados:</AppText>
-            <View style={styles.selectedList}>
-              {selectedHobbies.map((hobby, index) => (
-                <View key={index} style={styles.selectedChip}>
-                  <AppText style={styles.selectedText}>{hobby}</AppText>
+              {showCustomInput && (
+                <View style={styles.customInputContainer}>
+                  <TextInput
+                    style={styles.input}
+                    value={customHobby}
+                    onChangeText={setCustomHobby}
+                    placeholder="Escribe tu hobby"
+                    placeholderTextColor="#666"
+                    onSubmitEditing={addCustomHobby}
+                  />
+                  <Pressable style={styles.addButton} onPress={addCustomHobby}>
+                    <AppText style={styles.addButtonText}>Añadir</AppText>
+                  </Pressable>
                 </View>
-              ))}
-            </View>
-          </View>
-        )}
+              )}
 
-        <AppButton
-          title="Save and Continue"
-          onPress={handleContinue}
-          style={styles.button}
-        />
-      </ScrollView>
+              {selectedHobbies.length > 0 && (
+                <View style={styles.selectedContainer}>
+                  <AppText style={styles.selectedLabel}>Seleccionados:</AppText>
+                  <View style={styles.selectedList}>
+                    {selectedHobbies.map((hobby, index) => (
+                      <View key={index} style={styles.selectedChip}>
+                        <AppText style={styles.selectedText}>{hobby}</AppText>
+                      </View>
+                    ))}
+                  </View>
+                </View>
+              )}
+
+              <AppButton
+                title="Save and Continue"
+                onPress={handleContinue}
+                style={styles.button}
+              />
+
+              <Pressable
+                onPress={handleSkip}
+                onPressIn={() => setSkipPressed(true)}
+                onPressOut={() => setSkipPressed(false)}
+              >
+                <AppText style={[styles.skipText, skipPressed && styles.skipTextPressed]}>
+                  Saltar
+                </AppText>
+              </Pressable>
+            </View>
+          </TouchableWithoutFeedback>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </AppContainer>
   );
 }
 
 const styles = StyleSheet.create({
-  scrollView: {
+  keyboardView: {
     flex: 1,
   },
+  scrollContent: {
+    flexGrow: 1,
+    justifyContent: 'center',
+  },
+  content: {
+    paddingBottom: 40,
+  },
   title: {
-    marginTop: 20,
-    marginBottom: 30,
+    marginBottom: 40,
     textAlign: 'center',
   },
   hobbiesGrid: {
@@ -219,6 +270,14 @@ const styles = StyleSheet.create({
   },
   button: {
     marginTop: 8,
-    marginBottom: 40,
+    marginBottom: 16,
+  },
+  skipText: {
+    textAlign: 'center',
+    fontSize: 16,
+    color: '#888',
+  },
+  skipTextPressed: {
+    textDecorationLine: 'underline',
   },
 });

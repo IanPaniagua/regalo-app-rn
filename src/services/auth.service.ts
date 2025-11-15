@@ -114,7 +114,7 @@ export class AuthService {
     name: string;
     birthdate: Date;
     hobbies: string[];
-    avatar?: string;
+    avatar: string;
   }): Promise<{ authUser: FirebaseUser; dbUserId: string }> {
     try {
       // 1. Crear usuario en Firebase Auth
@@ -126,7 +126,7 @@ export class AuthService {
         email: data.email,
         birthdate: data.birthdate,
         hobbies: data.hobbies,
-        avatar: data.avatar || '🎉',
+        avatar: data.avatar,
       });
 
       console.log('✅ Complete user profile created:', {

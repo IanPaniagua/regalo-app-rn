@@ -9,7 +9,8 @@ import {
   KeyboardAvoidingView,
   ScrollView,
   TouchableWithoutFeedback,
-  Keyboard
+  Keyboard,
+  Alert
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import DateTimePicker from '@react-native-community/datetimepicker';
@@ -26,7 +27,6 @@ export default function CreateProfileStep1() {
   const [name, setName] = useState(tempUser?.name || '');
   const [birthdate, setBirthdate] = useState(tempUser?.birthdate || new Date(2000, 0, 1)); // Fecha por defecto más razonable
   const [showDatePicker, setShowDatePicker] = useState(false);
-  const [skipPressed, setSkipPressed] = useState(false);
 
   const handleContinue = () => {
     if (!name.trim()) {
@@ -41,11 +41,6 @@ export default function CreateProfileStep1() {
       hobbies: [], // Se añadirán en el siguiente paso
     });
 
-    router.push('/create-profile/hobbies');
-  };
-
-  const handleSkip = () => {
-    // @ts-ignore
     router.push('/create-profile/hobbies');
   };
 
@@ -103,16 +98,6 @@ export default function CreateProfileStep1() {
                 onPress={handleContinue}
                 style={styles.button}
               />
-
-              <Pressable
-                onPress={handleSkip}
-                onPressIn={() => setSkipPressed(true)}
-                onPressOut={() => setSkipPressed(false)}
-              >
-                <AppText style={[styles.skipText, skipPressed && styles.skipTextPressed]}>
-                  Saltar
-                </AppText>
-              </Pressable>
             </View>
           </TouchableWithoutFeedback>
 
@@ -219,14 +204,6 @@ const styles = StyleSheet.create({
   button: {
     marginTop: 16,
     marginBottom: 16,
-  },
-  skipText: {
-    textAlign: 'center',
-    fontSize: 16,
-    color: colors.white,
-  },
-  skipTextPressed: {
-    textDecorationLine: 'underline',
   },
   // Estilos para el Modal del DatePicker (iOS)
   modalOverlay: {
