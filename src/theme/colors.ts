@@ -1,5 +1,5 @@
 export const colors = {
-  primary: '#D4AF37',
+  primary: '#C7B540', // dorado más brillante y moderno
   secondary: '#1C1C1C',
   tertiary: '#D9534F',
   white: '#FFFFFF',
