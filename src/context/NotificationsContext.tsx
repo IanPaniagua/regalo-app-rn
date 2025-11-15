@@ -12,6 +12,8 @@ Notifications.setNotificationHandler({
     shouldShowAlert: true,
     shouldPlaySound: true,
     shouldSetBadge: true,
+    shouldShowBanner: true,
+    shouldShowList: true,
   }),
 });
 
@@ -30,14 +32,15 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
   const [notification, setNotification] = useState<Notifications.Notification | null>(null);
   const [isPermissionGranted, setIsPermissionGranted] = useState(false);
   
-  const notificationListener = useRef<Notifications.Subscription>();
-  const responseListener = useRef<Notifications.Subscription>();
+  const notificationListener = useRef<Notifications.Subscription | undefined>();
+  const responseListener = useRef<Notifications.Subscription | undefined>();
 
   // Registrar token cuando el usuario inicia sesión
   useEffect(() => {
     if (user && !expoPushToken) {
       registerForPushNotificationsAsync();
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
   // Guardar token en Firestore cuando se obtiene
@@ -62,12 +65,8 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
     });
 
     return () => {
-      if (notificationListener.current) {
-        Notifications.removeNotificationSubscription(notificationListener.current);
-      }
-      if (responseListener.current) {
-        Notifications.removeNotificationSubscription(responseListener.current);
-      }
+      notificationListener.current?.remove();
+      responseListener.current?.remove();
     };
   }, []);
 
@@ -101,8 +100,14 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
       setIsPermissionGranted(true);
       
       // Obtener token de Expo
+      const projectId = Constants.expoConfig?.extra?.eas?.projectId;
+      if (!projectId) {
+        console.error('❌ No project ID found in app.json');
+        return;
+      }
+      
       token = (await Notifications.getExpoPushTokenAsync({
-        projectId: Constants.expoConfig?.extra?.eas?.projectId ?? 'your-project-id',
+        projectId,
       })).data;
       
       console.log('✅ Expo Push Token:', token);
@@ -128,14 +133,19 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
   }
 
   async function saveFCMTokenToFirestore(token: string) {
-    if (!user?.id) return;
+    console.log('💾 Attempting to save FCM token...', { token, userId: user?.id });
+    
+    if (!user?.id) {
+      console.log('⚠️  No user ID, skipping token save');
+      return;
+    }
 
     try {
       await db.getAdapter().updateUser(user.id, {
         fcmToken: token,
         fcmTokenUpdatedAt: new Date(),
       });
-      console.log('✅ FCM token saved to Firestore');
+      console.log('✅ FCM token saved to Firestore successfully');
     } catch (error) {
       console.error('❌ Error saving FCM token:', error);
     }

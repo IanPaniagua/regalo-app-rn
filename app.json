@@ -38,8 +38,22 @@
             "backgroundColor": "#000000"
           }
         }
+      ],
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/images/notification-icon.png",
+          "color": "#D4AF37",
+          "sounds": []
+        }
       ]
     ],
+    "notification": {
+      "icon": "./assets/images/notification-icon.png",
+      "color": "#D4AF37",
+      "androidMode": "default",
+      "androidCollapsedTitle": "Regalo App"
+    },
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
