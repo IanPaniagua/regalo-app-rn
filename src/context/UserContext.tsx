@@ -1,4 +1,5 @@
-import { createContext, useContext, useState, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Datos completos del usuario (con email confirmado)
 interface UserData {
@@ -32,17 +33,72 @@ interface UserContextType {
   tempUser: Partial<UserData>;
   setTempUser: (user: Partial<UserData>) => void;
   clearTempUser: () => void;
+  isLoading: boolean;
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
 
+const USER_STORAGE_KEY = '@regalo_app_user';
+
 export function UserProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<UserData | null>(null);
   const [tempUser, setTempUser] = useState<Partial<UserData>>({});
+  const [isLoading, setIsLoading] = useState(true);
 
-  const clearUser = () => {
-    setUser(null);
-    console.log(' User context cleared');
+  // Cargar usuario guardado al iniciar la app
+  useEffect(() => {
+    loadUser();
+  }, []);
+
+  // Guardar usuario cuando cambie
+  useEffect(() => {
+    if (user) {
+      saveUser(user);
+    }
+  }, [user]);
+
+  const loadUser = async () => {
+    try {
+      const storedUser = await AsyncStorage.getItem(USER_STORAGE_KEY);
+      if (storedUser) {
+        const parsedUser = JSON.parse(storedUser);
+        // Convertir fechas de string a Date
+        if (parsedUser.birthdate) {
+          parsedUser.birthdate = new Date(parsedUser.birthdate);
+        }
+        if (parsedUser.hideAgeLastChangeDate) {
+          parsedUser.hideAgeLastChangeDate = new Date(parsedUser.hideAgeLastChangeDate);
+        }
+        if (parsedUser.nameLastChangeDate) {
+          parsedUser.nameLastChangeDate = new Date(parsedUser.nameLastChangeDate);
+        }
+        setUser(parsedUser);
+        console.log('✅ User loaded from storage:', parsedUser.email);
+      }
+    } catch (error) {
+      console.error('❌ Error loading user from storage:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const saveUser = async (userData: UserData) => {
+    try {
+      await AsyncStorage.setItem(USER_STORAGE_KEY, JSON.stringify(userData));
+      console.log('✅ User saved to storage:', userData.email);
+    } catch (error) {
+      console.error('❌ Error saving user to storage:', error);
+    }
+  };
+
+  const clearUser = async () => {
+    try {
+      await AsyncStorage.removeItem(USER_STORAGE_KEY);
+      setUser(null);
+      console.log('✅ User cleared from storage');
+    } catch (error) {
+      console.error('❌ Error clearing user from storage:', error);
+    }
   };
 
   const clearTempUser = () => {
@@ -50,7 +106,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <UserContext.Provider value={{ user, tempUser, setUser, setTempUser, clearUser, clearTempUser }}>
+    <UserContext.Provider value={{ user, tempUser, setUser, setTempUser, clearUser, clearTempUser, isLoading }}>
       {children}
     </UserContext.Provider>
   );

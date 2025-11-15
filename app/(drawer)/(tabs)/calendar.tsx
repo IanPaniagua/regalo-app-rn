@@ -27,6 +27,7 @@ export default function CalendarTabScreen() {
   const [showBirthdaysModal, setShowBirthdaysModal] = useState(false);
   const [selectedDayBirthdays, setSelectedDayBirthdays] = useState<BirthdayUser[]>([]);
   const [selectedUser, setSelectedUser] = useState<BirthdayUser | null>(null);
+  const [showMonthListModal, setShowMonthListModal] = useState(false);
 
   const getDaysInMonth = (date: Date) => {
     const year = date.getFullYear();
@@ -67,7 +68,19 @@ export default function CalendarTabScreen() {
 
   const closeModals = () => {
     setShowBirthdaysModal(false);
+    setShowMonthListModal(false);
     setSelectedUser(null);
+  };
+
+  // Obtener cumpleaños del mes actual
+  const getMonthBirthdays = () => {
+    return users.filter(user => {
+      return user.birthdate.getMonth() === currentDate.getMonth();
+    }).sort((a, b) => a.birthdate.getDate() - b.birthdate.getDate());
+  };
+
+  const handleShowMonthList = () => {
+    setShowMonthListModal(true);
   };
 
   const renderCalendarDays = () => {
@@ -177,29 +190,28 @@ export default function CalendarTabScreen() {
           {renderCalendarDays()}
         </View>
 
-        {/* Leyenda */}
-        <View style={styles.legendContainer}>
-          <AppText style={styles.legendTitle}>Leyenda:</AppText>
-          <View style={styles.legendItem}>
-            <View style={styles.legendIcon}>
-              <AppText style={styles.iconEmoji}>👤</AppText>
-            </View>
-            <AppText style={styles.legendText}>Un cumpleaños</AppText>
+        {/* Resumen del mes */}
+        <View style={styles.monthSummaryContainer}>
+          <View style={styles.summaryHeader}>
+            <Ionicons name="gift" size={24} color={colors.primary} />
+            <AppText style={styles.summaryTitle}>
+              Cumpleaños en {MONTHS[currentDate.getMonth()]}
+            </AppText>
           </View>
-          <View style={styles.legendItem}>
-            <View style={styles.legendIcon}>
-              <View style={styles.avatarWithCounter}>
-                <AppText style={styles.iconEmoji}>👤</AppText>
-                <View style={styles.counterBadgeSmall}>
-                  <AppText style={styles.counterTextSmall}>+1</AppText>
-                </View>
-              </View>
+          
+          <View style={styles.summaryContent}>
+            <View style={styles.totalCount}>
+              <AppText style={styles.totalNumber}>{getMonthBirthdays().length}</AppText>
+              <AppText style={styles.totalLabel}>
+                {getMonthBirthdays().length === 1 ? 'cumpleaño' : 'cumpleaños'}
+              </AppText>
             </View>
-            <AppText style={styles.legendText}>Múltiples cumpleaños</AppText>
+            
+            <Pressable style={styles.viewListButton} onPress={handleShowMonthList}>
+              <Ionicons name="list" size={18} color={colors.primary} />
+              <AppText style={styles.viewListText}>Ver lista</AppText>
+            </Pressable>
           </View>
-          <AppText style={styles.legendHint}>
-            Toca un día con iconos para ver los cumpleaños
-          </AppText>
         </View>
       </ScrollView>
 
@@ -240,6 +252,57 @@ export default function CalendarTabScreen() {
                   <Ionicons name="chevron-forward" size={20} color={colors.primary} />
                 </Pressable>
               ))}
+            </ScrollView>
+          </Pressable>
+        </Pressable>
+      </Modal>
+
+      {/* Modal: Lista de cumpleaños del mes */}
+      <Modal
+        visible={showMonthListModal && !selectedUser}
+        transparent
+        animationType="slide"
+        onRequestClose={closeModals}
+      >
+        <Pressable style={styles.modalOverlay} onPress={closeModals}>
+          <Pressable style={styles.modalContent} onPress={(e) => e.stopPropagation()}>
+            <View style={styles.modalHeader}>
+              <AppText style={styles.modalTitle}>
+                {MONTHS[currentDate.getMonth()]} - {getMonthBirthdays().length} {getMonthBirthdays().length === 1 ? 'cumpleaño' : 'cumpleaños'}
+              </AppText>
+              <Pressable onPress={closeModals}>
+                <Ionicons name="close" size={24} color={colors.white} />
+              </Pressable>
+            </View>
+
+            <ScrollView style={styles.birthdaysList}>
+              {getMonthBirthdays().length === 0 ? (
+                <View style={styles.emptyState}>
+                  <Ionicons name="calendar-outline" size={48} color="#666" />
+                  <AppText style={styles.emptyText}>
+                    No hay cumpleaños este mes
+                  </AppText>
+                </View>
+              ) : (
+                getMonthBirthdays().map((user) => (
+                  <Pressable
+                    key={user.id}
+                    style={styles.birthdayItem}
+                    onPress={() => handleUserSelect(user)}
+                  >
+                    <View style={styles.userAvatar}>
+                      <AppText style={styles.userAvatarText}>{user.avatar}</AppText>
+                    </View>
+                    <View style={styles.userInfo}>
+                      <AppText style={styles.userName}>{user.name}</AppText>
+                      <AppText style={styles.userAge}>
+                        {user.birthdate.getDate()} de {MONTHS[user.birthdate.getMonth()].toLowerCase()}
+                      </AppText>
+                    </View>
+                    <Ionicons name="chevron-forward" size={20} color={colors.primary} />
+                  </Pressable>
+                ))
+              )}
             </ScrollView>
           </Pressable>
         </Pressable>
@@ -458,42 +521,66 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: colors.white,
   },
-  legendContainer: {
+  monthSummaryContainer: {
     marginTop: 16,
-    padding: 16,
+    padding: 20,
     backgroundColor: '#2A2A2A',
     borderRadius: 16,
     marginBottom: 16,
   },
-  legendTitle: {
-    fontSize: 17,
-    fontWeight: '700',
-    color: colors.primary,
-    marginBottom: 14,
-  },
-  legendItem: {
+  summaryHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 10,
+    marginBottom: 16,
+    gap: 12,
   },
-  legendIcon: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: 'rgba(212, 175, 55, 0.3)',
-    justifyContent: 'center',
+  summaryTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: colors.white,
+  },
+  summaryContent: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    marginRight: 12,
   },
-  legendText: {
-    fontSize: 15,
-    color: '#CCC',
+  totalCount: {
+    alignItems: 'center',
   },
-  legendHint: {
-    fontSize: 13,
+  totalNumber: {
+    fontSize: 36,
+    fontWeight: '700',
+    color: colors.primary,
+  },
+  totalLabel: {
+    fontSize: 14,
     color: '#999',
-    marginTop: 8,
-    fontStyle: 'italic',
+    marginTop: 4,
+  },
+  viewListButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderWidth: 1,
+    borderColor: colors.primary,
+    borderRadius: 8,
+  },
+  viewListText: {
+    color: colors.primary,
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  emptyState: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 40,
+  },
+  emptyText: {
+    fontSize: 16,
+    color: '#999',
+    marginTop: 12,
   },
   // Estilos para modales
   modalOverlay: {

@@ -13,12 +13,20 @@ import {
   where,
   Timestamp,
 } from 'firebase/firestore';
+import {
+  getAuth,
+  Auth,
+  signInAnonymously,
+  onAuthStateChanged,
+  indexedDBLocalPersistence,
+} from 'firebase/auth';
 import { DatabaseAdapter, User, BirthdayEvent, Connection, ConnectionInvitation } from '../types';
 import { firebaseConfig } from '../config';
 
 export class FirebaseAdapter implements DatabaseAdapter {
   private app: FirebaseApp | null = null;
   private db: Firestore | null = null;
+  private auth: Auth | null = null;
   private initialized = false;
 
   async initialize(): Promise<void> {
@@ -35,6 +43,18 @@ export class FirebaseAdapter implements DatabaseAdapter {
         this.app = getApp();
       }
 
+      // Inicializar Auth (opcional)
+      this.auth = getAuth(this.app);
+      console.log('✅ Firebase Auth initialized');
+
+      // Intentar autenticar anónimamente (no crítico)
+      try {
+        await this.ensureAuthenticated();
+      } catch (authError: any) {
+        console.warn('⚠️ Auth failed, continuing without authentication:', authError.code);
+        console.warn('   To enable: Firebase Console → Authentication → Sign-in method → Anonymous → Enable');
+      }
+
       this.db = getFirestore(this.app);
       this.initialized = true;
       console.log('✅ Firebase Firestore initialized successfully');
@@ -42,6 +62,30 @@ export class FirebaseAdapter implements DatabaseAdapter {
       console.error('❌ Error initializing Firebase:', error);
       throw error;
     }
+  }
+
+  private async ensureAuthenticated(): Promise<void> {
+    if (!this.auth) throw new Error('Auth not initialized');
+
+    return new Promise((resolve, reject) => {
+      const unsubscribe = onAuthStateChanged(this.auth!, async (user) => {
+        unsubscribe();
+        
+        if (user) {
+          console.log('✅ User already authenticated:', user.uid);
+          resolve();
+        } else {
+          try {
+            console.log('🔐 Signing in anonymously...');
+            const result = await signInAnonymously(this.auth!);
+            console.log('✅ Anonymous sign-in successful:', result.user.uid);
+            resolve();
+          } catch (error) {
+            reject(error);
+          }
+        }
+      });
+    });
   }
 
   async disconnect(): Promise<void> {

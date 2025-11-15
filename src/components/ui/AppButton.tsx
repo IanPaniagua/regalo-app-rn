@@ -21,6 +21,7 @@ export function AppButton({ title, variant = 'primary', style, ...rest }: AppBut
       <AppText style={[
         styles.buttonText,
         variant === 'primary' && styles.buttonTextPrimary,
+        variant === 'secondary' && styles.buttonTextSecondary,
       ]}>
         {title}
       </AppText>
@@ -38,7 +39,7 @@ const styles = StyleSheet.create({
   },
   buttonSecondary: {
     backgroundColor: 'transparent',
-    borderWidth: 2,
+    borderWidth: 1,
     borderColor: colors.primary,
   },
   buttonText: {
@@ -47,5 +48,8 @@ const styles = StyleSheet.create({
   },
   buttonTextPrimary: {
     color: colors.secondary,
+  },
+  buttonTextSecondary: {
+    color: colors.primary,
   },
 });
