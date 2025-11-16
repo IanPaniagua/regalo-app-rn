@@ -1,6 +1,5 @@
 import { ReactNode } from 'react';
-import { StyleSheet, View, ViewProps } from 'react-native';
-import { Image } from 'expo-image';
+import { StyleSheet, View, ViewProps, ImageBackground } from 'react-native';
 import { colors } from '@/src/theme';
 import BgDark from '../../../assets/images/bg-dark.png';
 
@@ -20,7 +19,7 @@ export function AppContainer({ children, style, ...rest }: AppContainerProps) {
           {children}
         </View>
       </View>
-    </View>
+    </ImageBackground>
   );
 }
 
