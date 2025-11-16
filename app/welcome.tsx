@@ -3,13 +3,14 @@ import { useRouter } from 'expo-router';
 import { Image } from 'expo-image';
 import { AppTitle } from '@/src/components/ui/AppTitle';
 import { AppText } from '@/src/components/ui/AppText';
+import { AppContainer } from '@/src/components/ui/AppContainer';
 import { colors } from '@/src/theme';
 
 export default function WelcomeScreen() {
   const router = useRouter();
 
   return (
-    <View style={styles.container}>
+    <AppContainer style={styles.container}>
       <AppTitle style={styles.title}>Bienvenido</AppTitle>
       
       <Image
@@ -39,17 +40,15 @@ export default function WelcomeScreen() {
           <AppText style={styles.buttonText}>Iniciar Sesión</AppText>
         </Pressable>
       </View>
-    </View>
+    </AppContainer>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.secondary,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 24,
   },
   title: {
     marginBottom: 40,
