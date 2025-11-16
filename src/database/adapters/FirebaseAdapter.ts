@@ -16,11 +16,9 @@ import {
 import {
   getAuth,
   Auth,
-  signInAnonymously,
-  createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
   onAuthStateChanged,
-  indexedDBLocalPersistence,
   User as FirebaseUser,
 } from 'firebase/auth';
 import { DatabaseAdapter, User, BirthdayEvent, Connection, ConnectionInvitation } from '../types';
@@ -29,7 +27,7 @@ import { firebaseConfig } from '../config';
 export class FirebaseAdapter implements DatabaseAdapter {
   private app: FirebaseApp | null = null;
   private db: Firestore | null = null;
-  private auth: Auth | null = null;
+  // Auth se maneja en authService, no aquí
   private initialized = false;
 
   async initialize(): Promise<void> {
@@ -46,9 +44,10 @@ export class FirebaseAdapter implements DatabaseAdapter {
         this.app = getApp();
       }
 
-      // Inicializar Auth (se usa desde authService, no aquí)
-      this.auth = getAuth(this.app);
-      console.log('✅ Firebase Auth initialized (managed by authService)');
+      // Auth se inicializa en authService con persistencia de AsyncStorage
+      // NO llamar a getAuth() aquí para evitar inicialización sin persistencia
+      // authService se encargará de inicializar Auth correctamente
+      console.log('ℹ️ Auth will be initialized by authService with AsyncStorage persistence');
 
       this.db = getFirestore(this.app);
       this.initialized = true;
@@ -60,10 +59,9 @@ export class FirebaseAdapter implements DatabaseAdapter {
   }
 
   private async ensureAuthenticated(): Promise<void> {
-    if (!this.auth) throw new Error('Auth not initialized');
-
+    const auth = getAuth(this.app!);
     return new Promise((resolve, reject) => {
-      const unsubscribe = onAuthStateChanged(this.auth!, async (user) => {
+      const unsubscribe = onAuthStateChanged(auth, async (user) => {
         unsubscribe();
         
         if (user) {
@@ -71,7 +69,6 @@ export class FirebaseAdapter implements DatabaseAdapter {
           resolve();
         } else {
           console.log('⚠️ No authenticated user, waiting for login...');
-          // No autenticar automáticamente, esperar a que el usuario cree cuenta
           resolve();
         }
       });
@@ -80,10 +77,9 @@ export class FirebaseAdapter implements DatabaseAdapter {
 
   // Método para autenticar con email/contraseña
   async signInWithEmail(email: string, password: string): Promise<FirebaseUser> {
-    if (!this.auth) throw new Error('Auth not initialized');
-    
+    const auth = getAuth(this.app!);
     try {
-      const result = await signInWithEmailAndPassword(this.auth, email, password);
+      const result = await signInWithEmailAndPassword(auth, email, password);
       console.log('✅ Sign-in successful:', result.user.uid);
       return result.user;
     } catch (error: any) {
@@ -94,10 +90,9 @@ export class FirebaseAdapter implements DatabaseAdapter {
 
   // Método para crear cuenta con email/contraseña
   async createAccountWithEmail(email: string, password: string): Promise<FirebaseUser> {
-    if (!this.auth) throw new Error('Auth not initialized');
-    
+    const auth = getAuth(this.app!);
     try {
-      const result = await createUserWithEmailAndPassword(this.auth, email, password);
+      const result = await createUserWithEmailAndPassword(auth, email, password);
       console.log('✅ Account created:', result.user.uid);
       return result.user;
     } catch (error: any) {

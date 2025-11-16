@@ -10,29 +10,24 @@ import {
 import { db } from '@/src/database';
 import { getFirebaseApp } from './firebase';
 
+export type { FirebaseUser };
+
 /**
- * Servicio de autenticación con Firebase Auth
- * 
- * NOTA: Para persistencia en React Native, instala @react-native-async-storage/async-storage
- * y configura initializeAuth con getReactNativePersistence
+ * Servicio de autenticación con Firebase Auth (Web SDK)
  */
+
 export class AuthService {
   private auth: Auth | null = null;
 
   constructor() {
-    // No inicializar Auth en el constructor para evitar errores
-    // Se inicializará cuando se use por primera vez
+    // Auth se inicializa lazy
   }
 
-  /**
-   * Obtener instancia de Auth (lazy initialization)
-   */
   private getAuthInstance(): Auth {
     if (!this.auth) {
-      // Asegurar que Firebase App esté inicializado
       const app = getFirebaseApp();
       this.auth = getAuth(app);
-      console.log('✅ Firebase Auth initialized (memory persistence)');
+      console.log('✅ Firebase Auth initialized');
     }
     return this.auth;
   }
@@ -43,11 +38,9 @@ export class AuthService {
   async signUp(email: string, password: string, displayName: string): Promise<FirebaseUser> {
     try {
       const auth = this.getAuthInstance();
-      // Crear usuario en Firebase Auth
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
-      // Actualizar nombre de usuario
       await updateProfile(user, {
         displayName: displayName,
       });
