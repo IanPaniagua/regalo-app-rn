@@ -157,7 +157,7 @@ export default function CalendarTabScreen() {
   };
 
   return (
-    <AppContainer style={styles.container}>
+    <AppContainer>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
         <AppTitle style={styles.title}>Calendario</AppTitle>
         
@@ -390,13 +390,12 @@ export default function CalendarTabScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingTop: 8,
   },
   scrollContent: {
     padding: 10,
   },
   title: {
-    marginTop: 10,
+    marginTop: 0,
     marginBottom: 16,
     textAlign: 'center',
   },
