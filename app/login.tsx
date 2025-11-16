@@ -12,7 +12,7 @@ import { db } from '@/src/database';
 
 export default function LoginScreen() {
   const router = useRouter();
-  const { setUser } = useUser();
+  const { setUser, saveCredentials } = useUser();
   const { refreshUsers } = useBirthdays();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -42,6 +42,9 @@ export default function LoginScreen() {
         Alert.alert('Error', 'No se encontró el perfil del usuario');
         return;
       }
+
+      // Guardar credenciales para auto-login
+      await saveCredentials(email, password);
 
       // Guardar en contexto
       setUser({
