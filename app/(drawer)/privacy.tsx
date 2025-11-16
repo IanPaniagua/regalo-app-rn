@@ -11,7 +11,7 @@ export default function PrivacyScreen() {
 
         <Pressable onPress={() => Linking.openURL('https://regaloapp.com/privacy-policy-app')}>
           <AppText style={styles.link}>
-            Full Privacy Policy (web): https://regaloapp.com/privacy-policy-app
+            Full Privacy Policy (web): https://app-regalo.vercel.app/privacy-policy-app
           </AppText>
         </Pressable>
 

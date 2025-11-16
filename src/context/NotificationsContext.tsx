@@ -4,6 +4,7 @@ import * as Device from 'expo-device';
 import { Platform } from 'react-native';
 import messaging from '@react-native-firebase/messaging';
 import Constants from 'expo-constants';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { db } from '@/src/database';
 import { useUser } from './UserContext';
 
@@ -23,6 +24,8 @@ interface NotificationsContextType {
   notification: Notifications.Notification | null;
   requestPermissions: () => Promise<boolean>;
   isPermissionGranted: boolean;
+  notificationsEnabled: boolean;
+  setNotificationsEnabled: (enabled: boolean) => Promise<void>;
 }
 
 const NotificationsContext = createContext<NotificationsContextType | undefined>(undefined);
@@ -32,24 +35,41 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
   const [fcmToken, setFcmToken] = useState<string | null>(null);
   const [notification, setNotification] = useState<Notifications.Notification | null>(null);
   const [isPermissionGranted, setIsPermissionGranted] = useState(false);
+  const [notificationsEnabled, setNotificationsEnabledState] = useState(true);
   
   const notificationListener = useRef<Notifications.Subscription | undefined>();
   const responseListener = useRef<Notifications.Subscription | undefined>();
 
+  const NOTIFICATIONS_ENABLED_KEY = '@regalo_app_notifications_enabled';
+
+  // Cargar preferencia de notificaciones desde AsyncStorage
+  useEffect(() => {
+    (async () => {
+      try {
+        const stored = await AsyncStorage.getItem(NOTIFICATIONS_ENABLED_KEY);
+        if (stored !== null) {
+          setNotificationsEnabledState(stored === 'true');
+        }
+      } catch (error) {
+        console.error('❌ Error loading notifications preference:', error);
+      }
+    })();
+  }, []);
+
   // Registrar token cuando el usuario inicia sesión
   useEffect(() => {
-    if (user && !fcmToken) {
+    if (user && notificationsEnabled && !fcmToken) {
       registerForPushNotificationsAsync();
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user]);
+  }, [user, notificationsEnabled]);
 
   // Guardar token en Firestore cuando se obtiene
   useEffect(() => {
-    if (fcmToken && user) {
+    if (fcmToken && user && notificationsEnabled) {
       saveFCMTokenToFirestore(fcmToken);
     }
-  }, [fcmToken, user]);
+  }, [fcmToken, user, notificationsEnabled]);
 
   // Listeners de notificaciones
   useEffect(() => {
@@ -164,6 +184,35 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
     return granted;
   }
 
+  async function setNotificationsEnabled(enabled: boolean): Promise<void> {
+    try {
+      setNotificationsEnabledState(enabled);
+      await AsyncStorage.setItem(NOTIFICATIONS_ENABLED_KEY, enabled ? 'true' : 'false');
+
+      if (!enabled) {
+        // Desactivar a nivel de app: limpiar token local y en Firestore
+        if (user?.id && fcmToken) {
+          try {
+            await db.getAdapter().updateUser(user.id, {
+              fcmToken: null,
+            });
+            console.log('ℹ️ Notifications disabled, FCM token cleared from Firestore');
+          } catch (error) {
+            console.error('❌ Error clearing FCM token when disabling notifications:', error);
+          }
+        }
+        setFcmToken(null);
+      } else {
+        // Si se vuelven a habilitar y ya hay permisos, registrar de nuevo
+        if (user && isPermissionGranted && !fcmToken) {
+          await registerForPushNotificationsAsync();
+        }
+      }
+    } catch (error) {
+      console.error('❌ Error updating notificationsEnabled:', error);
+    }
+  }
+
   async function saveFCMTokenToFirestore(token: string) {
     console.log('💾 Attempting to save FCM token...', { token: token.substring(0, 20) + '...', userId: user?.id });
     
@@ -219,6 +268,8 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
         notification,
         requestPermissions,
         isPermissionGranted,
+        notificationsEnabled,
+        setNotificationsEnabled,
       }}
     >
       {children}
