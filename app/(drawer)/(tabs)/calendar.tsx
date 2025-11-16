@@ -157,7 +157,7 @@ export default function CalendarTabScreen() {
   };
 
   return (
-    <View style={styles.container}>
+    <AppContainer style={styles.container}>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
         <AppTitle style={styles.title}>Calendario</AppTitle>
         
@@ -203,7 +203,7 @@ export default function CalendarTabScreen() {
             <View style={styles.totalCount}>
               <AppText style={styles.totalNumber}>{getMonthBirthdays().length}</AppText>
               <AppText style={styles.totalLabel}>
-                {getMonthBirthdays().length === 1 ? 'cumpleaño' : 'cumpleaños'}
+                {'Cumpleaños'}
               </AppText>
             </View>
             
@@ -268,7 +268,7 @@ export default function CalendarTabScreen() {
           <Pressable style={styles.modalContent} onPress={(e) => e.stopPropagation()}>
             <View style={styles.modalHeader}>
               <AppText style={styles.modalTitle}>
-                {MONTHS[currentDate.getMonth()]} - {getMonthBirthdays().length} {getMonthBirthdays().length === 1 ? 'cumpleaño' : 'cumpleaños'}
+                {MONTHS[currentDate.getMonth()]} - {getMonthBirthdays().length} cumpleaños
               </AppText>
               <Pressable onPress={closeModals}>
                 <Ionicons name="close" size={24} color={colors.white} />
@@ -383,14 +383,14 @@ export default function CalendarTabScreen() {
           </Pressable>
         </Pressable>
       </Modal>
-    </View>
+    </AppContainer>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.secondary,
+    paddingTop: 8,
   },
   scrollContent: {
     padding: 10,
@@ -431,7 +431,7 @@ const styles = StyleSheet.create({
   calendarGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    backgroundColor: '#2A2A2A',
+    backgroundColor: 'rgba(42, 42, 42, 0.7)',
     borderRadius: 16,
     padding: 8,
     gap: 4,
@@ -439,7 +439,7 @@ const styles = StyleSheet.create({
   dayCell: {
     width: DAY_SIZE,
     height: DAY_SIZE,
-    backgroundColor: '#1C1C1C',
+    backgroundColor: 'rgba(28, 28, 28, 0.8)',
     borderRadius: 10,
     padding: 6,
     alignItems: 'center',
@@ -524,7 +524,7 @@ const styles = StyleSheet.create({
   monthSummaryContainer: {
     marginTop: 16,
     padding: 20,
-    backgroundColor: '#2A2A2A',
+    backgroundColor: 'rgba(42, 42, 42, 0.7)',
     borderRadius: 16,
     marginBottom: 16,
   },
@@ -619,7 +619,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     padding: 16,
-    backgroundColor: '#2A2A2A',
+    backgroundColor: 'rgba(42, 42, 42, 0.8)',
     borderRadius: 12,
     marginBottom: 12,
   },
