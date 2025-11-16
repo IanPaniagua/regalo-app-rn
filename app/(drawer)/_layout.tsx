@@ -13,15 +13,15 @@ export default function DrawerLayout() {
     <Drawer
       screenOptions={{
         headerShown: true,
-        drawerActiveTintColor: '#D4AF37',
-        drawerInactiveTintColor: '#FFFFFF',
+        drawerActiveTintColor: colors.primary,
+        drawerInactiveTintColor: colors.white,
         drawerStyle: {
-          backgroundColor: '#1C1C1C',
+          backgroundColor: colors.secondary,
         },
         headerStyle: {
-          backgroundColor: '#1C1C1C',
+          backgroundColor: colors.secondary,
         },
-        headerTintColor: '#FFFFFF',
+        headerTintColor: colors.white,
         headerRight: () => (
           user ? (
             <View style={styles.userContainer}>
@@ -39,7 +39,7 @@ export default function DrawerLayout() {
           headerTitle: () => (
             <Image
               source={require('@/assets/logo.svg')}
-              style={{ width: 32, height: 32, tintColor: '#FFFFFF' }}
+              style={{ width: 32, height: 32, tintColor: colors.white }}
               contentFit="contain"
             />
           ),

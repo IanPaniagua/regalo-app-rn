@@ -2,6 +2,7 @@ import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { View, Text, StyleSheet } from 'react-native';
 import { useConnections } from '@/src/context/ConnectionsContext';
+import { colors } from '@/src/theme';
 
 export default function TabLayout() {
   const { notificationCount } = useConnections();
@@ -9,10 +10,10 @@ export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: '#D4AF37',
-        tabBarInactiveTintColor: '#FFFFFF',
+        tabBarActiveTintColor: colors.primary,
+        tabBarInactiveTintColor: colors.white,
         tabBarStyle: {
-          backgroundColor: '#1C1C1C',
+          backgroundColor: colors.secondary,
         },
         headerShown: false,
       }}>
