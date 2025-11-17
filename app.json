@@ -12,6 +12,7 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.manolodev.regalo-app",
       "googleServicesFile": "./GoogleService-Info.plist",
+      "useFrameworks": "static",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }
