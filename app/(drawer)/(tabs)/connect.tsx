@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { View, StyleSheet, ScrollView, Pressable, Alert, ActivityIndicator, TextInput, KeyboardAvoidingView, Platform, Modal, RefreshControl } from 'react-native';
+import { View, StyleSheet, ScrollView, Pressable, Alert, ActivityIndicator, TextInput, Modal, RefreshControl, Animated, Easing } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { AppContainer } from '@/src/components/ui/AppContainer';
 import { AppTitle } from '@/src/components/ui/AppTitle';
@@ -36,6 +36,7 @@ export default function ConnectTabScreen() {
   const [showUserModal, setShowUserModal] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const hasViewedRef = useRef(false);
+  const invitationProgress = useRef(new Animated.Value(0)).current;
 
   // Marcar conexiones aceptadas como vistas cuando el usuario SALE de la screen
   useFocusEffect(
@@ -92,12 +93,47 @@ export default function ConnectTabScreen() {
 
     try {
       setSendingInvitation(true);
-      await sendInvitationByEmail(email);
+      invitationProgress.setValue(0);
+      const animationPromise = new Promise<void>((resolve) => {
+        Animated.timing(invitationProgress, {
+          toValue: 1,
+          duration: 400,
+          easing: Easing.out(Easing.ease),
+          useNativeDriver: false,
+        }).start(() => resolve());
+      });
+
+      const sendPromise = sendInvitationByEmail(email);
+
+      // Esperar a que terminen tanto el envío como la animación
+      await Promise.all([animationPromise, sendPromise]);
+
       setEmail('');
       Alert.alert('¡Enviado!', 'Invitación enviada correctamente');
+      
+      // Resetear la animación después de mostrar la alerta
+      invitationProgress.setValue(0);
     } catch (error: any) {
       console.error('Error sending invitation:', error);
-      Alert.alert('Error', error.message || 'No se pudo enviar la invitación');
+      
+      // Resetear la animación en caso de error
+      invitationProgress.setValue(0);
+      
+      // Mejorar mensajes de error con títulos apropiados
+      let alertTitle = 'Error';
+      let errorMessage = 'No se pudo enviar la invitación';
+      
+      if (error.message?.includes('Ya existe una invitación pendiente')) {
+        alertTitle = 'Paciencia';
+        errorMessage = 'Ya enviaste una invitación a este usuario. Espera a que la acepte.';
+      } else if (error.message?.includes('Ya estás conectado')) {
+        alertTitle = 'Ya conectado';
+        errorMessage = 'Ya estás conectado con este usuario.';
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      Alert.alert(alertTitle, errorMessage);
     } finally {
       setSendingInvitation(false);
     }
@@ -215,14 +251,37 @@ export default function ConnectTabScreen() {
               autoCapitalize="none"
               autoCorrect={false}
               editable={!sendingInvitation}
+              returnKeyType="send"
+              onSubmitEditing={handleSendInvitation}
+              blurOnSubmit={false}
             />
           </View>
-          <AppButton
-            title={sendingInvitation ? 'Enviando...' : 'Enviar Invitación'}
+          <Pressable
             onPress={handleSendInvitation}
             disabled={sendingInvitation || !email.trim()}
-            style={styles.sendButton}
-          />
+            style={({ pressed }) => [
+              styles.sendButton,
+              pressed && !sendingInvitation && styles.sendButtonPressed,
+              (sendingInvitation || !email.trim()) && styles.sendButtonDisabled,
+            ]}
+          >
+            <View style={styles.sendButtonInner}>
+              <Animated.View
+                style={[
+                  styles.sendButtonProgress,
+                  {
+                    width: invitationProgress.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: ['0%', '100%'],
+                    }),
+                  },
+                ]}
+              />
+              <AppText style={styles.sendButtonText}>
+                {sendingInvitation ? 'Enviando...' : 'Enviar Invitación'}
+              </AppText>
+            </View>
+          </Pressable>
         </View>
 
         {/* Tabs */}
@@ -469,6 +528,34 @@ const styles = StyleSheet.create({
   },
   sendButton: {
     marginTop: 4,
+    borderRadius: 12,
+    overflow: 'hidden',
+  },
+  sendButtonInner: {
+    backgroundColor: colors.primary,
+    paddingVertical: 14,
+    paddingHorizontal: 24,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  sendButtonProgress: {
+    position: 'absolute',
+    left: 0,
+    top: 0,
+    bottom: 0,
+    backgroundColor: colors.gold,
+  },
+  sendButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.secondary,
+  },
+  sendButtonPressed: {
+    opacity: 0.9,
+  },
+  sendButtonDisabled: {
+    opacity: 0.6,
   },
   tabs: {
     flexDirection: 'row',

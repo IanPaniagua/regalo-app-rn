@@ -38,8 +38,8 @@ export default function DrawerLayout() {
           title: '',
           headerTitle: () => (
             <Image
-              source={require('@/assets/logo-regalo.png')}
-              style={{ width: 32, height: 32, tintColor: colors.white }}
+              source={require('@/assets/images/logo-regalo.png')}
+              style={{ width: 32, height: 32 }}
               contentFit="contain"
             />
           ),

@@ -14,7 +14,7 @@ export default function WelcomeScreen() {
       <AppTitle style={styles.title}>Bienvenido</AppTitle>
       
       <Image
-        source={require('@/assets/logo-regalo.png')}
+        source={require('@/assets/images/logo-regalo.png')}
         style={styles.logo}
         contentFit="contain"
       />
@@ -58,7 +58,6 @@ const styles = StyleSheet.create({
     width: 150,
     height: 150,
     marginBottom: 60,
-    tintColor: colors.primary,
   },
   buttonsContainer: {
     width: '100%',
