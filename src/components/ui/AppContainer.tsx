@@ -1,27 +1,36 @@
-import { ReactNode } from 'react';
-import { StyleSheet, View, ViewProps, ImageBackground } from 'react-native';
+import { ReactNode, memo } from 'react';
+import { StyleSheet, View, ViewProps } from 'react-native';
+import { Image } from 'expo-image';
 import { colors } from '@/src/theme';
 import BgDark from '../../../assets/images/bg-dark.png';
 
-export interface AppContainerProps extends ViewProps {
+interface AppContainerProps extends ViewProps {
   children: ReactNode;
 }
 
-export function AppContainer({ children, style, ...rest }: AppContainerProps) {
+export const AppContainer = memo(function AppContainer({ children, style, ...rest }: AppContainerProps) {
   return (
-    <ImageBackground source={BgDark} style={styles.container} resizeMode="cover">
+    <View style={styles.container}>
+      {/* Background image with aggressive caching */}
+      <Image 
+        source={BgDark} 
+        style={StyleSheet.absoluteFillObject}
+        contentFit="cover"
+        cachePolicy="memory-disk"
+        priority="high"
+        transition={0}
+      />
+      
       {/* Capa oscura sobre la imagen, detrás del contenido */}
       <View style={styles.darkOverlay} />
 
-      {/* Contenido por encima, con colores sin teñir */}
-      <View style={styles.overlay}>
-        <View style={[styles.content, style]} {...rest}>
-          {children}
-        </View>
+      {/* Contenido real de la app */}
+      <View style={[styles.content, style]} {...rest}>
+        {children}
       </View>
-    </ImageBackground>
+    </View>
   );
-}
+});
 
 const styles = StyleSheet.create({
   container: {
@@ -31,10 +40,6 @@ const styles = StyleSheet.create({
   darkOverlay: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: 'rgba(0,0,0,0.4)',
-  },
-  // Contenedor del contenido, por encima del fondo oscurecido
-  overlay: {
-    flex: 1,
   },
   content: {
     flex: 1,

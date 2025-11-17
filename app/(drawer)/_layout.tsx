@@ -38,7 +38,7 @@ export default function DrawerLayout() {
           title: '',
           headerTitle: () => (
             <Image
-              source={require('@/assets/logo.svg')}
+              source={require('@/assets/logo-regalo.png')}
               style={{ width: 32, height: 32, tintColor: colors.white }}
               contentFit="contain"
             />

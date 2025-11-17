@@ -14,7 +14,7 @@ export default function WelcomeScreen() {
       <AppTitle style={styles.title}>Bienvenido</AppTitle>
       
       <Image
-        source={require('@/assets/logo.svg')}
+        source={require('@/assets/logo-regalo.png')}
         style={styles.logo}
         contentFit="contain"
       />

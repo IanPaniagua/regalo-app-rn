@@ -59,7 +59,12 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
   // Registrar token cuando el usuario inicia sesión
   useEffect(() => {
     if (user && notificationsEnabled && !fcmToken) {
-      registerForPushNotificationsAsync();
+      // Pequeño delay para asegurar que Firebase esté completamente inicializado
+      const timer = setTimeout(() => {
+        registerForPushNotificationsAsync();
+      }, 500);
+      
+      return () => clearTimeout(timer);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, notificationsEnabled]);
@@ -147,12 +152,18 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
       
       // Obtener token FCM nativo
       try {
-        token = await messaging().getToken();
+        // Verificar que Firebase Messaging esté disponible
+        const messagingInstance = messaging();
+        if (!messagingInstance) {
+          throw new Error('Firebase Messaging not initialized');
+        }
+        
+        token = await messagingInstance.getToken();
         console.log('✅ FCM Token:', token);
         setFcmToken(token);
         
         // Listener para cuando el token se actualiza
-        messaging().onTokenRefresh(async (newToken) => {
+        messagingInstance.onTokenRefresh(async (newToken) => {
           console.log('🔄 FCM Token refreshed:', newToken);
           setFcmToken(newToken);
           if (user) {
@@ -161,8 +172,8 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
         });
       } catch (error) {
         console.error('❌ Error getting FCM token:', error);
-        // Si falla FCM, intentar obtener token de Expo como fallback
-        console.log('⚠️ Falling back to Expo Push Token...');
+        console.log('⚠️ FCM may not be fully initialized yet. Will retry on next app launch.');
+        // No es grave - el token se obtendrá en el próximo inicio de sesión o cuando se refresque
       }
       
     } else {
