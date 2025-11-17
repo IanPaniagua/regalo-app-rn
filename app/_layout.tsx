@@ -11,6 +11,7 @@ import { UserProvider } from '@/src/context/UserContext';
 import { BirthdaysProvider } from '@/src/context/BirthdaysContext';
 import { ConnectionsProvider } from '@/src/context/ConnectionsContext';
 import { NotificationsProvider } from '@/src/context/NotificationsContext';
+import { LanguageProvider } from '@/src/context/LanguageContext';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { db } from '@/src/database';
 import { DATABASE_TYPE } from '@/src/database/database.config';
@@ -78,12 +79,13 @@ export default function RootLayout() {
         </View>
       ) : (
         // Providers solo se montan después de que la DB esté lista
-        <UserProvider>
-          <NotificationsProvider>
-            <ConnectionsProvider>
-              <BirthdaysProvider>
-                <ThemeProvider>
-                  <Stack screenOptions={{ headerShown: false }}>
+        <LanguageProvider>
+          <UserProvider>
+            <NotificationsProvider>
+              <ConnectionsProvider>
+                <BirthdaysProvider>
+                  <ThemeProvider>
+                    <Stack screenOptions={{ headerShown: false }}>
                     <Stack.Screen name="index" />
                     <Stack.Screen name="welcome" />
                     <Stack.Screen name="login" />
@@ -97,6 +99,7 @@ export default function RootLayout() {
             </ConnectionsProvider>
           </NotificationsProvider>
         </UserProvider>
+        </LanguageProvider>
       )}
     </NavigationThemeProvider>
   );

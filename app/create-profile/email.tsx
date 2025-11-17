@@ -17,6 +17,7 @@ import { AppTitle } from '@/src/components/ui/AppTitle';
 import { AppText } from '@/src/components/ui/AppText';
 import { AppButton } from '@/src/components/ui/AppButton';
 import { colors, fonts } from '@/src/theme';
+import { useLanguage } from '@/src/context/LanguageContext';
 import { useUser } from '@/src/context/UserContext';
 import { useBirthdays } from '@/src/context/BirthdaysContext';
 import { authService } from '@/src/services/auth.service';
@@ -25,6 +26,7 @@ export default function CreateProfileStep3() {
   const router = useRouter();
   const { tempUser, setUser, clearTempUser } = useUser();
   const { addUser } = useBirthdays();
+  const { t } = useLanguage();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isCreating, setIsCreating] = useState(false);
@@ -36,27 +38,27 @@ export default function CreateProfileStep3() {
 
   const handleContinue = async () => {
     if (!email.trim()) {
-      Alert.alert('Error', 'Por favor ingresa tu email');
+      Alert.alert(t('create_profile_error_title'), t('create_profile_error_email_required'));
       return;
     }
 
     if (!validateEmail(email)) {
-      Alert.alert('Error', 'Por favor ingresa un email válido');
+      Alert.alert(t('create_profile_error_title'), t('create_profile_error_email_invalid'));
       return;
     }
 
     if (!password.trim()) {
-      Alert.alert('Error', 'Por favor ingresa una contraseña');
+      Alert.alert(t('create_profile_error_title'), t('create_profile_error_password_required'));
       return;
     }
 
     if (password.length < 6) {
-      Alert.alert('Error', 'La contraseña debe tener al menos 6 caracteres');
+      Alert.alert(t('create_profile_error_title'), t('create_profile_error_password_min_length'));
       return;
     }
 
     if (!tempUser || !tempUser.avatar) {
-      Alert.alert('Error', 'No se encontraron datos del perfil. Por favor vuelve a empezar.');
+      Alert.alert(t('create_profile_error_title'), t('create_profile_error_tempuser_missing'));
       router.replace('/create-profile');
       return;
     }
@@ -105,8 +107,8 @@ export default function CreateProfileStep3() {
       });
 
       Alert.alert(
-        'Perfil creado',
-        '¡Tu perfil ha sido creado exitosamente!',
+        t('create_profile_created_title'),
+        t('create_profile_created_message'),
         [
           {
             text: 'OK',
@@ -119,10 +121,7 @@ export default function CreateProfileStep3() {
       );
     } catch (error: any) {
       console.error('❌ Error creating profile:', error);
-      Alert.alert(
-        'Error',
-        error.message || 'Hubo un problema al crear tu perfil. Por favor intenta de nuevo.'
-      );
+      Alert.alert(t('create_profile_error_title'), error.message || t('create_profile_error_generic'));
     } finally {
       setIsCreating(false);
     }
@@ -141,22 +140,22 @@ export default function CreateProfileStep3() {
         >
           <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
             <View style={styles.content}>
-              <AppTitle style={styles.title}>¿Cuál es tu email?</AppTitle>
+              <AppTitle style={styles.title}>{t('create_profile_email_title')}</AppTitle>
 
               <AppText style={styles.subtitle}>
-                Crea tu cuenta para acceder a la app
+                {t('create_profile_email_subtitle')}
               </AppText>
 
               <View style={styles.inputContainer}>
                 <View style={styles.labelRow}>
                   <Ionicons name="mail-outline" size={18} color={colors.primary} />
-                  <AppText style={styles.label}>Email</AppText>
+                  <AppText style={styles.label}>{t('create_profile_email_label')}</AppText>
                 </View>
                 <TextInput
                   style={styles.input}
                   value={email}
                   onChangeText={setEmail}
-                  placeholder="tu@email.com"
+                  placeholder={t('create_profile_email_placeholder')}
                   placeholderTextColor="#666"
                   keyboardType="email-address"
                   autoCapitalize="none"
@@ -169,13 +168,13 @@ export default function CreateProfileStep3() {
               <View style={styles.inputContainer}>
                 <View style={styles.labelRow}>
                   <Ionicons name="lock-closed-outline" size={18} color={colors.primary} />
-                  <AppText style={styles.label}>Contraseña</AppText>
+                  <AppText style={styles.label}>{t('create_profile_password_label')}</AppText>
                 </View>
                 <TextInput
                   style={styles.input}
                   value={password}
                   onChangeText={setPassword}
-                  placeholder="Mínimo 6 caracteres"
+                  placeholder={t('create_profile_password_placeholder')}
                   placeholderTextColor="#666"
                   secureTextEntry
                   autoCapitalize="none"
@@ -186,7 +185,7 @@ export default function CreateProfileStep3() {
               </View>
 
               <AppButton
-                title={isCreating ? "Creando perfil..." : "Crear cuenta"}
+                title={isCreating ? t('create_profile_button_loading') : t('create_profile_button')}
                 onPress={handleContinue}
                 disabled={!email.trim() || !password.trim() || isCreating}
                 style={styles.button}

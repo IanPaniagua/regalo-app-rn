@@ -5,13 +5,15 @@ import { AppTitle } from '@/src/components/ui/AppTitle';
 import { AppText } from '@/src/components/ui/AppText';
 import { AppContainer } from '@/src/components/ui/AppContainer';
 import { colors } from '@/src/theme';
+import { useLanguage } from '@/src/context/LanguageContext';
 
 export default function WelcomeScreen() {
   const router = useRouter();
+  const { t } = useLanguage();
 
   return (
     <AppContainer style={styles.container}>
-      <AppTitle style={styles.title}>Bienvenido</AppTitle>
+      <AppTitle style={styles.title}>{t('welcome_title')}</AppTitle>
       
       <Image
         source={require('@/assets/logo.svg')}
@@ -27,7 +29,7 @@ export default function WelcomeScreen() {
             router.push('/create-profile');
           }}
         >
-          <AppText style={styles.buttonText}>Crear Perfil</AppText>
+          <AppText style={styles.buttonText}>{t('welcome_create_profile')}</AppText>
         </Pressable>
 
         <Pressable
@@ -37,7 +39,7 @@ export default function WelcomeScreen() {
             router.push('/login');
           }}
         >
-          <AppText style={styles.buttonText}>Iniciar Sesión</AppText>
+          <AppText style={styles.buttonText}>{t('welcome_login')}</AppText>
         </Pressable>
       </View>
     </AppContainer>

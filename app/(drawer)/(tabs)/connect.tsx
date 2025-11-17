@@ -8,12 +8,14 @@ import { AppButton } from '@/src/components/ui/AppButton';
 import { useConnections } from '@/src/context/ConnectionsContext';
 import { useUser } from '@/src/context/UserContext';
 import { useBirthdays } from '@/src/context/BirthdaysContext';
+import { useLanguage } from '@/src/context/LanguageContext';
 import { colors } from '@/src/theme';
 import { Ionicons } from '@expo/vector-icons';
 import type { User } from '@/src/database/types';
 
 export default function ConnectTabScreen() {
   const { user } = useUser();
+  const { t } = useLanguage();
   const { refreshUsers: refreshBirthdays } = useBirthdays();
   const {
     connections,
@@ -79,14 +81,14 @@ export default function ConnectTabScreen() {
 
   const handleSendInvitation = async () => {
     if (!email.trim()) {
-      Alert.alert('Error', 'Por favor ingresa un email');
+      Alert.alert(t('create_profile_error_title'), t('create_profile_error_email_required'));
       return;
     }
 
     // Validar formato de email
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-      Alert.alert('Error', 'Por favor ingresa un email válido');
+      Alert.alert(t('create_profile_error_title'), t('create_profile_error_email_invalid'));
       return;
     }
 
@@ -94,10 +96,10 @@ export default function ConnectTabScreen() {
       setSendingInvitation(true);
       await sendInvitationByEmail(email);
       setEmail('');
-      Alert.alert('¡Enviado!', 'Invitación enviada correctamente');
+      Alert.alert(t('invite_connected_title'), t('invite_connected_message').replace('{{name}}', email));
     } catch (error: any) {
       console.error('Error sending invitation:', error);
-      Alert.alert('Error', error.message || 'No se pudo enviar la invitación');
+      Alert.alert(t('create_profile_error_title'), error.message || t('connect_accept_invitation_error_message'));
     } finally {
       setSendingInvitation(false);
     }
@@ -108,10 +110,10 @@ export default function ConnectTabScreen() {
       await acceptInvitation(connectionId);
       // Refrescar cumpleaños para que aparezcan en el calendario
       await refreshBirthdays();
-      Alert.alert('¡Conectado!', `Ahora estás conectado con ${userName}. Sus cumpleaños aparecerán en tu calendario.`);
+      Alert.alert(t('connect_accept_invitation_success_title'), t('connect_accept_invitation_success_message').replace('{{name}}', userName));
     } catch (error) {
       console.error('Error accepting invitation:', error);
-      Alert.alert('Error', 'No se pudo aceptar la invitación');
+      Alert.alert(t('connect_accept_invitation_error_title'), t('connect_accept_invitation_error_message'));
     }
   };
 
@@ -120,7 +122,7 @@ export default function ConnectTabScreen() {
       await rejectInvitation(connectionId);
     } catch (error) {
       console.error('Error rejecting invitation:', error);
-      Alert.alert('Error', 'No se pudo rechazar la invitación');
+      Alert.alert(t('connect_reject_invitation_error_title'), t('connect_reject_invitation_error_message'));
     }
   };
 
@@ -138,12 +140,12 @@ export default function ConnectTabScreen() {
     if (!selectedUser) return;
 
     Alert.alert(
-      'Desconectar contacto',
-      `Si desconectas de ${selectedUser.name}, dejarás de ver sus cumpleaños en tu calendario.`,
+      t('connect_disconnect_title'),
+      t('connect_disconnect_message').replace('{{name}}', selectedUser.name),
       [
-        { text: 'Cancelar', style: 'cancel' },
+        { text: t('connect_disconnect_cancel'), style: 'cancel' },
         {
-          text: 'Desconectar',
+          text: t('connect_disconnect_confirm'),
           // estilo neutro para que el botón no sea tan llamativo
           onPress: async () => {
             try {
@@ -154,11 +156,11 @@ export default function ConnectTabScreen() {
               if (connection) {
                 await disconnectUser(connection.id);
                 handleCloseModal();
-                Alert.alert('Desconectado', `Ya no estás conectado con ${selectedUser.name}`);
+                Alert.alert(t('connect_disconnect_confirm'), t('connect_disconnect_message').replace('{{name}}', selectedUser.name));
               }
             } catch (error) {
               console.error('Error disconnecting:', error);
-              Alert.alert('Error', 'No se pudo desconectar');
+              Alert.alert(t('connect_disconnect_error_title'), t('connect_disconnect_error_message'));
             }
           },
         },
@@ -171,9 +173,9 @@ export default function ConnectTabScreen() {
       <AppContainer>
         <View style={styles.emptyContainer}>
           <Ionicons name="people-outline" size={64} color="#666" />
-          <AppTitle style={styles.emptyTitle}>Inicia sesión</AppTitle>
+          <AppTitle style={styles.emptyTitle}>{t('connect_empty_requires_login_title')}</AppTitle>
           <AppText style={styles.emptyText}>
-            Inicia sesión para conectar con amigos
+            {t('connect_empty_requires_login_text')}
           </AppText>
         </View>
       </AppContainer>
@@ -195,19 +197,19 @@ export default function ConnectTabScreen() {
         }
       >
         <View style={styles.header}>
-          <AppTitle>Conectar</AppTitle>
+          <AppTitle>{t('connect_title')}</AppTitle>
           <AppText style={styles.subtitle}>
-            Conecta con amigos para ver sus cumpleaños
+            {t('connect_subtitle')}
           </AppText>
         </View>
 
         {/* Formulario de invitación por email */}
         <View style={styles.inviteForm}>
-          <AppText style={styles.formLabel}>Invitar por email</AppText>
+          <AppText style={styles.formLabel}>{t('connect_invite_label')}</AppText>
           <View style={styles.inputContainer}>
             <TextInput
               style={styles.input}
-              placeholder="email@ejemplo.com"
+              placeholder={t('connect_invite_placeholder')}
               placeholderTextColor="#666"
               value={email}
               onChangeText={setEmail}
@@ -218,7 +220,7 @@ export default function ConnectTabScreen() {
             />
           </View>
           <AppButton
-            title={sendingInvitation ? 'Enviando...' : 'Enviar Invitación'}
+            title={sendingInvitation ? t('connect_invite_button_loading') : t('connect_invite_button')}
             onPress={handleSendInvitation}
             disabled={sendingInvitation || !email.trim()}
             style={styles.sendButton}
@@ -232,7 +234,7 @@ export default function ConnectTabScreen() {
             onPress={() => setActiveTab('connections')}
           >
             <AppText style={[styles.tabText, activeTab === 'connections' && styles.tabTextActive]}>
-              Mis Conexiones ({connectedUsers.length})
+              {t('connect_tab_connections').replace('{{count}}', connectedUsers.length.toString())}
             </AppText>
           </Pressable>
           <Pressable
@@ -240,7 +242,7 @@ export default function ConnectTabScreen() {
             onPress={() => setActiveTab('pending')}
           >
             <AppText style={[styles.tabText, activeTab === 'pending' && styles.tabTextActive]}>
-              Pendientes
+              {t('connect_tab_pending')}
             </AppText>
             {pendingInvitationsWithDetails.length > 0 && (
               <View style={styles.badge}>
@@ -263,10 +265,10 @@ export default function ConnectTabScreen() {
                   <View style={styles.emptyState}>
                     <Ionicons name="people-outline" size={48} color="#666" />
                     <AppText style={styles.emptyStateText}>
-                      No tienes conexiones todavía
+                      {t('connect_empty_connections_title')}
                     </AppText>
                     <AppText style={styles.emptyStateSubtext}>
-                      Envía una invitación para conectar con amigos
+                      {t('connect_empty_connections_subtitle')}
                     </AppText>
                   </View>
                 ) : (
@@ -312,7 +314,7 @@ export default function ConnectTabScreen() {
                   <View style={styles.emptyState}>
                     <Ionicons name="mail-outline" size={48} color="#666" />
                     <AppText style={styles.emptyStateText}>
-                      No tienes invitaciones pendientes
+                      {t('connect_empty_pending_title')}
                     </AppText>
                   </View>
                 ) : (
@@ -340,14 +342,14 @@ export default function ConnectTabScreen() {
                           onPress={() => handleAcceptInvitation(invitation.id, invitation.fromUser?.name || 'usuario')}
                         >
                           <Ionicons name="checkmark" size={20} color={colors.white} />
-                          <AppText style={styles.actionButtonText}>Aceptar</AppText>
+                          <AppText style={styles.actionButtonText}>{t('invite_accept')}</AppText>
                         </Pressable>
                         <Pressable
                           style={[styles.actionButton, styles.rejectButton]}
                           onPress={() => handleRejectInvitation(invitation.id)}
                         >
                           <Ionicons name="close" size={20} color={colors.white} />
-                          <AppText style={styles.actionButtonText}>Rechazar</AppText>
+                          <AppText style={styles.actionButtonText}>{t('invite_reject')}</AppText>
                         </Pressable>
                       </View>
                     </View>
@@ -370,7 +372,7 @@ export default function ConnectTabScreen() {
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
-              <AppTitle style={styles.modalTitle}>Información</AppTitle>
+              <AppTitle style={styles.modalTitle}>{t('calendar_profile_modal_title')}</AppTitle>
               <Pressable onPress={handleCloseModal} style={styles.closeButton}>
                 <Ionicons name="close" size={28} color={colors.white} />
               </Pressable>
@@ -387,7 +389,7 @@ export default function ConnectTabScreen() {
                 <View style={styles.infoSection}>
                   <View style={styles.infoRow}>
                     <Ionicons name="calendar-outline" size={20} color={colors.primary} />
-                    <AppText style={styles.infoLabel}>Cumpleaños</AppText>
+                    <AppText style={styles.infoLabel}>{t('calendar_profile_birthdate_label')}</AppText>
                   </View>
                   <AppText style={styles.infoValue}>
                     {selectedUser.birthdate.toLocaleDateString('es-ES', {
@@ -402,7 +404,7 @@ export default function ConnectTabScreen() {
                   <View style={styles.infoSection}>
                     <View style={styles.infoRow}>
                       <Ionicons name="heart-outline" size={20} color={colors.primary} />
-                      <AppText style={styles.infoLabel}>Intereses</AppText>
+                      <AppText style={styles.infoLabel}>{t('calendar_profile_hobbies_label')}</AppText>
                     </View>
                     <View style={styles.hobbiesContainer}>
                       {selectedUser.hobbies.map((hobby, index) => (
@@ -416,7 +418,7 @@ export default function ConnectTabScreen() {
 
                 <View style={styles.disconnectSection}>
                   <AppButton
-                    title="Desconectar"
+                    title={t('connect_disconnect_confirm')}
                     variant="secondary"
                     onPress={handleDisconnect}
                     style={styles.disconnectButtonModal}

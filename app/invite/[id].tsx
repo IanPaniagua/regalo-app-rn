@@ -11,12 +11,14 @@ import { db } from '@/src/database';
 import { ConnectionInvitation } from '@/src/database/types';
 import { colors } from '@/src/theme';
 import { Ionicons } from '@expo/vector-icons';
+import { useLanguage } from '@/src/context/LanguageContext';
 
 export default function InviteScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { user } = useUser();
   const { refreshConnections } = useConnections();
+  const { t } = useLanguage();
 
   const [invitation, setInvitation] = useState<ConnectionInvitation | null>(null);
   const [loading, setLoading] = useState(true);
@@ -29,7 +31,7 @@ export default function InviteScreen() {
 
   const loadInvitation = async () => {
     if (!id) {
-      setError('ID de invitación inválido');
+      setError(t('invite_invalid_id'));
       setLoading(false);
       return;
     }
@@ -39,26 +41,26 @@ export default function InviteScreen() {
       const inv = await db.getAdapter().getConnectionInvitation(id);
 
       if (!inv) {
-        setError('Invitación no encontrada');
+        setError(t('invite_not_found'));
         return;
       }
 
       // Verificar si expiró
       if (new Date() > inv.expiresAt) {
-        setError('Esta invitación ha expirado');
+        setError(t('invite_expired'));
         return;
       }
 
       // Verificar si ya fue usada
       if (inv.used) {
-        setError('Esta invitación ya fue usada');
+        setError(t('invite_used'));
         return;
       }
 
       setInvitation(inv);
     } catch (error) {
       console.error('Error loading invitation:', error);
-      setError('Error al cargar la invitación');
+      setError(t('invite_load_error'));
     } finally {
       setLoading(false);
     }
@@ -67,12 +69,12 @@ export default function InviteScreen() {
   const handleAccept = async () => {
     if (!user) {
       Alert.alert(
-        'Inicia sesión',
-        'Necesitas iniciar sesión para aceptar esta invitación',
+        t('invite_login_title'),
+        t('invite_login_message'),
         [
-          { text: 'Cancelar', style: 'cancel' },
+          { text: t('invite_login_cancel'), style: 'cancel' },
           {
-            text: 'Iniciar sesión',
+            text: t('invite_login_action'),
             onPress: () => router.replace('/login'),
           },
         ]
@@ -84,7 +86,7 @@ export default function InviteScreen() {
 
     // Verificar que no sea el mismo usuario
     if (user.id === invitation.fromUserId) {
-      Alert.alert('Error', 'No puedes conectar contigo mismo');
+      Alert.alert(t('create_profile_error_title'), t('invite_error_self_connect'));
       return;
     }
 
@@ -106,18 +108,18 @@ export default function InviteScreen() {
       await refreshConnections();
 
       Alert.alert(
-        '¡Conectado!',
-        `Ahora estás conectado con ${invitation.fromUserName}`,
+        t('invite_connected_title'),
+        t('invite_connected_message').replace('{{name}}', invitation.fromUserName),
         [
           {
-            text: 'Ver conexiones',
+            text: t('invite_connected_button'),
             onPress: () => router.push('/(drawer)/(tabs)/connect' as any),
           },
         ]
       );
     } catch (error) {
       console.error('Error accepting invitation:', error);
-      Alert.alert('Error', 'No se pudo aceptar la invitación');
+      Alert.alert(t('create_profile_error_title'), t('invite_load_error'));
     } finally {
       setAccepting(false);
     }
@@ -125,12 +127,12 @@ export default function InviteScreen() {
 
   const handleReject = () => {
     Alert.alert(
-      'Rechazar invitación',
-      '¿Estás seguro de que quieres rechazar esta invitación?',
+      t('invite_reject_title'),
+      t('invite_reject_message'),
       [
-        { text: 'Cancelar', style: 'cancel' },
+        { text: t('invite_reject_cancel'), style: 'cancel' },
         {
-          text: 'Rechazar',
+          text: t('invite_reject_confirm'),
           style: 'destructive',
           onPress: () => router.back(),
         },
@@ -143,7 +145,7 @@ export default function InviteScreen() {
       <AppContainer>
         <View style={styles.centerContainer}>
           <ActivityIndicator size="large" color={colors.primary} />
-          <AppText style={styles.loadingText}>Cargando invitación...</AppText>
+          <AppText style={styles.loadingText}>{t('invite_loading')}</AppText>
         </View>
       </AppContainer>
     );
@@ -154,12 +156,12 @@ export default function InviteScreen() {
       <AppContainer>
         <View style={styles.centerContainer}>
           <Ionicons name="alert-circle-outline" size={64} color="#999" />
-          <AppTitle style={styles.errorTitle}>Invitación no válida</AppTitle>
+          <AppTitle style={styles.errorTitle}>{t('invite_invalid_title')}</AppTitle>
           <AppText style={styles.errorText}>
-            {error || 'No se pudo cargar la invitación'}
+            {error || t('invite_invalid_fallback')}
           </AppText>
           <AppButton
-            title="Volver"
+            title={t('login_back')}
             onPress={() => router.back()}
             style={styles.button}
           />
@@ -194,20 +196,20 @@ export default function InviteScreen() {
             <View style={styles.warningBox}>
               <Ionicons name="warning-outline" size={20} color="#FFA500" />
               <AppText style={styles.warningText}>
-                Necesitas iniciar sesión para aceptar esta invitación
+                {t('invite_login_required_inline')}
               </AppText>
             </View>
           )}
 
           <View style={styles.actions}>
             <AppButton
-              title={accepting ? 'Aceptando...' : 'Aceptar'}
+              title={accepting ? t('invite_accepting') : t('invite_accept')}
               onPress={handleAccept}
               disabled={accepting}
               style={styles.acceptButton}
             />
             <AppButton
-              title="Rechazar"
+              title={t('invite_reject')}
               onPress={handleReject}
               style={styles.rejectButton}
               variant="secondary"
@@ -215,7 +217,7 @@ export default function InviteScreen() {
           </View>
 
           <AppText style={styles.expiryText}>
-            Esta invitación expira el{' '}
+            {t('invite_expiry_prefix')}
             {invitation.expiresAt.toLocaleDateString('es-ES', {
               day: 'numeric',
               month: 'long',

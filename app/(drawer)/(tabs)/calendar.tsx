@@ -7,6 +7,7 @@ import { AppText } from '@/src/components/ui/AppText';
 import { AppButton } from '@/src/components/ui/AppButton';
 import { colors } from '@/src/theme';
 import { useBirthdays, BirthdayUser } from '@/src/context/BirthdaysContext';
+import { useLanguage } from '@/src/context/LanguageContext';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const CALENDAR_PADDING = 20; // padding horizontal del scroll (10 * 2) - reducido
@@ -14,14 +15,17 @@ const GRID_PADDING = 16; // padding del grid (8 * 2)
 const GAP = 4; // gap reducido
 const DAY_SIZE = (SCREEN_WIDTH - CALENDAR_PADDING - GRID_PADDING - (GAP * 6)) / 7;
 
-const DAYS_OF_WEEK = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
-const MONTHS = [
-  'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
-  'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
-];
-
 export default function CalendarTabScreen() {
   const { users, getUsersByDate } = useBirthdays();
+  const { t } = useLanguage();
+
+  // Get translated days and months
+  const DAYS_OF_WEEK = [t('day_mon'), t('day_tue'), t('day_wed'), t('day_thu'), t('day_fri'), t('day_sat'), t('day_sun')];
+  const MONTHS = [
+    t('month_january'), t('month_february'), t('month_march'), t('month_april'),
+    t('month_may'), t('month_june'), t('month_july'), t('month_august'),
+    t('month_september'), t('month_october'), t('month_november'), t('month_december')
+  ];
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDay, setSelectedDay] = useState<number | null>(null);
   const [showBirthdaysModal, setShowBirthdaysModal] = useState(false);
@@ -159,7 +163,7 @@ export default function CalendarTabScreen() {
   return (
     <AppContainer>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
-        <AppTitle style={styles.title}>Calendario</AppTitle>
+        <AppTitle style={styles.title}>{t('calendar_title')}</AppTitle>
         
         {/* Header del mes */}
         <View style={styles.monthHeader}>
@@ -195,7 +199,7 @@ export default function CalendarTabScreen() {
           <View style={styles.summaryHeader}>
             <Ionicons name="gift" size={24} color={colors.primary} />
             <AppText style={styles.summaryTitle}>
-              Cumpleaños en {MONTHS[currentDate.getMonth()]}
+              {t('calendar_month_birthdays_title').replace('{{month}}', MONTHS[currentDate.getMonth()])}
             </AppText>
           </View>
           
@@ -203,13 +207,13 @@ export default function CalendarTabScreen() {
             <View style={styles.totalCount}>
               <AppText style={styles.totalNumber}>{getMonthBirthdays().length}</AppText>
               <AppText style={styles.totalLabel}>
-                {'Cumpleaños'}
+                {t('calendar_month_birthdays_count_label')}
               </AppText>
             </View>
             
             <Pressable style={styles.viewListButton} onPress={handleShowMonthList}>
               <Ionicons name="list" size={18} color={colors.primary} />
-              <AppText style={styles.viewListText}>Ver lista</AppText>
+              <AppText style={styles.viewListText}>{t('calendar_view_list')}</AppText>
             </Pressable>
           </View>
         </View>
@@ -226,7 +230,7 @@ export default function CalendarTabScreen() {
           <Pressable style={styles.modalContent} onPress={(e) => e.stopPropagation()}>
             <View style={styles.modalHeader}>
               <AppText style={styles.modalTitle}>
-                Cumpleaños - {selectedDay} de {MONTHS[currentDate.getMonth()]}
+                {t('calendar_day_modal_title').replace('{{day}}', selectedDay?.toString() || '').replace('{{month}}', MONTHS[currentDate.getMonth()])}
               </AppText>
               <Pressable onPress={closeModals}>
                 <Ionicons name="close" size={24} color={colors.white} />
@@ -246,7 +250,7 @@ export default function CalendarTabScreen() {
                   <View style={styles.userInfo}>
                     <AppText style={styles.userName}>{user.name}</AppText>
                     <AppText style={styles.userAge}>
-                      {new Date().getFullYear() - user.birthdate.getFullYear()} años
+                      {new Date().getFullYear() - user.birthdate.getFullYear()} {t('calendar_day_item_age_suffix')}
                     </AppText>
                   </View>
                   <Ionicons name="chevron-forward" size={20} color={colors.primary} />
@@ -268,7 +272,7 @@ export default function CalendarTabScreen() {
           <Pressable style={styles.modalContent} onPress={(e) => e.stopPropagation()}>
             <View style={styles.modalHeader}>
               <AppText style={styles.modalTitle}>
-                {MONTHS[currentDate.getMonth()]} - {getMonthBirthdays().length} cumpleaños
+                {t('calendar_month_modal_title').replace('{{month}}', MONTHS[currentDate.getMonth()]).replace('{{count}}', getMonthBirthdays().length.toString())}
               </AppText>
               <Pressable onPress={closeModals}>
                 <Ionicons name="close" size={24} color={colors.white} />
@@ -280,7 +284,7 @@ export default function CalendarTabScreen() {
                 <View style={styles.emptyState}>
                   <Ionicons name="calendar-outline" size={48} color="#666" />
                   <AppText style={styles.emptyText}>
-                    No hay cumpleaños este mes
+                    {t('calendar_month_modal_empty')}
                   </AppText>
                 </View>
               ) : (
@@ -323,7 +327,7 @@ export default function CalendarTabScreen() {
                   <Pressable onPress={() => setSelectedUser(null)}>
                     <Ionicons name="arrow-back" size={24} color={colors.white} />
                   </Pressable>
-                  <AppText style={styles.modalTitle}>Perfil</AppText>
+                  <AppText style={styles.modalTitle}>{t('calendar_profile_modal_title')}</AppText>
                   <Pressable onPress={closeModals}>
                     <Ionicons name="close" size={24} color={colors.white} />
                   </Pressable>
@@ -337,7 +341,7 @@ export default function CalendarTabScreen() {
                   <AppText style={styles.userNameLarge}>{selectedUser.name}</AppText>
 
                   <View style={styles.detailSection}>
-                    <AppText style={styles.detailLabel}>Fecha de nacimiento</AppText>
+                    <AppText style={styles.detailLabel}>{t('calendar_profile_birthdate_label')}</AppText>
                     <AppText style={styles.detailValue}>
                       {selectedUser.birthdate.toLocaleDateString('es-ES', {
                         day: 'numeric',
@@ -348,21 +352,21 @@ export default function CalendarTabScreen() {
                   </View>
 
                   <View style={styles.detailSection}>
-                    <AppText style={styles.detailLabel}>Edad</AppText>
+                    <AppText style={styles.detailLabel}>{t('calendar_profile_age_label')}</AppText>
                     <AppText style={styles.detailValue}>
-                      {new Date().getFullYear() - selectedUser.birthdate.getFullYear()} años
+                      {new Date().getFullYear() - selectedUser.birthdate.getFullYear()} {t('calendar_day_item_age_suffix')}
                     </AppText>
                   </View>
 
                   {selectedUser.email && (
                     <View style={styles.detailSection}>
-                      <AppText style={styles.detailLabel}>Email</AppText>
+                      <AppText style={styles.detailLabel}>{t('calendar_profile_email_label')}</AppText>
                       <AppText style={styles.detailValue}>{selectedUser.email}</AppText>
                     </View>
                   )}
 
                   <View style={styles.detailSection}>
-                    <AppText style={styles.detailLabel}>Hobbies</AppText>
+                    <AppText style={styles.detailLabel}>{t('calendar_profile_hobbies_label')}</AppText>
                     <View style={styles.hobbiesContainer}>
                       {selectedUser.hobbies.map((hobby, index) => (
                         <View key={index} style={styles.hobbyBadge}>
@@ -373,7 +377,7 @@ export default function CalendarTabScreen() {
                   </View>
 
                   <AppButton
-                    title="Cerrar"
+                    title={t('calendar_profile_close_button')}
                     onPress={closeModals}
                     style={styles.closeButton}
                   />

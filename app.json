@@ -55,7 +55,8 @@
           }
         }
       ],
-      "@react-native-firebase/messaging"
+      "@react-native-firebase/messaging",
+      "expo-localization"
     ],
     "experiments": {
       "typedRoutes": true,
