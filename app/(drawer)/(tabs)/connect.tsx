@@ -138,13 +138,13 @@ export default function ConnectTabScreen() {
     if (!selectedUser) return;
 
     Alert.alert(
-      'Desconectar',
-      `¿Estás seguro de que quieres desconectar de ${selectedUser.name}? Ya no verás sus cumpleaños en tu calendario.`,
+      'Desconectar contacto',
+      `Si desconectas de ${selectedUser.name}, dejarás de ver sus cumpleaños en tu calendario.`,
       [
         { text: 'Cancelar', style: 'cancel' },
         {
           text: 'Desconectar',
-          style: 'destructive',
+          // estilo neutro para que el botón no sea tan llamativo
           onPress: async () => {
             try {
               // Buscar el connectionId
@@ -417,12 +417,10 @@ export default function ConnectTabScreen() {
                 <View style={styles.disconnectSection}>
                   <AppButton
                     title="Desconectar"
+                    variant="secondary"
                     onPress={handleDisconnect}
                     style={styles.disconnectButtonModal}
                   />
-                  <AppText style={styles.disconnectWarning}>
-                    Si te desconectas, ya no verás los cumpleaños de {selectedUser.name} en tu calendario
-                  </AppText>
                 </View>
               </ScrollView>
             )}
@@ -500,7 +498,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 8,
     right: 8,
-    backgroundColor: colors.primary,
+    backgroundColor: '#FF3B30',
     borderRadius: 10,
     minWidth: 20,
     height: 20,
@@ -751,7 +749,6 @@ const styles = StyleSheet.create({
     borderTopColor: '#333',
   },
   disconnectButtonModal: {
-    backgroundColor: '#FF3B30',
     marginBottom: 12,
   },
   disconnectWarning: {
