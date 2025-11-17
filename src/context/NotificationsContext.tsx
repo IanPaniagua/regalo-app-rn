@@ -2,7 +2,6 @@ import { createContext, useContext, useState, useEffect, useRef, ReactNode } fro
 import * as Notifications from 'expo-notifications';
 import * as Device from 'expo-device';
 import { Platform } from 'react-native';
-import messaging from '@react-native-firebase/messaging';
 import Constants from 'expo-constants';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { db } from '@/src/database';
@@ -109,21 +108,7 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
     }
 
     if (Device.isDevice) {
-      // Solicitar permisos de FCM (iOS)
-      if (Platform.OS === 'ios') {
-        const authStatus = await messaging().requestPermission();
-        const enabled =
-          authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
-          authStatus === messaging.AuthorizationStatus.PROVISIONAL;
-
-        if (!enabled) {
-          console.log('❌ FCM Permission not granted');
-          setIsPermissionGranted(false);
-          return;
-        }
-      }
-      
-      // Solicitar permisos de notificaciones locales
+      // Solicitar permisos de notificaciones
       const { status: existingStatus } = await Notifications.getPermissionsAsync();
       let finalStatus = existingStatus;
       
@@ -140,40 +125,23 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
       
       setIsPermissionGranted(true);
       
-      // Para iOS, necesitamos registrar APNS primero
-      if (Platform.OS === 'ios') {
-        try {
-          await messaging().registerDeviceForRemoteMessages();
-          console.log('✅ Device registered for remote messages');
-        } catch (error) {
-          console.error('❌ Error registering device:', error);
-        }
-      }
-      
-      // Obtener token FCM nativo
+      // Obtener Expo Push Token (funciona con FCM en iOS y Android)
       try {
-        // Verificar que Firebase Messaging esté disponible
-        const messagingInstance = messaging();
-        if (!messagingInstance) {
-          throw new Error('Firebase Messaging not initialized');
+        const projectId = Constants.expoConfig?.extra?.eas?.projectId;
+        if (!projectId) {
+          throw new Error('EAS project ID not found in app config');
         }
-        
-        token = await messagingInstance.getToken();
-        console.log('✅ FCM Token:', token);
-        setFcmToken(token);
-        
-        // Listener para cuando el token se actualiza
-        messagingInstance.onTokenRefresh(async (newToken) => {
-          console.log('🔄 FCM Token refreshed:', newToken);
-          setFcmToken(newToken);
-          if (user) {
-            await saveFCMTokenToFirestore(newToken);
-          }
+
+        const pushTokenData = await Notifications.getExpoPushTokenAsync({
+          projectId,
         });
+        
+        token = pushTokenData.data;
+        console.log('✅ Expo Push Token:', token);
+        setFcmToken(token);
       } catch (error) {
-        console.error('❌ Error getting FCM token:', error);
-        console.log('⚠️ FCM may not be fully initialized yet. Will retry on next app launch.');
-        // No es grave - el token se obtendrá en el próximo inicio de sesión o cuando se refresque
+        console.error('❌ Error getting push token:', error);
+        console.log('⚠️ Push token will be obtained on next app launch.');
       }
       
     } else {

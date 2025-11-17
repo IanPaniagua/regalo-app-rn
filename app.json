@@ -11,8 +11,6 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.manolodev.regalo-app",
-      "googleServicesFile": "./GoogleService-Info.plist",
-      "useFrameworks": "static",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }
@@ -26,7 +24,6 @@
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "googleServicesFile": "./google-services.json",
       "package": "com.manolodev.regaloapp"
     },
     "web": {
@@ -47,20 +44,7 @@
           }
         }
       ],
-      "expo-notifications",
-      [
-        "@react-native-firebase/app",
-        {
-          "ios": {
-            "googleServicesFile": "./GoogleService-Info.plist",
-            "use_frameworks": "static"
-          },
-          "android": {
-            "googleServicesFile": "./google-services.json"
-          }
-        }
-      ],
-      "@react-native-firebase/messaging"
+      "expo-notifications"
     ],
     "experiments": {
       "typedRoutes": true,
