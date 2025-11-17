@@ -1,6 +1,17 @@
 import { useState } from 'react';
-import { View, StyleSheet, TextInput, Alert } from 'react-native';
+import {
+  View,
+  StyleSheet,
+  TextInput,
+  Alert,
+  KeyboardAvoidingView,
+  ScrollView,
+  TouchableWithoutFeedback,
+  Keyboard,
+  Platform,
+} from 'react-native';
 import { useRouter } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 import { AppContainer } from '@/src/components/ui/AppContainer';
 import { AppTitle } from '@/src/components/ui/AppTitle';
 import { AppText } from '@/src/components/ui/AppText';
@@ -119,59 +130,83 @@ export default function CreateProfileStep3() {
 
   return (
     <AppContainer>
-      <View style={styles.content}>
-        <AppTitle style={styles.title}>¿Cuál es tu email?</AppTitle>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={styles.keyboardView}
+      >
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
+          <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+            <View style={styles.content}>
+              <AppTitle style={styles.title}>¿Cuál es tu email?</AppTitle>
 
-        <AppText style={styles.subtitle}>
-          Crea tu cuenta para acceder a la app
-        </AppText>
+              <AppText style={styles.subtitle}>
+                Crea tu cuenta para acceder a la app
+              </AppText>
 
-        <View style={styles.inputContainer}>
-          <AppText style={styles.label}>Email</AppText>
-          <TextInput
-            style={styles.input}
-            value={email}
-            onChangeText={setEmail}
-            placeholder="tu@email.com"
-            placeholderTextColor="#666"
-            keyboardType="email-address"
-            autoCapitalize="none"
-            autoCorrect={false}
-          />
-        </View>
+              <View style={styles.inputContainer}>
+                <View style={styles.labelRow}>
+                  <Ionicons name="mail-outline" size={18} color={colors.primary} />
+                  <AppText style={styles.label}>Email</AppText>
+                </View>
+                <TextInput
+                  style={styles.input}
+                  value={email}
+                  onChangeText={setEmail}
+                  placeholder="tu@email.com"
+                  placeholderTextColor="#666"
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  returnKeyType="next"
+                  onSubmitEditing={() => Keyboard.dismiss()}
+                />
+              </View>
 
-        <View style={styles.inputContainer}>
-          <AppText style={styles.label}>Contraseña</AppText>
-          <TextInput
-            style={styles.input}
-            value={password}
-            onChangeText={setPassword}
-            placeholder="Mínimo 6 caracteres"
-            placeholderTextColor="#666"
-            secureTextEntry
-            autoCapitalize="none"
-            autoCorrect={false}
-          />
-        </View>
+              <View style={styles.inputContainer}>
+                <View style={styles.labelRow}>
+                  <Ionicons name="lock-closed-outline" size={18} color={colors.primary} />
+                  <AppText style={styles.label}>Contraseña</AppText>
+                </View>
+                <TextInput
+                  style={styles.input}
+                  value={password}
+                  onChangeText={setPassword}
+                  placeholder="Mínimo 6 caracteres"
+                  placeholderTextColor="#666"
+                  secureTextEntry
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  returnKeyType="done"
+                  onSubmitEditing={handleContinue}
+                />
+              </View>
 
-        <AppButton
-          title={isCreating ? "Creando perfil..." : "Crear cuenta"}
-          onPress={handleContinue}
-          disabled={!email.trim() || !password.trim() || isCreating}
-          style={styles.button}
-        />
-
-        {(!email.trim() || !password.trim()) && (
-          <AppText style={styles.hint}>
-            Debes ingresar email y contraseña para continuar
-          </AppText>
-        )}
-      </View>
+              <AppButton
+                title={isCreating ? "Creando perfil..." : "Crear cuenta"}
+                onPress={handleContinue}
+                disabled={!email.trim() || !password.trim() || isCreating}
+                style={styles.button}
+              />
+            </View>
+          </TouchableWithoutFeedback>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </AppContainer>
   );
 }
 
 const styles = StyleSheet.create({
+  keyboardView: {
+    flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
+    justifyContent: 'center',
+  },
   content: {
     flex: 1,
     justifyContent: 'center',
@@ -188,10 +223,15 @@ const styles = StyleSheet.create({
   inputContainer: {
     marginBottom: 20,
   },
+  labelRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 8,
+  },
   label: {
     fontSize: 14,
     color: colors.white,
-    marginBottom: 8,
     fontWeight: '600',
   },
   input: {

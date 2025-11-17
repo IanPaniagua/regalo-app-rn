@@ -1,6 +1,18 @@
 import { useState } from 'react';
-import { View, StyleSheet, TextInput, Pressable, Alert } from 'react-native';
+import {
+  View,
+  StyleSheet,
+  TextInput,
+  Pressable,
+  Alert,
+  KeyboardAvoidingView,
+  ScrollView,
+  TouchableWithoutFeedback,
+  Keyboard,
+  Platform,
+} from 'react-native';
 import { useRouter } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 import { AppContainer } from '@/src/components/ui/AppContainer';
 import { AppTitle } from '@/src/components/ui/AppTitle';
 import { AppText } from '@/src/components/ui/AppText';
@@ -74,63 +86,93 @@ export default function LoginScreen() {
 
   return (
     <AppContainer>
-      <View style={styles.content}>
-        <AppTitle style={styles.title}>Iniciar Sesión</AppTitle>
-        
-        <AppText style={styles.subtitle}>
-          Ingresa con tu email y contraseña
-        </AppText>
-
-        <View style={styles.inputContainer}>
-          <AppText style={styles.label}>Email</AppText>
-          <TextInput
-            style={styles.input}
-            value={email}
-            onChangeText={setEmail}
-            placeholder="tu@email.com"
-            placeholderTextColor="#666"
-            keyboardType="email-address"
-            autoCapitalize="none"
-            autoCorrect={false}
-          />
-        </View>
-
-        <View style={styles.inputContainer}>
-          <AppText style={styles.label}>Contraseña</AppText>
-          <TextInput
-            style={styles.input}
-            value={password}
-            onChangeText={setPassword}
-            placeholder="Tu contraseña"
-            placeholderTextColor="#666"
-            secureTextEntry
-            autoCapitalize="none"
-            autoCorrect={false}
-          />
-        </View>
-
-        <Pressable
-          style={[styles.button, (!email.trim() || !password.trim() || isLoading) && styles.buttonDisabled]}
-          onPress={handleLogin}
-          disabled={!email.trim() || !password.trim() || isLoading}
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={styles.keyboardView}
+      >
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
         >
-          <AppText style={styles.buttonText}>
-            {isLoading ? 'Iniciando sesión...' : 'Iniciar Sesión'}
-          </AppText>
-        </Pressable>
+          <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+            <View style={styles.content}>
+              <AppTitle style={styles.title}>Iniciar Sesión</AppTitle>
+              
+              <AppText style={styles.subtitle}>
+                Ingresa con tu email y contraseña
+              </AppText>
 
-        <Pressable
-          style={styles.backButton}
-          onPress={() => router.back()}
-        >
-          <AppText style={styles.backButtonText}>Volver</AppText>
-        </Pressable>
-      </View>
+              <View style={styles.inputContainer}>
+                <View style={styles.labelRow}>
+                  <Ionicons name="mail-outline" size={18} color={colors.primary} />
+                  <AppText style={styles.label}>Email</AppText>
+                </View>
+                <TextInput
+                  style={styles.input}
+                  value={email}
+                  onChangeText={setEmail}
+                  placeholder="tu@email.com"
+                  placeholderTextColor="#666"
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  returnKeyType="next"
+                  onSubmitEditing={() => Keyboard.dismiss()}
+                />
+              </View>
+
+              <View style={styles.inputContainer}>
+                <View style={styles.labelRow}>
+                  <Ionicons name="lock-closed-outline" size={18} color={colors.primary} />
+                  <AppText style={styles.label}>Contraseña</AppText>
+                </View>
+                <TextInput
+                  style={styles.input}
+                  value={password}
+                  onChangeText={setPassword}
+                  placeholder="Tu contraseña"
+                  placeholderTextColor="#666"
+                  secureTextEntry
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  returnKeyType="done"
+                  onSubmitEditing={handleLogin}
+                />
+              </View>
+
+              <Pressable
+                style={[styles.button, (!email.trim() || !password.trim() || isLoading) && styles.buttonDisabled]}
+                onPress={handleLogin}
+                disabled={!email.trim() || !password.trim() || isLoading}
+              >
+                <AppText style={styles.buttonText}>
+                  {isLoading ? 'Iniciando sesión...' : 'Iniciar Sesión'}
+                </AppText>
+              </Pressable>
+
+              <Pressable
+                style={styles.backButton}
+                onPress={() => router.back()}
+              >
+                <AppText style={styles.backButtonText}>Volver</AppText>
+              </Pressable>
+            </View>
+          </TouchableWithoutFeedback>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </AppContainer>
   );
 }
 
 const styles = StyleSheet.create({
+  keyboardView: {
+    flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
+    justifyContent: 'center',
+  },
   content: {
     flex: 1,
     justifyContent: 'center',
@@ -149,10 +191,15 @@ const styles = StyleSheet.create({
   inputContainer: {
     marginBottom: 20,
   },
+  labelRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 8,
+  },
   label: {
     fontSize: 14,
     color: colors.white,
-    marginBottom: 8,
     fontWeight: '600',
   },
   input: {
