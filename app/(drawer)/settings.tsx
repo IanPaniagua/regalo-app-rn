@@ -1,4 +1,4 @@
-import { View, StyleSheet, Alert, Switch, Linking } from 'react-native';
+import { View, StyleSheet, Switch } from 'react-native';
 import { AppContainer } from '@/src/components/ui/AppContainer';
 import { AppTitle } from '@/src/components/ui/AppTitle';
 import { AppText } from '@/src/components/ui/AppText';
@@ -19,17 +19,8 @@ export default function SettingsScreen() {
       if (!isPermissionGranted) {
         const granted = await requestPermissions();
         if (!granted) {
-          Alert.alert(
-            'Notifications disabled',
-            'You have denied notification permissions. To enable push notifications, please allow them in your device settings.',
-            [
-              { text: 'Cancel', style: 'cancel' },
-              {
-                text: 'Open settings',
-                onPress: () => Linking.openSettings(),
-              },
-            ]
-          );
+          // Permiso del sistema denegado: mantenemos el toggle desactivado
+          await setNotificationsEnabled(false);
           return;
         }
       }
