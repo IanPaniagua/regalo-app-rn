@@ -22,6 +22,7 @@ export default function DrawerLayout() {
           backgroundColor: colors.secondary,
         },
         headerTintColor: colors.white,
+        headerTitleAlign: 'center',
         headerRight: () => (
           user ? (
             <View style={styles.userContainer}>
