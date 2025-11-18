@@ -165,63 +165,65 @@ export default function InviteScreen() {
   }
 
   return (
-    <AppContainer>
-      <View style={styles.container}>
-        <View style={styles.invitationCard}>
-          <View style={styles.avatarContainer}>
-            <AppText style={styles.avatar}>{invitation.fromUserAvatar}</AppText>
-          </View>
+    <>
+      <AppContainer>
+        <View style={styles.container}>
+          <View style={styles.invitationCard}>
+            <View style={styles.avatarContainer}>
+              <AppText style={styles.avatar}>{invitation.fromUserAvatar}</AppText>
+            </View>
 
-          <AppTitle style={styles.title}>Invitación de conexión</AppTitle>
+            <AppTitle style={styles.title}>Invitación de conexión</AppTitle>
 
-          <AppText style={styles.message}>
-            <AppText style={styles.userName}>{invitation.fromUserName}</AppText>
-            {' '}quiere conectar contigo
-          </AppText>
-
-          <View style={styles.infoBox}>
-            <Ionicons name="information-circle-outline" size={20} color={colors.primary} />
-            <AppText style={styles.infoText}>
-              Al conectar, podrán ver los cumpleaños del otro en el calendario
+            <AppText style={styles.message}>
+              <AppText style={styles.userName}>{invitation.fromUserName}</AppText>
+              {' '}quiere conectar contigo
             </AppText>
-          </View>
 
-          {!user && (
-            <View style={styles.warningBox}>
-              <Ionicons name="warning-outline" size={20} color="#FFA500" />
-              <AppText style={styles.warningText}>
-                {t('invite_login_required_inline')}
+            <View style={styles.infoBox}>
+              <Ionicons name="information-circle-outline" size={20} color={colors.primary} />
+              <AppText style={styles.infoText}>
+                Al conectar, podrán ver los cumpleaños del otro en el calendario
               </AppText>
             </View>
-          )}
 
-          <View style={styles.actions}>
-            <AppButton
-              title={accepting ? t('invite_accepting') : t('invite_accept')}
-              onPress={handleAccept}
-              disabled={accepting}
-              style={styles.acceptButton}
-            />
-            <AppButton
-              title={t('invite_reject')}
-              onPress={handleReject}
-              style={styles.rejectButton}
-              variant="secondary"
-            />
+            {!user && (
+              <View style={styles.warningBox}>
+                <Ionicons name="warning-outline" size={20} color="#FFA500" />
+                <AppText style={styles.warningText}>
+                  {t('invite_login_required_inline')}
+                </AppText>
+              </View>
+            )}
+
+            <View style={styles.actions}>
+              <AppButton
+                title={accepting ? t('invite_accepting') : t('invite_accept')}
+                onPress={handleAccept}
+                disabled={accepting}
+                style={styles.acceptButton}
+              />
+              <AppButton
+                title={t('invite_reject')}
+                onPress={handleReject}
+                style={styles.rejectButton}
+                variant="secondary"
+              />
+            </View>
+
+            <AppText style={styles.expiryText}>
+              {t('invite_expiry_prefix')}
+              {invitation.expiresAt.toLocaleDateString('es-ES', {
+                day: 'numeric',
+                month: 'long',
+                year: 'numeric',
+              })}
+            </AppText>
           </View>
-
-          <AppText style={styles.expiryText}>
-            {t('invite_expiry_prefix')}
-            {invitation.expiresAt.toLocaleDateString('es-ES', {
-              day: 'numeric',
-              month: 'long',
-              year: 'numeric',
-            })}
-          </AppText>
         </View>
-      </View>
+      </AppContainer>
 
-      {/* Modal de celebración con confetti */}
+      {/* Modal de celebración con confetti - FUERA del AppContainer */}
       <CelebrationModal
         visible={showCelebration}
         title={t('invite_connected_title')}
@@ -232,7 +234,7 @@ export default function InviteScreen() {
           router.push('/(drawer)/(tabs)/connect' as any);
         }}
       />
-    </AppContainer>
+    </>
   );
 }
 
