@@ -25,7 +25,9 @@ export function CelebrationModal({
   const confettiRef = useRef<any>(null);
 
   useEffect(() => {
+    console.log('🎊 CelebrationModal visible changed:', visible);
     if (visible) {
+      console.log('🎊 Starting modal animation and confetti');
       // Disparar confetti
       setTimeout(() => {
         confettiRef.current?.start();

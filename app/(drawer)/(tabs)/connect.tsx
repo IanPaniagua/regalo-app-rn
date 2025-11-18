@@ -5,6 +5,7 @@ import { AppContainer } from '@/src/components/ui/AppContainer';
 import { AppTitle } from '@/src/components/ui/AppTitle';
 import { AppText } from '@/src/components/ui/AppText';
 import { AppButton } from '@/src/components/ui/AppButton';
+import { CelebrationModal } from '@/src/components/CelebrationModal';
 import { useConnections } from '@/src/context/ConnectionsContext';
 import { useUser } from '@/src/context/UserContext';
 import { useBirthdays } from '@/src/context/BirthdaysContext';
@@ -37,6 +38,8 @@ export default function ConnectTabScreen() {
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [showUserModal, setShowUserModal] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [showCelebration, setShowCelebration] = useState(false);
+  const [celebrationUserName, setCelebrationUserName] = useState('');
   const hasViewedRef = useRef(false);
 
   // Marcar conexiones aceptadas como vistas cuando el usuario SALE de la screen
@@ -110,7 +113,9 @@ export default function ConnectTabScreen() {
       await acceptInvitation(connectionId);
       // Refrescar cumpleaños para que aparezcan en el calendario
       await refreshBirthdays();
-      Alert.alert(t('connect_accept_invitation_success_title'), t('connect_accept_invitation_success_message').replace('{{name}}', userName));
+      // Mostrar modal de celebración
+      setCelebrationUserName(userName);
+      setShowCelebration(true);
     } catch (error) {
       console.error('Error accepting invitation:', error);
       Alert.alert(t('connect_accept_invitation_error_title'), t('connect_accept_invitation_error_message'));
@@ -429,6 +434,15 @@ export default function ConnectTabScreen() {
           </View>
         </View>
       </Modal>
+
+      {/* Modal de celebración con confetti */}
+      <CelebrationModal
+        visible={showCelebration}
+        title={t('connect_accept_invitation_success_title')}
+        message={t('connect_accept_invitation_success_message').replace('{{name}}', celebrationUserName)}
+        buttonText={t('invite_connected_button')}
+        onButtonPress={() => setShowCelebration(false)}
+      />
     </AppContainer>
   );
 }

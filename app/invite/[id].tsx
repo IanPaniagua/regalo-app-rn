@@ -110,7 +110,9 @@ export default function InviteScreen() {
       await refreshConnections();
 
       // Mostrar modal de celebración con confetti
+      console.log('🎉 Setting showCelebration to TRUE');
       setShowCelebration(true);
+      console.log('🎉 showCelebration state updated');
     } catch (error) {
       console.error('Error accepting invitation:', error);
       Alert.alert(t('create_profile_error_title'), t('invite_load_error'));
