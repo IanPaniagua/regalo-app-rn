@@ -53,6 +53,33 @@ export default function SettingsScreen() {
     }
   };
 
+  const getTranslationInLanguage = (key: string, targetLang: Lang): string => {
+    const translations: Record<Lang, Record<string, string>> = {
+      es: {
+        settings_language_change_title: 'Cambiar idioma',
+        settings_language_change_message: '¿Quieres cambiar el idioma de la aplicación? Tendrás que cerrar y volver a abrir la app para aplicar los cambios.',
+        settings_language_change_cancel: 'Cancelar',
+        settings_language_change_confirm: 'Cambiar',
+        settings_language_restart_required: 'Reinicia la app para ver los cambios de idioma',
+      },
+      en: {
+        settings_language_change_title: 'Change language',
+        settings_language_change_message: 'Do you want to change the app language? You will need to close and reopen the app to apply the changes.',
+        settings_language_change_cancel: 'Cancel',
+        settings_language_change_confirm: 'Change',
+        settings_language_restart_required: 'Restart the app to see language changes',
+      },
+      de: {
+        settings_language_change_title: 'Sprache ändern',
+        settings_language_change_message: 'Möchtest du die App-Sprache ändern? Du musst die App schließen und neu öffnen, um die Änderungen anzuwenden.',
+        settings_language_change_cancel: 'Abbrechen',
+        settings_language_change_confirm: 'Ändern',
+        settings_language_restart_required: 'Starte die App neu, um Sprachänderungen zu sehen',
+      },
+    };
+    return translations[targetLang][key] || key;
+  };
+
   const handleLanguageSelect = async (selectedLang: Lang) => {
     if (selectedLang === lang) {
       setShowLanguageModal(false);
@@ -61,17 +88,17 @@ export default function SettingsScreen() {
     
     setShowLanguageModal(false);
     
-    // Show single confirmation alert
+    // Show confirmation alert in the SELECTED language (not current)
     Alert.alert(
-      t('settings_language_change_title'),
-      t('settings_language_change_message'),
+      getTranslationInLanguage('settings_language_change_title', selectedLang),
+      getTranslationInLanguage('settings_language_change_message', selectedLang),
       [
         {
-          text: t('settings_language_change_cancel'),
+          text: getTranslationInLanguage('settings_language_change_cancel', selectedLang),
           style: 'cancel',
         },
         {
-          text: t('settings_language_change_confirm'),
+          text: getTranslationInLanguage('settings_language_change_confirm', selectedLang),
           onPress: async () => {
             // Save the new language
             await setLanguage(selectedLang);
@@ -139,7 +166,7 @@ export default function SettingsScreen() {
             <View style={styles.restartWarning}>
               <Ionicons name="information-circle" size={16} color={colors.primary} />
               <AppText style={styles.restartWarningText}>
-                {t('settings_language_restart_required')}
+                {getTranslationInLanguage('settings_language_restart_required', pendingLanguage)}
               </AppText>
             </View>
           )}
