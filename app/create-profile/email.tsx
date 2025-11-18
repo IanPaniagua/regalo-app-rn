@@ -17,6 +17,7 @@ import { AppContainer } from '@/src/components/ui/AppContainer';
 import { AppTitle } from '@/src/components/ui/AppTitle';
 import { AppText } from '@/src/components/ui/AppText';
 import { AppButton } from '@/src/components/ui/AppButton';
+import { useLanguage } from '@/src/context/LanguageContext';
 import { colors, fonts } from '@/src/theme';
 import { useUser } from '@/src/context/UserContext';
 import { useBirthdays } from '@/src/context/BirthdaysContext';
@@ -26,6 +27,7 @@ export default function CreateProfileStep3() {
   const router = useRouter();
   const { tempUser, setUser, clearTempUser } = useUser();
   const { addUser } = useBirthdays();
+  const { t } = useLanguage();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -40,32 +42,32 @@ export default function CreateProfileStep3() {
 
   const handleContinue = async () => {
     if (!email.trim()) {
-      Alert.alert('Error', 'Por favor ingresa tu email');
+      Alert.alert(t('create_profile_error_title'), t('create_profile_error_email_required'));
       return;
     }
 
     if (!validateEmail(email)) {
-      Alert.alert('Error', 'Por favor ingresa un email válido');
+      Alert.alert(t('create_profile_error_title'), t('create_profile_error_email_invalid'));
       return;
     }
 
     if (!password.trim()) {
-      Alert.alert('Error', 'Por favor ingresa una contraseña');
+      Alert.alert(t('create_profile_error_title'), t('create_profile_error_password_required'));
       return;
     }
 
     if (password.length < 8) {
-      Alert.alert('Error', 'La contraseña debe tener al menos 8 caracteres');
+      Alert.alert(t('create_profile_error_title'), t('create_profile_error_password_min_length'));
       return;
     }
 
     if (password !== confirmPassword) {
-      Alert.alert('Error', 'Las contraseñas no coinciden');
+      Alert.alert(t('create_profile_error_title'), 'Las contraseñas no coinciden');
       return;
     }
 
     if (!tempUser || !tempUser.avatar) {
-      Alert.alert('Error', 'No se encontraron datos del perfil. Por favor vuelve a empezar.');
+      Alert.alert(t('create_profile_error_title'), t('create_profile_error_tempuser_missing'));
       router.replace('/create-profile');
       return;
     }
