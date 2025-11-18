@@ -1,0 +1,107 @@
+OPCIÓN 1 (Profesional): Volver a usar FCM con Expo Dev Client
+
+👉 Esto te permite mantener Expo sin perder capacidades nativas.
+
+Pasos:
+
+expo prebuild
+
+Instalar React Native Firebase Messaging
+
+Configurar FCM en Android e iOS
+
+Publicar normal
+
+Resultado:
+🎉 Recuperas notificaciones serias, diarias, backend, todo.
+
+Expo Dev Client NO es de pago
+
+No necesitas membresía Pro, ni Enterprise, ni nada.
+
+👉 Funciona perfectamente con el plan Starter (gratis).
+👉 No es una suscripción.
+👉 No es un servicio cloud.
+
+Es simplemente una forma diferente de construir tu app, para que puedas usar librerías nativas como FCM (React Native Firebase, notificaciones nativas, background tasks, etc.).
+
+🧠 ¿Entonces qué es un "Expo Dev Client"?
+
+Piensa en Expo Go, pero:
+
+personalizado
+
+con tus librerías nativas compiladas dentro
+
+100% compatible con React Native Firebase
+
+100% compatible con FCM
+
+Es decir:
+
+📱 Un build nativo de tu app con tu propio runtime.
+
+Queda así:
+
+Expo Go → NO soporta librerías nativas externas (como FCM)
+
+Expo Dev Client → SÍ soporta librerías nativas externas
+
+🤔 ¿Por qué existe esto?
+
+Porque Expo Go es limitado.
+No puedes usar FCM, ni librerías nativas personalizadas.
+
+Entonces Expo creó Dev Client, que permite:
+
+mantener el poder del ecosistema Expo
+
+pero con capacidad de instalar librerías nativas
+
+sin migrarte al bare workflow completamente
+
+🏗️ ¿Qué necesitas para usar Expo Dev Client?
+
+Solo esto:
+
+npm install expo-dev-client
+
+
+Y luego construir tu app:
+
+expo run:android
+expo run:ios
+
+
+O usando EAS Build:
+
+eas build --profile development --platform android
+
+
+Esto genera un APK/IPA personalizado.
+
+Nada más.
+
+🚀 ¿Y qué beneficio te da?
+
+🔓 Puedes volver a usar FCM sin limitaciones.
+🔓 Puedes usar @react-native-firebase/messaging.
+🔓 Puedes usar librerías nativas personalizadas.
+🔓 Puedes publicar la app perfectamente en las stores.
+
+❗ Resumiendo clarísimo
+Funcionalidad	Expo Go	Expo Dev Client
+React Native Firebase (FCM)	❌ No	✅ Sí
+Notificaciones avanzadas	❌ No	✅ Sí
+Librerías nativas externas	❌ No	✅ Sí
+Necesita pagar	❌ No	❌ No
+Sirve para publicar apps	⚠️ No	✅ Sí
+Si quieres, te puedo guiar:
+
+Migrar tu proyecto a Dev Client (sin perder Expo).
+
+Instalar React Native Firebase Messaging.
+
+Conectar FCM de nuevo (Android + iOS).
+
+Configurar la Cloud Function que enviará cumpleaños diarios.

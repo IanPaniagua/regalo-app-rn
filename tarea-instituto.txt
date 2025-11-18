@@ -1,0 +1,23 @@
+ Eigener Use Case & Automatisierung
+Überlege dir nun ein eigenes Automatisierungsprojekt. Du kannst dich dabei von den Vorschlägen im Projektideen-Katalog inspirieren lassen (z.B. Bewerbungshelfer, Geburtstagsbot, Ideen-Speicher). Starte mit einem einfachen "Zap", der aus mindestens einem Trigger und einer Action besteht.
+Beschreibe deinen Use Case: Welchen wiederkehrenden Prozess möchtest du automatisieren? Was ist das konkrete Ziel?
+Recherchiere die Tools: Welche Dienste möchtest du verbinden?
+Setze den Basis-Workflow um: Baue einen einfachen Zap in Zapier (oder Make/n8n).
+Aufgabe 3: Workflow um Custom Code oder API erweitern
+Ergänze deinen bestehenden Workflow um eine eigene Logik. Das Ziel ist, dass deine Automatisierung am Ende mindestens einen Trigger, eine Action und eine eigene Logik (Code oder API) enthält.
+Wähle eine der beiden folgenden Optionen:
+Option A: Custom Code integrieren (siehe Anhang 1 für wichtige Tipps)
+Füge einen "Code by Zapier" Schritt hinzu. Nutze Gemini oder ChatGPT, um dir ein kurzes JavaScript-Code-Snippet zu erstellen.
+Beispiele:
+Name in Großbuchstaben umwandeln
+E-Mail-Domain extrahieren (z. B. @gmail.com)
+Datum auslesen und umformatieren (z. B. 2025-05-19 zu 19. Mai 2025)
+Text längenbasiert kürzen (max. 150 Zeichen)
+Option B: Externe API anbinden (siehe Anhang 2 für wichtige Tipps)
+Nutze eine externe, kostenlose API, um Daten abzurufen.
+Füge dazu einen "Webhooks by Zapier" Schritt mit einer "GET"-Anfrage hinzu.
+Beispiele: 
+Wetterdaten (OpenWeather)
+Witze (JokeAPI)
+Zitate (Quotable)
+Wer optional beides machen kann und möchte (Custom Code + API) darf das natürlich – aber geht Schritt für Schritt vor und nehmt euch nicht zu viel auf einmal vor. Sobald ein Automatisierungs-Schritt zuverlässig läuft, können wir uns die nächste Erweiterung vornehmen.
