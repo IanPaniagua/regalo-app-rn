@@ -3,6 +3,7 @@ import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   signOut,
+  sendPasswordResetEmail,
   User as FirebaseUser,
   updateProfile,
   Auth,
@@ -96,6 +97,20 @@ export class AuthService {
   isAuthenticated(): boolean {
     const auth = this.getAuthInstance();
     return auth.currentUser !== null;
+  }
+
+  /**
+   * Enviar email de recuperación de contraseña
+   */
+  async resetPassword(email: string): Promise<void> {
+    try {
+      const auth = this.getAuthInstance();
+      await sendPasswordResetEmail(auth, email);
+      console.log('✅ Password reset email sent to:', email);
+    } catch (error: any) {
+      console.error('❌ Error sending password reset email:', error);
+      throw this.handleAuthError(error);
+    }
   }
 
   /**
