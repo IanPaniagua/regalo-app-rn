@@ -9,6 +9,7 @@ import {
   TouchableWithoutFeedback,
   Keyboard,
   Platform,
+  Pressable,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -27,6 +28,9 @@ export default function CreateProfileStep3() {
   const { addUser } = useBirthdays();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
 
   const validateEmail = (email: string) => {
@@ -50,8 +54,13 @@ export default function CreateProfileStep3() {
       return;
     }
 
-    if (password.length < 6) {
-      Alert.alert('Error', 'La contraseña debe tener al menos 6 caracteres');
+    if (password.length < 8) {
+      Alert.alert('Error', 'La contraseña debe tener al menos 8 caracteres');
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      Alert.alert('Error', 'Las contraseñas no coinciden');
       return;
     }
 
@@ -171,24 +180,66 @@ export default function CreateProfileStep3() {
                   <Ionicons name="lock-closed-outline" size={18} color={colors.primary} />
                   <AppText style={styles.label}>Contraseña</AppText>
                 </View>
-                <TextInput
-                  style={styles.input}
-                  value={password}
-                  onChangeText={setPassword}
-                  placeholder="Mínimo 6 caracteres"
-                  placeholderTextColor="#666"
-                  secureTextEntry
-                  autoCapitalize="none"
-                  autoCorrect={false}
-                  returnKeyType="done"
-                  onSubmitEditing={handleContinue}
-                />
+                <View style={styles.passwordContainer}>
+                  <TextInput
+                    style={styles.passwordInput}
+                    value={password}
+                    onChangeText={setPassword}
+                    placeholder="Mínimo 8 caracteres"
+                    placeholderTextColor="#666"
+                    secureTextEntry={!showPassword}
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    returnKeyType="next"
+                  />
+                  <Pressable
+                    onPress={() => setShowPassword(!showPassword)}
+                    style={styles.eyeIcon}
+                  >
+                    <Ionicons
+                      name={showPassword ? "eye-off-outline" : "eye-outline"}
+                      size={22}
+                      color="#999"
+                    />
+                  </Pressable>
+                </View>
+              </View>
+
+              <View style={styles.inputContainer}>
+                <View style={styles.labelRow}>
+                  <Ionicons name="lock-closed-outline" size={18} color={colors.primary} />
+                  <AppText style={styles.label}>Confirmar Contraseña</AppText>
+                </View>
+                <View style={styles.passwordContainer}>
+                  <TextInput
+                    style={styles.passwordInput}
+                    value={confirmPassword}
+                    onChangeText={setConfirmPassword}
+                    placeholder="Repite tu contraseña"
+                    placeholderTextColor="#666"
+                    secureTextEntry={!showConfirmPassword}
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    returnKeyType="done"
+                    onSubmitEditing={handleContinue}
+                  />
+                  <Pressable
+                    onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+                    style={styles.eyeIcon}
+                  >
+                    <Ionicons
+                      name={showConfirmPassword ? "eye-off-outline" : "eye-outline"}
+                      size={22}
+                      color="#999"
+                    />
+                  </Pressable>
+                </View>
               </View>
 
               <AppButton
                 title={isCreating ? "Creando perfil..." : "Crear cuenta"}
                 onPress={handleContinue}
-                disabled={!email.trim() || !password.trim() || isCreating}
+                disabled={!email.trim() || !password.trim() || !confirmPassword.trim() || isCreating}
                 style={styles.button}
               />
             </View>
@@ -242,6 +293,24 @@ const styles = StyleSheet.create({
     color: colors.white,
     borderWidth: 1,
     borderColor: '#444',
+  },
+  passwordContainer: {
+    position: 'relative',
+  },
+  passwordInput: {
+    backgroundColor: '#2A2A2A',
+    borderRadius: 12,
+    padding: 16,
+    paddingRight: 50,
+    fontSize: 16,
+    color: colors.white,
+    borderWidth: 1,
+    borderColor: '#444',
+  },
+  eyeIcon: {
+    position: 'absolute',
+    right: 16,
+    top: 16,
   },
   button: {
     marginTop: 8,

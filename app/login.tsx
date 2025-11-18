@@ -28,6 +28,7 @@ export default function LoginScreen() {
   const { refreshUsers } = useBirthdays();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
   const handleLogin = async () => {
@@ -84,6 +85,12 @@ export default function LoginScreen() {
     }
   };
 
+  const handleForgotPassword = () => {
+    // Navegar a la pantalla dedicada de recuperación
+    // @ts-ignore - typed routes
+    router.push('/forgot-password');
+  };
+
   return (
     <AppContainer>
       <KeyboardAvoidingView
@@ -127,18 +134,30 @@ export default function LoginScreen() {
                   <Ionicons name="lock-closed-outline" size={18} color={colors.primary} />
                   <AppText style={styles.label}>Contraseña</AppText>
                 </View>
-                <TextInput
-                  style={styles.input}
-                  value={password}
-                  onChangeText={setPassword}
-                  placeholder="Tu contraseña"
-                  placeholderTextColor="#666"
-                  secureTextEntry
-                  autoCapitalize="none"
-                  autoCorrect={false}
-                  returnKeyType="done"
-                  onSubmitEditing={handleLogin}
-                />
+                <View style={styles.passwordContainer}>
+                  <TextInput
+                    style={styles.passwordInput}
+                    value={password}
+                    onChangeText={setPassword}
+                    placeholder="Tu contraseña"
+                    placeholderTextColor="#666"
+                    secureTextEntry={!showPassword}
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    returnKeyType="done"
+                    onSubmitEditing={handleLogin}
+                  />
+                  <Pressable
+                    onPress={() => setShowPassword(!showPassword)}
+                    style={styles.eyeIcon}
+                  >
+                    <Ionicons
+                      name={showPassword ? "eye-off-outline" : "eye-outline"}
+                      size={22}
+                      color="#999"
+                    />
+                  </Pressable>
+                </View>
               </View>
 
               <Pressable
@@ -149,6 +168,13 @@ export default function LoginScreen() {
                 <AppText style={styles.buttonText}>
                   {isLoading ? 'Iniciando sesión...' : 'Iniciar Sesión'}
                 </AppText>
+              </Pressable>
+
+              <Pressable
+                style={styles.forgotPassword}
+                onPress={handleForgotPassword}
+              >
+                <AppText style={styles.forgotPasswordText}>¿Has olvidado tu contraseña?</AppText>
               </Pressable>
 
               <Pressable
@@ -211,6 +237,24 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: colors.white,
   },
+  passwordContainer: {
+    position: 'relative',
+  },
+  passwordInput: {
+    backgroundColor: '#2A2A2A',
+    borderWidth: 1,
+    borderColor: '#444',
+    borderRadius: 12,
+    padding: 16,
+    paddingRight: 50,
+    fontSize: 16,
+    color: colors.white,
+  },
+  eyeIcon: {
+    position: 'absolute',
+    right: 16,
+    top: 16,
+  },
   button: {
     backgroundColor: colors.primary,
     padding: 16,
@@ -225,6 +269,15 @@ const styles = StyleSheet.create({
     color: colors.secondary,
     fontSize: 16,
     fontWeight: '700',
+  },
+  forgotPassword: {
+    marginTop: 16,
+    alignItems: 'center',
+  },
+  forgotPasswordText: {
+    fontSize: 14,
+    color: colors.primary,
+    textDecorationLine: 'underline',
   },
   backButton: {
     marginTop: 16,
