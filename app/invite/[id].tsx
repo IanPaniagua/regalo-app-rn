@@ -1,7 +1,7 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState } from 'react';
 import { View, StyleSheet, ActivityIndicator, Alert } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import ConfettiCannon from 'react-native-confetti-cannon';
+import { CelebrationModal } from '@/src/components/CelebrationModal';
 import { AppContainer } from '@/src/components/ui/AppContainer';
 import { AppTitle } from '@/src/components/ui/AppTitle';
 import { AppText } from '@/src/components/ui/AppText';
@@ -25,7 +25,7 @@ export default function InviteScreen() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [accepting, setAccepting] = useState(false);
-  const confettiRef = useRef<any>(null);
+  const [showCelebration, setShowCelebration] = useState(false);
 
   useEffect(() => {
     loadInvitation();
@@ -109,24 +109,8 @@ export default function InviteScreen() {
       // Refrescar conexiones
       await refreshConnections();
 
-      // ¡Disparar confetti! 🎉
-      if (confettiRef.current) {
-        confettiRef.current.start();
-      }
-
-      // Mostrar alert después de un pequeño delay para que se vea el confetti
-      setTimeout(() => {
-        Alert.alert(
-          t('invite_connected_title'),
-          t('invite_connected_message').replace('{{name}}', invitation.fromUserName),
-          [
-            {
-              text: t('invite_connected_button'),
-              onPress: () => router.push('/(drawer)/(tabs)/connect' as any),
-            },
-          ]
-        );
-      }, 500);
+      // Mostrar modal de celebración con confetti
+      setShowCelebration(true);
     } catch (error) {
       console.error('Error accepting invitation:', error);
       Alert.alert(t('create_profile_error_title'), t('invite_load_error'));
@@ -237,16 +221,16 @@ export default function InviteScreen() {
         </View>
       </View>
 
-      {/* Confetti celebration animation */}
-      <ConfettiCannon
-        ref={confettiRef}
-        count={200}
-        origin={{ x: -10, y: 0 }}
-        autoStart={false}
-        fadeOut={true}
-        explosionSpeed={350}
-        fallSpeed={2500}
-        colors={[colors.primary, '#FFD700', '#FF6B6B', '#4ECDC4', '#95E1D3']}
+      {/* Modal de celebración con confetti */}
+      <CelebrationModal
+        visible={showCelebration}
+        title={t('invite_connected_title')}
+        message={t('invite_connected_message').replace('{{name}}', invitation?.fromUserName || '')}
+        buttonText={t('invite_connected_button')}
+        onButtonPress={() => {
+          setShowCelebration(false);
+          router.push('/(drawer)/(tabs)/connect' as any);
+        }}
       />
     </AppContainer>
   );
