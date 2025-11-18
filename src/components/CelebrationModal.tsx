@@ -107,7 +107,7 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   modalContainer: {
-    backgroundColor: colors.secondary,
+    backgroundColor: colors.successGreen,
     borderRadius: 24,
     padding: 32,
     width: '100%',
@@ -118,8 +118,8 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 16,
     elevation: 10,
-    borderWidth: 1,
-    borderColor: colors.primary + '30',
+    borderWidth: 2,
+    borderColor: colors.primary,
   },
   iconContainer: {
     marginBottom: 20,
@@ -135,13 +135,13 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 24,
     fontWeight: '700',
-    color: colors.white,
+    color: '#2C5F2D',
     marginBottom: 12,
     textAlign: 'center',
   },
   message: {
     fontSize: 16,
-    color: '#CCCCCC',
+    color: '#2C5F2D',
     textAlign: 'center',
     marginBottom: 28,
     lineHeight: 22,

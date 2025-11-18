@@ -110,7 +110,7 @@ const styles = StyleSheet.create({
   content: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#2A2A2A',
+    backgroundColor: colors.successGreen,
     borderRadius: 12,
     padding: 16,
     shadowColor: '#000',

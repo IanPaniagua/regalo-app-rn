@@ -618,10 +618,12 @@ const styles = StyleSheet.create({
     padding: 4,
   },
   invitationCard: {
-    backgroundColor: '#2A2A2A',
+    backgroundColor: colors.successGreen,
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
+    borderWidth: 2,
+    borderColor: colors.primary,
   },
   invitationHeader: {
     flexDirection: 'row',
@@ -639,15 +641,16 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     marginBottom: 2,
+    color: '#2C5F2D',
   },
   invitationEmail: {
     fontSize: 13,
-    color: '#999',
+    color: '#2C5F2D',
     marginBottom: 4,
   },
   invitationDate: {
     fontSize: 12,
-    color: '#666',
+    color: '#2C5F2D',
   },
   invitationActions: {
     flexDirection: 'row',
