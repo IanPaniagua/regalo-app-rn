@@ -1,6 +1,7 @@
 import { createContext, useContext, ReactNode, useState, useEffect } from 'react';
 import { db } from '@/src/database';
 import { useUser } from './UserContext';
+import { useConnections } from './ConnectionsContext';
 
 export interface BirthdayUser {
   id: string;
@@ -23,6 +24,7 @@ const BirthdaysContext = createContext<BirthdaysContextType | undefined>(undefin
 
 export function BirthdaysProvider({ children }: { children: ReactNode }) {
   const { user } = useUser();
+  const { connectedUsers } = useConnections();
   const [users, setUsers] = useState<BirthdayUser[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -65,10 +67,10 @@ export function BirthdaysProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  // Cargar usuarios al montar el componente o cuando cambie el usuario
+  // Cargar usuarios al montar el componente o cuando cambie el usuario o las conexiones
   useEffect(() => {
     refreshUsers();
-  }, [user?.id]);
+  }, [user?.id, connectedUsers.length]);
 
   const getUsersByDate = async (date: Date): Promise<BirthdayUser[]> => {
     try {
