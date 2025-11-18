@@ -91,7 +91,7 @@ export function InAppNotification({
           <AppText style={styles.message}>{message}</AppText>
         </View>
         <Pressable onPress={handleDismiss} hitSlop={8}>
-          <Ionicons name="close" size={20} color="#999" />
+          <Ionicons name="close" size={20} color="#2a2a2a" />
         </Pressable>
       </Pressable>
     </Animated.View>
@@ -130,11 +130,11 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 15,
     fontWeight: '600',
-    color: '#FFFFFF',
+    color: '#1a1a1a',
     marginBottom: 2,
   },
   message: {
     fontSize: 13,
-    color: '#CCCCCC',
+    color: '#2a2a2a',
   },
 });
