@@ -4,10 +4,12 @@ import * as admin from 'firebase-admin';
 admin.initializeApp();
 
 const db = admin.firestore();
-const messaging = admin.messaging();
 
 // Zona horaria para Alemania (CET/CEST)
 const TIMEZONE = 'Europe/Berlin';
+
+// Expo Push API endpoint
+const EXPO_PUSH_API = 'https://exp.host/--/api/v2/push/send';
 
 // Tipos
 interface UserData {
@@ -19,6 +21,52 @@ interface UserData {
   [key: string]: any;
 }
 
+interface ExpoPushMessage {
+  to: string | string[];
+  sound?: 'default' | null;
+  title?: string;
+  body?: string;
+  data?: any;
+  badge?: number;
+  priority?: 'default' | 'normal' | 'high';
+}
+
+interface ExpoPushResponse {
+  data: Array<{
+    status: 'ok' | 'error';
+    id?: string;
+    message?: string;
+    details?: any;
+  }>;
+}
+
+/**
+ * Envía notificaciones usando Expo Push API
+ */
+async function sendExpoPushNotifications(
+  messages: ExpoPushMessage[]
+): Promise<ExpoPushResponse> {
+  try {
+    const response = await fetch(EXPO_PUSH_API, {
+      method: 'POST',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(messages),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Expo Push API error: ${response.status}`);
+    }
+
+    return await response.json() as ExpoPushResponse;
+  } catch (error) {
+    console.error('❌ Error sending Expo push notifications:', error);
+    throw error;
+  }
+}
+
 /**
  * Función programada que se ejecuta todos los días a las 9:00 AM (hora de Alemania)
  * Envía notificaciones para cumpleaños del día
@@ -26,7 +74,7 @@ interface UserData {
 export const sendDailyBirthdayReminders = functions
   .region('europe-west1') // Servidor en Europa para mejor latencia
   .pubsub
-  .schedule('0 9 * * *') // Cron: 9:00 AM todos los días
+  .schedule('48 12 * * *') // Cron: 9:00 AM todos los días
   .timeZone(TIMEZONE)
   .onRun(async (context) => {
     console.log('🎂 Starting daily birthday reminders...');
@@ -195,7 +243,7 @@ async function notifyConnectionsAboutBirthday(birthdayUser: any) {
       conn.userId1 === birthdayUser.id ? conn.userId2 : conn.userId1
     );
     
-    // Obtener tokens FCM de usuarios conectados
+    // Obtener tokens Expo Push de usuarios conectados
     const usersSnapshot = await db
       .collection('users')
       .where(admin.firestore.FieldPath.documentId(), 'in', connectedUserIds)
@@ -203,10 +251,10 @@ async function notifyConnectionsAboutBirthday(birthdayUser: any) {
     
     const tokens = usersSnapshot.docs
       .map(doc => doc.data().fcmToken)
-      .filter(token => token); // Filtrar tokens vacíos
+      .filter(token => token && token.startsWith('ExponentPushToken[')); // Filtrar tokens Expo válidos
     
     if (tokens.length === 0) {
-      console.log('⚠️ No FCM tokens found for connections');
+      console.log('⚠️ No Expo Push tokens found for connections');
       return;
     }
     
@@ -216,30 +264,33 @@ async function notifyConnectionsAboutBirthday(birthdayUser: any) {
     const birthdate = birthdayUser.birthdate.toDate();
     const age = new Date().getFullYear() - birthdate.getFullYear();
     
-    // Crear mensaje
-    const message = {
-      notification: {
-        title: `🎉 ¡Hoy es el cumpleaños de ${birthdayUser.name}!`,
-        body: `Cumple ${age} años. No olvides felicitarlo 🎂`,
-      },
+    // Crear mensajes para Expo Push API
+    const messages: ExpoPushMessage[] = tokens.map(token => ({
+      to: token,
+      sound: 'default',
+      title: `🎉 ¡Hoy es el cumpleaños de ${birthdayUser.name}!`,
+      body: `Cumple ${age} años. No olvides felicitarlo 🎂`,
       data: {
         type: 'birthday',
         userId: birthdayUser.id,
         userName: birthdayUser.name,
         age: age.toString(),
       },
-      tokens: tokens,
-    };
+      priority: 'high',
+    }));
     
-    // Enviar notificación
-    const response = await messaging.sendEachForMulticast(message);
+    // Enviar notificaciones
+    const response = await sendExpoPushNotifications(messages);
     
-    console.log(`✅ Successfully sent: ${response.successCount}`);
-    console.log(`❌ Failed: ${response.failureCount}`);
+    const successCount = response.data.filter(r => r.status === 'ok').length;
+    const failureCount = response.data.filter(r => r.status === 'error').length;
+    
+    console.log(`✅ Successfully sent: ${successCount}`);
+    console.log(`❌ Failed: ${failureCount}`);
     
     // Limpiar tokens inválidos
-    if (response.failureCount > 0) {
-      await cleanupInvalidTokens(response, tokens);
+    if (failureCount > 0) {
+      await cleanupInvalidExpoPushTokens(response, tokens);
     }
     
   } catch (error) {
@@ -256,7 +307,7 @@ async function sendMonthlySummaryNotification(
   monthName: string
 ) {
   try {
-    if (!user.fcmToken) return;
+    if (!user.fcmToken || !user.fcmToken.startsWith('ExponentPushToken[')) return;
     
     console.log(`📊 Sending summary to ${user.name}: ${birthdays.length} birthdays in ${monthName}`);
     
@@ -271,72 +322,72 @@ async function sendMonthlySummaryNotification(
     
     const moreText = birthdays.length > 3 ? ` y ${birthdays.length - 3} más` : '';
     
-    const message = {
-      notification: {
-        title: `🎂 Cumpleaños en ${monthName}`,
-        body: `Tienes ${birthdays.length} cumpleaños: ${birthdayList}${moreText}`,
-      },
+    const message: ExpoPushMessage = {
+      to: user.fcmToken,
+      sound: 'default',
+      title: `🎂 Cumpleaños en ${monthName}`,
+      body: `Tienes ${birthdays.length} cumpleaños: ${birthdayList}${moreText}`,
       data: {
         type: 'monthly_summary',
         month: monthName,
         count: birthdays.length.toString(),
       },
-      token: user.fcmToken,
+      priority: 'high',
     };
     
-    await messaging.send(message);
-    console.log(`✅ Summary sent to ${user.name}`);
+    const response = await sendExpoPushNotifications([message]);
     
-  } catch (error: any) {
-    console.error(`❌ Error sending summary to ${user.name}:`, error);
-    
-    // Si el token es inválido, limpiarlo
-    if (error.code === 'messaging/invalid-registration-token' ||
-        error.code === 'messaging/registration-token-not-registered') {
+    if (response.data[0].status === 'ok') {
+      console.log(`✅ Summary sent to ${user.name}`);
+    } else {
+      console.error(`❌ Failed to send summary to ${user.name}:`, response.data[0].message);
+      // Limpiar token inválido
       await db.collection('users').doc(user.id).update({
         fcmToken: admin.firestore.FieldValue.delete()
       });
       console.log(`🧹 Cleaned invalid token for ${user.name}`);
     }
+    
+  } catch (error: any) {
+    console.error(`❌ Error sending summary to ${user.name}:`, error);
   }
 }
 
 /**
- * Limpia tokens FCM inválidos de la base de datos
+ * Limpia tokens Expo Push inválidos de la base de datos
  */
-async function cleanupInvalidTokens(response: any, tokens: string[]) {
-  const batch = db.batch();
+async function cleanupInvalidExpoPushTokens(response: ExpoPushResponse, tokens: string[]) {
   let cleanupCount = 0;
   
-  response.responses.forEach((resp: any, idx: number) => {
-    if (!resp.success) {
-      const error = resp.error;
-      if (error.code === 'messaging/invalid-registration-token' ||
-          error.code === 'messaging/registration-token-not-registered') {
-        
-        const invalidToken = tokens[idx];
-        
-        // Buscar y limpiar el token inválido
-        db.collection('users')
+  // Procesar cada respuesta
+  for (let idx = 0; idx < response.data.length; idx++) {
+    const resp = response.data[idx];
+    
+    if (resp.status === 'error') {
+      const invalidToken = tokens[idx];
+      
+      // Buscar y limpiar el token inválido
+      try {
+        const snapshot = await db.collection('users')
           .where('fcmToken', '==', invalidToken)
           .limit(1)
-          .get()
-          .then(snapshot => {
-            if (!snapshot.empty) {
-              const userRef = snapshot.docs[0].ref;
-              batch.update(userRef, {
-                fcmToken: admin.firestore.FieldValue.delete()
-              });
-              cleanupCount++;
-            }
+          .get();
+        
+        if (!snapshot.empty) {
+          await snapshot.docs[0].ref.update({
+            fcmToken: admin.firestore.FieldValue.delete()
           });
+          cleanupCount++;
+          console.log(`🧹 Cleaned invalid token: ${invalidToken.substring(0, 20)}...`);
+        }
+      } catch (error) {
+        console.error(`❌ Error cleaning token:`, error);
       }
     }
-  });
+  }
   
   if (cleanupCount > 0) {
-    await batch.commit();
-    console.log(`🧹 Cleaned ${cleanupCount} invalid tokens`);
+    console.log(`✅ Total cleaned tokens: ${cleanupCount}`);
   }
 }
 
