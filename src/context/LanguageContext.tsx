@@ -195,6 +195,10 @@ const translations = {
     drawer_settings_title: 'Ajustes',
     drawer_privacy_title: 'Política de privacidad',
     drawer_logout_title: 'Cerrar sesión',
+
+    // In-app notifications
+    notification_new_request_title: 'Nueva petición de conexión',
+    notification_new_request_message: 'Tienes una nueva solicitud de conexión. Toca para ver.',
   },
   en: {
     settings_title: 'Settings',
@@ -262,7 +266,7 @@ const translations = {
     invite_login_action: 'Log in',
     invite_error_self_connect: 'You cannot connect with yourself',
     invite_connected_title: 'Connected!',
-    invite_connected_message: 'You are now connected with {{name}}',
+    invite_connected_message: 'Wait for the reponse of with {{name}}',
     invite_connected_button: 'View connections',
     invite_accepting: 'Accepting...',
     invite_accept: 'Accept',
@@ -384,6 +388,10 @@ const translations = {
     drawer_settings_title: 'Settings',
     drawer_privacy_title: 'Privacy Policy',
     drawer_logout_title: 'Logout',
+
+    // In-app notifications
+    notification_new_request_title: 'New connection request',
+    notification_new_request_message: 'You have a new connection request. Tap to view.',
   },
   de: {
     settings_title: 'Einstellungen',
@@ -573,6 +581,10 @@ const translations = {
     drawer_settings_title: 'Einstellungen',
     drawer_privacy_title: 'Datenschutzerklärung',
     drawer_logout_title: 'Abmelden',
+
+    // In-app notifications
+    notification_new_request_title: 'Neue Verbindungsanfrage',
+    notification_new_request_message: 'Du hast eine neue Verbindungsanfrage. Tippe zum Anzeigen.',
   },
 } as const;
 
