@@ -5,4 +5,5 @@ export const colors = {
   gold: '#D4AF37', // oro estilo logo-regalo
   white: '#FFFFFF',
   black: '#000000',
+  successGreen: '#A8E6CF', // verde pastel para notificaciones y celebraciones
 };

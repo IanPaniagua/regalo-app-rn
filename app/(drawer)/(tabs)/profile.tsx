@@ -20,6 +20,7 @@ import { AppText } from '@/src/components/ui/AppText';
 import { AppButton } from '@/src/components/ui/AppButton';
 import { useUser } from '@/src/context/UserContext';
 import { useBirthdays } from '@/src/context/BirthdaysContext';
+import { useLanguage } from '@/src/context/LanguageContext';
 import { colors, fonts } from '@/src/theme';
 import { Ionicons } from '@expo/vector-icons';
 import { db } from '@/src/database';
@@ -61,6 +62,7 @@ const AVATARS = [
 export default function ProfileScreen() {
   const { user, setUser } = useUser();
   const { refreshUsers } = useBirthdays();
+  const { t } = useLanguage();
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [editedName, setEditedName] = useState(user?.name || '');
@@ -138,12 +140,12 @@ export default function ProfileScreen() {
 
   const handleSave = async () => {
     if (!editedName.trim()) {
-      Alert.alert('Error', 'El nombre no puede estar vacío');
+      Alert.alert(t('create_profile_error_title'), t('profile_error_empty_name'));
       return;
     }
 
     if (!user?.id) {
-      Alert.alert('Error', 'No se encontró el ID del usuario');
+      Alert.alert(t('create_profile_error_title'), t('profile_error_no_user_id'));
       return;
     }
 
@@ -196,11 +198,11 @@ export default function ProfileScreen() {
       if (nameChanged) {
         nameChangeLimit.notifyRemainingChanges(updateData.nameChangesCount);
       } else {
-        Alert.alert('Éxito', 'Perfil actualizado correctamente');
+        Alert.alert(t('invite_connected_title'), t('profile_success'));
       }
     } catch (error: any) {
       console.error('❌ Error updating profile:', error);
-      Alert.alert('Error', 'No se pudo actualizar el perfil');
+      Alert.alert(t('create_profile_error_title'), t('profile_error_update'));
     } finally {
       setIsSaving(false);
     }
@@ -218,9 +220,9 @@ export default function ProfileScreen() {
     return (
       <AppContainer>
         <View style={styles.emptyContainer}>
-          <AppTitle>No hay usuario</AppTitle>
+          <AppTitle>{t('profile_no_user_title')}</AppTitle>
           <AppText style={styles.emptyText}>
-            Por favor inicia sesión o crea un perfil
+            {t('profile_no_user_text')}
           </AppText>
         </View>
       </AppContainer>
@@ -241,27 +243,27 @@ export default function ProfileScreen() {
           <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
             <View style={styles.content}>
               <View style={styles.header}>
-                <AppTitle>Mi Perfil</AppTitle>
+                <AppTitle>{t('profile_title')}</AppTitle>
                 {!isEditing && (
                   <Pressable
                     style={styles.editButton}
                     onPress={() => setIsEditing(true)}
                   >
                     <Ionicons name="pencil" size={20} color={colors.primary} />
-                    <AppText style={styles.editButtonText}>Editar</AppText>
+                    <AppText style={styles.editButtonText}>{t('profile_edit')}</AppText>
                   </Pressable>
                 )}
               </View>
 
               {/* Nombre */}
               <View style={styles.section}>
-                <AppText style={styles.label}>Nombre</AppText>
+                <AppText style={styles.label}>{t('profile_name')}</AppText>
                 {isEditing ? (
                   <TextInput
                     style={styles.input}
                     value={editedName}
                     onChangeText={setEditedName}
-                    placeholder="Tu nombre"
+                    placeholder={t('profile_name_placeholder')}
                     placeholderTextColor="#666"
                     returnKeyType="done"
                     onSubmitEditing={Keyboard.dismiss}
@@ -275,7 +277,7 @@ export default function ProfileScreen() {
 
               {/* Avatar */}
               <View style={styles.section}>
-                <AppText style={styles.label}>Avatar</AppText>
+                <AppText style={styles.label}>{t('profile_avatar')}</AppText>
                 {isEditing ? (
                   <Pressable
                     style={styles.avatarButton}
@@ -285,7 +287,7 @@ export default function ProfileScreen() {
                     }}
                   >
                     <AppText style={styles.avatarEmoji}>{editedAvatar}</AppText>
-                    <AppText style={styles.changeAvatarText}>Cambiar avatar</AppText>
+                    <AppText style={styles.changeAvatarText}>{t('profile_change_avatar')}</AppText>
                   </Pressable>
                 ) : (
                   <View style={styles.valueContainer}>
@@ -296,7 +298,7 @@ export default function ProfileScreen() {
 
               {/* Email (no editable) */}
               <View style={styles.section}>
-                <AppText style={styles.label}>Email</AppText>
+                <AppText style={styles.label}>{t('profile_email')}</AppText>
                 <View style={[styles.valueContainer, styles.disabledContainer]}>
                   <AppText style={styles.value}>{user.email}</AppText>
                   <Ionicons name="lock-closed" size={16} color="#666" />
@@ -305,7 +307,7 @@ export default function ProfileScreen() {
 
               {/* Fecha de nacimiento */}
               <View style={styles.section}>
-                <AppText style={styles.label}>Fecha de nacimiento</AppText>
+                <AppText style={styles.label}>{t('profile_birthdate')}</AppText>
                 <View style={[styles.valueContainer, styles.disabledContainer]}>
                   <AppText style={styles.value}>{formatDate(user.birthdate)}</AppText>
                   <Ionicons name="lock-closed" size={16} color="#666" />
@@ -316,7 +318,7 @@ export default function ProfileScreen() {
               <View style={styles.section}>
                 <View style={styles.privacyRow}>
                   <View style={styles.privacyLabelContainer}>
-                    <AppText style={styles.privacyLabel}>No revelar edad</AppText>
+                    <AppText style={styles.privacyLabel}>{t('profile_privacy_hide_age')}</AppText>
                     <Pressable 
                       onPress={() => setShowBirthdayInfo(!showBirthdayInfo)}
                       hitSlop={8}
@@ -357,7 +359,7 @@ export default function ProfileScreen() {
                         privacyChangeLimit.notifyRemainingChanges(limitData.count);
                       } catch (error) {
                         console.error('❌ Error updating privacy setting:', error);
-                        Alert.alert('Error', 'No se pudo actualizar la configuración');
+                        Alert.alert(t('create_profile_error_title'), t('profile_error_privacy'));
                         // Revertir el cambio en caso de error
                         setHideAge(!value);
                       }
@@ -372,14 +374,14 @@ export default function ProfileScreen() {
                   <View style={styles.infoBox}>
                     <Ionicons name="information-circle" size={16} color={colors.primary} />
                     <AppText style={styles.infoText}>
-                      Al activar esta opción, otros usuarios verán solo tu próximo cumpleaños (día y mes) en lugar de tu fecha de nacimiento completa.
+                      {t('profile_privacy_info')}
                     </AppText>
                   </View>
                 )}
 
                 {hideAge && (
                   <View style={styles.previewContainer}>
-                    <AppText style={styles.previewLabel}>Los demás verán:</AppText>
+                    <AppText style={styles.previewLabel}>{t('profile_privacy_preview')}</AppText>
                     <AppText style={styles.previewValue}>{formatNextBirthday(user.birthdate)}</AppText>
                   </View>
                 )}
@@ -387,7 +389,7 @@ export default function ProfileScreen() {
 
               {/* Hobbies */}
               <View style={styles.section}>
-                <AppText style={styles.label}>Hobbies</AppText>
+                <AppText style={styles.label}>{t('profile_hobbies')}</AppText>
                 {isEditing ? (
                   <>
                     <View style={styles.hobbiesGrid}>
@@ -414,7 +416,7 @@ export default function ProfileScreen() {
                         style={[styles.hobbyChip, styles.hobbyChipOther]}
                         onPress={() => setShowCustomInput(!showCustomInput)}
                       >
-                        <AppText style={styles.hobbyText}>Otro</AppText>
+                        <AppText style={styles.hobbyText}>{t('profile_hobbies_other')}</AppText>
                       </Pressable>
                     </View>
 
@@ -424,12 +426,12 @@ export default function ProfileScreen() {
                           style={styles.customInput}
                           value={customHobby}
                           onChangeText={setCustomHobby}
-                          placeholder="Escribe tu hobby"
+                          placeholder={t('profile_hobbies_custom_placeholder')}
                           placeholderTextColor="#666"
                           onSubmitEditing={addCustomHobby}
                         />
                         <Pressable style={styles.addButton} onPress={addCustomHobby}>
-                          <AppText style={styles.addButtonText}>Añadir</AppText>
+                          <AppText style={styles.addButtonText}>{t('profile_hobbies_add')}</AppText>
                         </Pressable>
                       </View>
                     )}
@@ -443,7 +445,7 @@ export default function ProfileScreen() {
                         </View>
                       ))
                     ) : (
-                      <AppText style={styles.emptyText}>Sin hobbies</AppText>
+                      <AppText style={styles.emptyText}>{t('profile_hobbies_empty')}</AppText>
                     )}
                   </View>
                 )}
@@ -453,13 +455,13 @@ export default function ProfileScreen() {
               {isEditing && (
                 <View style={styles.actions}>
                   <AppButton
-                    title={isSaving ? "Guardando..." : "Guardar"}
+                    title={isSaving ? t('profile_saving') : t('profile_save')}
                     onPress={handleSave}
                     disabled={isSaving}
                     style={styles.saveButton}
                   />
                   <Pressable style={styles.cancelButton} onPress={handleCancel}>
-                    <AppText style={styles.cancelButtonText}>Cancelar</AppText>
+                    <AppText style={styles.cancelButtonText}>{t('profile_cancel')}</AppText>
                   </Pressable>
                 </View>
               )}
@@ -478,7 +480,7 @@ export default function ProfileScreen() {
               <View style={styles.modalOverlay}>
                 <View style={[styles.modalContent, styles.avatarModalContent]}>
                   <View style={styles.modalHeader}>
-                    <AppText style={styles.modalTitle}>Selecciona tu avatar</AppText>
+                    <AppText style={styles.modalTitle}>{t('profile_select_avatar')}</AppText>
                     <Pressable onPress={() => setShowAvatarPicker(false)}>
                       <Ionicons name="close" size={24} color={colors.white} />
                     </Pressable>

@@ -1,13 +1,48 @@
-import { Tabs } from 'expo-router';
+import { Tabs, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { View, Text, StyleSheet } from 'react-native';
+import { useState, useEffect } from 'react';
 import { useConnections } from '@/src/context/ConnectionsContext';
+import { useLanguage } from '@/src/context/LanguageContext';
+import { InAppNotification } from '@/src/components/InAppNotification';
 import { colors } from '@/src/theme';
 
 export default function TabLayout() {
-  const { notificationCount } = useConnections();
+  const router = useRouter();
+  const { notificationCount, pendingInvitations } = useConnections();
+  const { t } = useLanguage();
+  const [showNotification, setShowNotification] = useState(false);
+  const [lastNotificationCount, setLastNotificationCount] = useState(0);
+
+  // Detectar nuevas peticiones y mostrar notificación
+  useEffect(() => {
+    // Solo mostrar si hay nuevas peticiones (el contador aumentó)
+    if (pendingInvitations.length > 0 && pendingInvitations.length > lastNotificationCount) {
+      setShowNotification(true);
+    }
+    setLastNotificationCount(pendingInvitations.length);
+  }, [pendingInvitations.length]);
+
+  const handleNotificationPress = () => {
+    setShowNotification(false);
+    // Navegar a la pestaña de Connect
+    router.push('/(drawer)/(tabs)/connect');
+  };
+
+  const handleNotificationDismiss = () => {
+    setShowNotification(false);
+  };
 
   return (
+    <>
+      <InAppNotification
+        visible={showNotification}
+        title={t('notification_new_request_title')}
+        message={t('notification_new_request_message')}
+        onPress={handleNotificationPress}
+        onDismiss={handleNotificationDismiss}
+        duration={6000}
+      />
     <Tabs
       screenOptions={{
         tabBarActiveTintColor: colors.primary,
@@ -49,6 +84,7 @@ export default function TabLayout() {
         }}
       />
     </Tabs>
+    </>
   );
 }
 

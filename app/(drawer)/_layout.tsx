@@ -4,10 +4,12 @@ import { Image } from 'expo-image';
 import { View, StyleSheet } from 'react-native';
 import { AppText } from '@/src/components/ui/AppText';
 import { useUser } from '@/src/context/UserContext';
+import { useLanguage } from '@/src/context/LanguageContext';
 import { colors } from '@/src/theme';
 
 export default function DrawerLayout() {
   const { user } = useUser();
+  const { t } = useLanguage();
 
   return (
     <Drawer
@@ -22,7 +24,6 @@ export default function DrawerLayout() {
           backgroundColor: colors.secondary,
         },
         headerTintColor: colors.white,
-        headerTitleAlign: 'center',
         headerRight: () => (
           user ? (
             <View style={styles.userContainer}>
@@ -35,12 +36,12 @@ export default function DrawerLayout() {
       <Drawer.Screen
         name="(tabs)"
         options={{
-          drawerLabel: 'Home',
+          drawerLabel: t('drawer_home'),
           title: '',
           headerTitle: () => (
             <Image
-              source={require('@/assets/images/logo-regalo.png')}
-              style={{ width: 32, height: 32 }}
+              source={require('@/assets/logo.svg')}
+              style={{ width: 32, height: 32, tintColor: colors.white }}
               contentFit="contain"
             />
           ),
@@ -52,8 +53,8 @@ export default function DrawerLayout() {
       <Drawer.Screen
         name="profile"
         options={{
-          drawerLabel: 'Profile',
-          title: 'Mi Perfil',
+          drawerLabel: t('drawer_profile'),
+          title: t('drawer_profile_title'),
           drawerIcon: ({ color, size }) => (
             <Ionicons name="person-outline" size={size} color={color} />
           ),
@@ -62,8 +63,8 @@ export default function DrawerLayout() {
       <Drawer.Screen
         name="calendar"
         options={{
-          drawerLabel: 'Calendar',
-          title: 'Calendar',
+          drawerLabel: t('drawer_calendar'),
+          title: t('drawer_calendar_title'),
           drawerIcon: ({ color, size }) => (
             <Ionicons name="calendar-outline" size={size} color={color} />
           ),
@@ -72,8 +73,8 @@ export default function DrawerLayout() {
       <Drawer.Screen
         name="settings"
         options={{
-          drawerLabel: 'Settings',
-          title: 'Settings',
+          drawerLabel: t('drawer_settings'),
+          title: t('drawer_settings_title'),
           drawerIcon: ({ color, size }) => (
             <Ionicons name="settings-outline" size={size} color={color} />
           ),
@@ -82,8 +83,8 @@ export default function DrawerLayout() {
       <Drawer.Screen
         name="privacy"
         options={{
-          drawerLabel: 'Privacy Policy',
-          title: 'Privacy Policy',
+          drawerLabel: t('drawer_privacy'),
+          title: t('drawer_privacy_title'),
           drawerIcon: ({ color, size }) => (
             <Ionicons name="shield-outline" size={size} color={color} />
           ),
@@ -92,8 +93,8 @@ export default function DrawerLayout() {
       <Drawer.Screen
         name="logout"
         options={{
-          drawerLabel: 'Logout',
-          title: 'Logout',
+          drawerLabel: t('drawer_logout'),
+          title: t('drawer_logout_title'),
           drawerIcon: ({ color, size }) => (
             <Ionicons name="log-out-outline" size={size} color={color} />
           ),

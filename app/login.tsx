@@ -16,6 +16,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { AppContainer } from '@/src/components/ui/AppContainer';
 import { AppTitle } from '@/src/components/ui/AppTitle';
 import { AppText } from '@/src/components/ui/AppText';
+import { useLanguage } from '@/src/context/LanguageContext';
 import { colors, fonts } from '@/src/theme';
 import { useUser } from '@/src/context/UserContext';
 import { useBirthdays } from '@/src/context/BirthdaysContext';
@@ -26,6 +27,7 @@ export default function LoginScreen() {
   const router = useRouter();
   const { setUser, saveCredentials } = useUser();
   const { refreshUsers } = useBirthdays();
+  const { t } = useLanguage();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -33,12 +35,12 @@ export default function LoginScreen() {
 
   const handleLogin = async () => {
     if (!email.trim()) {
-      Alert.alert('Error', 'Por favor ingresa tu email');
+      Alert.alert(t('login_error_title'), t('login_error_email_required'));
       return;
     }
 
     if (!password.trim()) {
-      Alert.alert('Error', 'Por favor ingresa tu contraseña');
+      Alert.alert(t('login_error_title'), t('login_error_password_required'));
       return;
     }
 
@@ -52,7 +54,7 @@ export default function LoginScreen() {
       const dbUser = await db.getAdapter().getUserByEmail(email);
       
       if (!dbUser) {
-        Alert.alert('Error', 'No se encontró el perfil del usuario');
+        Alert.alert(t('login_error_title'), 'No se encontró el perfil del usuario');
         return;
       }
 
@@ -79,7 +81,7 @@ export default function LoginScreen() {
       router.replace('/(drawer)/(tabs)/calendar');
     } catch (error: any) {
       console.error('❌ Error logging in:', error);
-      Alert.alert('Error', error.message || 'No se pudo iniciar sesión');
+      Alert.alert(t('login_error_title'), error.message || t('login_error_generic'));
     } finally {
       setIsLoading(false);
     }
@@ -104,22 +106,22 @@ export default function LoginScreen() {
         >
           <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
             <View style={styles.content}>
-              <AppTitle style={styles.title}>Iniciar Sesión</AppTitle>
+              <AppTitle style={styles.title}>{t('login_title')}</AppTitle>
               
               <AppText style={styles.subtitle}>
-                Ingresa con tu email y contraseña
+                {t('login_subtitle')}
               </AppText>
 
               <View style={styles.inputContainer}>
                 <View style={styles.labelRow}>
                   <Ionicons name="mail-outline" size={18} color={colors.primary} />
-                  <AppText style={styles.label}>Email</AppText>
+                  <AppText style={styles.label}>{t('login_email_label')}</AppText>
                 </View>
                 <TextInput
                   style={styles.input}
                   value={email}
                   onChangeText={setEmail}
-                  placeholder="tu@email.com"
+                  placeholder={t('login_email_placeholder')}
                   placeholderTextColor="#666"
                   keyboardType="email-address"
                   autoCapitalize="none"
@@ -132,14 +134,14 @@ export default function LoginScreen() {
               <View style={styles.inputContainer}>
                 <View style={styles.labelRow}>
                   <Ionicons name="lock-closed-outline" size={18} color={colors.primary} />
-                  <AppText style={styles.label}>Contraseña</AppText>
+                  <AppText style={styles.label}>{t('login_password_label')}</AppText>
                 </View>
                 <View style={styles.passwordContainer}>
                   <TextInput
                     style={styles.passwordInput}
                     value={password}
                     onChangeText={setPassword}
-                    placeholder="Tu contraseña"
+                    placeholder={t('login_password_placeholder')}
                     placeholderTextColor="#666"
                     secureTextEntry={!showPassword}
                     autoCapitalize="none"
@@ -166,7 +168,7 @@ export default function LoginScreen() {
                 disabled={!email.trim() || !password.trim() || isLoading}
               >
                 <AppText style={styles.buttonText}>
-                  {isLoading ? 'Iniciando sesión...' : 'Iniciar Sesión'}
+                  {isLoading ? t('login_button_loading') : t('login_button')}
                 </AppText>
               </Pressable>
 
@@ -174,14 +176,14 @@ export default function LoginScreen() {
                 style={styles.forgotPassword}
                 onPress={handleForgotPassword}
               >
-                <AppText style={styles.forgotPasswordText}>¿Has olvidado tu contraseña?</AppText>
+                <AppText style={styles.forgotPasswordText}>{t('login_forgot_password')}</AppText>
               </Pressable>
 
               <Pressable
                 style={styles.backButton}
                 onPress={() => router.back()}
               >
-                <AppText style={styles.backButtonText}>Volver</AppText>
+                <AppText style={styles.backButtonText}>{t('login_back')}</AppText>
               </Pressable>
             </View>
           </TouchableWithoutFeedback>

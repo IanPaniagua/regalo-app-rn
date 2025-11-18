@@ -1,0 +1,694 @@
+import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import { View, ActivityIndicator } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+export type Lang = 'es' | 'en' | 'de';
+
+const STORAGE_KEY = '@regalo_app_language';
+
+const translations = {
+  es: {
+    settings_title: 'Ajustes',
+    settings_notifications: 'Notificaciones',
+    settings_notifications_toggle: 'Activar notificaciones push',
+    settings_notifications_helper: 'Recordatorios de cumpleaños e invitaciones.',
+    settings_notifications_system_disabled:
+      'Las notificaciones están desactivadas a nivel del sistema. Actívalas en los ajustes de tu dispositivo.',
+    settings_language: 'Idioma',
+    settings_language_restart_required: 'Reinicia la app para ver los cambios de idioma',
+    settings_language_change_title: 'Cambiar idioma',
+    settings_language_change_message: '¿Quieres cambiar el idioma de la aplicación? Tendrás que cerrar y volver a abrir la app para aplicar los cambios.',
+    settings_language_change_cancel: 'Cancelar',
+    settings_language_change_confirm: 'Cambiar',
+    language_spanish: 'Español',
+    language_english: 'Inglés',
+    language_german: 'Alemán',
+
+    welcome_title: 'Bienvenido',
+    welcome_create_profile: 'Crear Perfil',
+    welcome_login: 'Iniciar Sesión',
+
+    login_title: 'Iniciar Sesión',
+    login_subtitle: 'Ingresa con tu email y contraseña',
+    login_email_label: 'Email',
+    login_email_placeholder: 'tu@email.com',
+    login_password_label: 'Contraseña',
+    login_password_placeholder: 'Tu contraseña',
+    login_button: 'Iniciar Sesión',
+    login_button_loading: 'Iniciando sesión...',
+    login_back: 'Volver',
+    login_forgot_password: '¿Has olvidado tu contraseña?',
+    login_error_title: 'Error',
+    login_error_email_required: 'Por favor ingresa tu email',
+    login_error_password_required: 'Por favor ingresa tu contraseña',
+    login_error_generic: 'No se pudo iniciar sesión',
+
+    create_profile_email_title: '¿Cuál es tu email?',
+    create_profile_email_subtitle: 'Crea tu cuenta para acceder a la app',
+    create_profile_email_label: 'Email',
+    create_profile_email_placeholder: 'tu@email.com',
+    create_profile_password_label: 'Contraseña',
+    create_profile_password_placeholder: 'Mínimo 6 caracteres',
+    create_profile_button: 'Crear cuenta',
+    create_profile_button_loading: 'Creando perfil...',
+    create_profile_error_title: 'Error',
+    create_profile_error_email_required: 'Por favor ingresa tu email',
+    create_profile_error_email_invalid: 'Por favor ingresa un email válido',
+    create_profile_error_password_required: 'Por favor ingresa una contraseña',
+    create_profile_error_password_min_length: 'La contraseña debe tener al menos 6 caracteres',
+    create_profile_error_password_mismatch: 'Las contraseñas no coinciden',
+    create_profile_error_tempuser_missing: 'No se encontraron datos del perfil. Por favor vuelve a empezar.',
+    create_profile_error_generic: 'Hubo un problema al crear tu perfil. Por favor intenta de nuevo.',
+    create_profile_created_title: 'Perfil creado',
+    create_profile_created_message: '¡Tu perfil ha sido creado exitosamente!',
+
+    invite_invalid_id: 'ID de invitación inválido',
+    invite_not_found: 'Invitación no encontrada',
+    invite_expired: 'Esta invitación ha expirado',
+    invite_used: 'Esta invitación ya fue usada',
+    invite_load_error: 'Error al cargar la invitación',
+    invite_login_title: 'Inicia sesión',
+    invite_login_message: 'Necesitas iniciar sesión para aceptar esta invitación',
+    invite_login_cancel: 'Cancelar',
+    invite_login_action: 'Iniciar sesión',
+    invite_error_self_connect: 'No puedes conectar contigo mismo',
+    invite_connected_title: '¡Conectado!',
+    invite_connected_message: 'Ahora estás conectado con {{name}}',
+    invite_connected_button: 'Ver conexiones',
+    invite_accepting: 'Aceptando...',
+    invite_accept: 'Aceptar',
+    invite_reject: 'Rechazar',
+    invite_reject_title: 'Rechazar invitación',
+    invite_reject_message: '¿Estás seguro de que quieres rechazar esta invitación?',
+    invite_reject_cancel: 'Cancelar',
+    invite_reject_confirm: 'Rechazar',
+    invite_invalid_title: 'Invitación no válida',
+    invite_invalid_fallback: 'No se pudo cargar la invitación',
+    invite_loading: 'Cargando invitación...',
+    invite_login_required_inline: 'Necesitas iniciar sesión para aceptar esta invitación',
+    invite_expiry_prefix: 'Esta invitación expira el ',
+
+    // Calendar
+    calendar_title: 'Calendario',
+    calendar_month_birthdays_title: 'Cumpleaños en {{month}}',
+    calendar_month_birthdays_count_label: 'Cumpleaños',
+    calendar_view_list: 'Ver lista',
+    calendar_day_modal_title: 'Cumpleaños - {{day}} de {{month}}',
+    calendar_month_modal_title: '{{month}} - {{count}} cumpleaños',
+    calendar_month_modal_empty: 'No hay cumpleaños este mes',
+    calendar_day_item_age_suffix: 'años',
+    calendar_profile_modal_title: 'Perfil',
+    calendar_profile_birthdate_label: 'Fecha de nacimiento',
+    calendar_profile_age_label: 'Edad',
+    calendar_profile_email_label: 'Email',
+    calendar_profile_hobbies_label: 'Hobbies',
+    calendar_profile_close_button: 'Cerrar',
+    // Days of week (short)
+    day_mon: 'Lun',
+    day_tue: 'Mar',
+    day_wed: 'Mié',
+    day_thu: 'Jue',
+    day_fri: 'Vie',
+    day_sat: 'Sáb',
+    day_sun: 'Dom',
+    // Months
+    month_january: 'Enero',
+    month_february: 'Febrero',
+    month_march: 'Marzo',
+    month_april: 'Abril',
+    month_may: 'Mayo',
+    month_june: 'Junio',
+    month_july: 'Julio',
+    month_august: 'Agosto',
+    month_september: 'Septiembre',
+    month_october: 'Octubre',
+    month_november: 'Noviembre',
+    month_december: 'Diciembre',
+
+    // Connect
+    connect_title: 'Conectar',
+    connect_subtitle: 'Conecta con amigos para ver sus cumpleaños',
+    connect_invite_label: 'Invitar por email',
+    connect_invite_placeholder: 'email@ejemplo.com',
+    connect_invite_button: 'Enviar Invitación',
+    connect_invite_button_loading: 'Enviando...',
+    connect_tab_connections: 'Mis Conexiones ({{count}})',
+    connect_tab_pending: 'Pendientes',
+    connect_empty_requires_login_title: 'Inicia sesión',
+    connect_empty_requires_login_text: 'Inicia sesión para conectar con amigos',
+    connect_empty_connections_title: 'No tienes conexiones todavía',
+    connect_empty_connections_subtitle: 'Envía una invitación para conectar con amigos',
+    connect_empty_pending_title: 'No tienes invitaciones pendientes',
+    connect_accept_invitation_success_title: '¡Conectado!',
+    connect_accept_invitation_success_message:
+      'Ahora estás conectado con {{name}}. Sus cumpleaños aparecerán en tu calendario.',
+    connect_accept_invitation_error_title: 'Error',
+    connect_accept_invitation_error_message: 'No se pudo aceptar la invitación',
+    connect_reject_invitation_error_title: 'Error',
+    connect_reject_invitation_error_message: 'No se pudo rechazar la invitación',
+    connect_disconnect_title: 'Desconectar contacto',
+    connect_disconnect_message:
+      'Si desconectas de {{name}}, dejarás de ver sus cumpleaños en tu calendario.',
+    connect_disconnect_confirm: 'Desconectar',
+    connect_disconnect_cancel: 'Cancelar',
+    connect_disconnect_error_title: 'Error',
+    connect_disconnect_error_message: 'No se pudo desconectar',
+
+    // Profile
+    profile_title: 'Mi Perfil',
+    profile_edit: 'Editar',
+    profile_name: 'Nombre',
+    profile_avatar: 'Avatar',
+    profile_email: 'Email',
+    profile_birthdate: 'Fecha de nacimiento',
+    profile_privacy_hide_age: 'No revelar edad',
+    profile_privacy_info: 'Al activar esta opción, otros usuarios verán solo tu próximo cumpleaños (día y mes) en lugar de tu fecha de nacimiento completa.',
+    profile_privacy_preview: 'Los demás verán:',
+    profile_hobbies: 'Hobbies',
+    profile_hobbies_empty: 'Sin hobbies',
+    profile_hobbies_other: 'Otro',
+    profile_hobbies_custom_placeholder: 'Escribe tu hobby',
+    profile_hobbies_add: 'Añadir',
+    profile_save: 'Guardar',
+    profile_saving: 'Guardando...',
+    profile_cancel: 'Cancelar',
+    profile_change_avatar: 'Cambiar avatar',
+    profile_select_avatar: 'Selecciona tu avatar',
+    profile_name_placeholder: 'Tu nombre',
+    profile_error_empty_name: 'El nombre no puede estar vacío',
+    profile_error_no_user_id: 'No se encontró el ID del usuario',
+    profile_success: 'Perfil actualizado correctamente',
+    profile_error_update: 'No se pudo actualizar el perfil',
+    profile_error_privacy: 'No se pudo actualizar la configuración',
+    profile_no_user_title: 'No hay usuario',
+    profile_no_user_text: 'Por favor inicia sesión o crea un perfil',
+
+    // Drawer / Navigation
+    drawer_home: 'Home',
+    drawer_profile: 'Perfil',
+    drawer_calendar: 'Calendario',
+    drawer_settings: 'Ajustes',
+    drawer_privacy: 'Política de privacidad',
+    drawer_logout: 'Cerrar sesión',
+    drawer_profile_title: 'Mi Perfil',
+    drawer_calendar_title: 'Calendario',
+    drawer_settings_title: 'Ajustes',
+    drawer_privacy_title: 'Política de privacidad',
+    drawer_logout_title: 'Cerrar sesión',
+
+    // In-app notifications
+    notification_new_request_title: 'Nueva petición de conexión',
+    notification_new_request_message: 'Tienes una nueva solicitud de conexión. Toca para ver.',
+  },
+  en: {
+    settings_title: 'Settings',
+    settings_notifications: 'Notifications',
+    settings_notifications_toggle: 'Enable push notifications',
+    settings_notifications_helper: 'Birthday reminders and invitations.',
+    settings_notifications_system_disabled:
+      'Notifications are disabled at system level. Enable them in your device settings.',
+    settings_language: 'Language',
+    settings_language_restart_required: 'Restart the app to see language changes',
+    settings_language_change_title: 'Change language',
+    settings_language_change_message: 'Do you want to change the app language? You will need to close and reopen the app to apply the changes.',
+    settings_language_change_cancel: 'Cancel',
+    settings_language_change_confirm: 'Change',
+    language_spanish: 'Spanish',
+    language_english: 'English',
+    language_german: 'German',
+
+    welcome_title: 'Welcome',
+    welcome_create_profile: 'Create Profile',
+    welcome_login: 'Log In',
+
+    login_title: 'Log In',
+    login_subtitle: 'Sign in with your email and password',
+    login_email_label: 'Email',
+    login_email_placeholder: 'you@email.com',
+    login_password_label: 'Password',
+    login_password_placeholder: 'Your password',
+    login_button: 'Log In',
+    login_button_loading: 'Logging in...',
+    login_back: 'Back',
+    login_forgot_password: 'Forgot your password?',
+    login_error_title: 'Error',
+    login_error_email_required: 'Please enter your email',
+    login_error_password_required: 'Please enter your password',
+    login_error_generic: 'Could not log in',
+
+    create_profile_email_title: 'What is your email?',
+    create_profile_email_subtitle: 'Create your account to access the app',
+    create_profile_email_label: 'Email',
+    create_profile_email_placeholder: 'you@email.com',
+    create_profile_password_label: 'Password',
+    create_profile_password_placeholder: 'Minimum 6 characters',
+    create_profile_button: 'Create account',
+    create_profile_button_loading: 'Creating profile...',
+    create_profile_error_title: 'Error',
+    create_profile_error_email_required: 'Please enter your email',
+    create_profile_error_email_invalid: 'Please enter a valid email address',
+    create_profile_error_password_required: 'Please enter a password',
+    create_profile_error_password_min_length: 'Password must be at least 6 characters long',
+    create_profile_error_password_mismatch: 'Passwords do not match',
+    create_profile_error_tempuser_missing: 'Profile data not found. Please start again.',
+    create_profile_error_generic: 'There was a problem creating your profile. Please try again.',
+    create_profile_created_title: 'Profile created',
+    create_profile_created_message: 'Your profile has been created successfully!',
+
+    invite_invalid_id: 'Invalid invitation ID',
+    invite_not_found: 'Invitation not found',
+    invite_expired: 'This invitation has expired',
+    invite_used: 'This invitation has already been used',
+    invite_load_error: 'Error loading invitation',
+    invite_login_title: 'Log in',
+    invite_login_message: 'You need to log in to accept this invitation',
+    invite_login_cancel: 'Cancel',
+    invite_login_action: 'Log in',
+    invite_error_self_connect: 'You cannot connect with yourself',
+    invite_connected_title: 'Connected!',
+    invite_connected_message: 'Wait for the reponse of with {{name}}',
+    invite_connected_button: 'View connections',
+    invite_accepting: 'Accepting...',
+    invite_accept: 'Accept',
+    invite_reject: 'Reject',
+    invite_reject_title: 'Reject invitation',
+    invite_reject_message: 'Are you sure you want to reject this invitation?',
+    invite_reject_cancel: 'Cancel',
+    invite_reject_confirm: 'Reject',
+    invite_invalid_title: 'Invalid invitation',
+    invite_invalid_fallback: 'Could not load invitation',
+    invite_loading: 'Loading invitation...',
+    invite_login_required_inline: 'You need to log in to accept this invitation',
+    invite_expiry_prefix: 'This invitation expires on ',
+
+    // Calendar
+    calendar_title: 'Calendar',
+    calendar_month_birthdays_title: 'Birthdays in {{month}}',
+    calendar_month_birthdays_count_label: 'Birthdays',
+    calendar_view_list: 'View list',
+    calendar_day_modal_title: 'Birthdays - {{day}} {{month}}',
+    calendar_month_modal_title: '{{month}} - {{count}} birthdays',
+    calendar_month_modal_empty: 'No birthdays this month',
+    calendar_day_item_age_suffix: 'years',
+    calendar_profile_modal_title: 'Profile',
+    calendar_profile_birthdate_label: 'Date of birth',
+    calendar_profile_age_label: 'Age',
+    calendar_profile_email_label: 'Email',
+    calendar_profile_hobbies_label: 'Hobbies',
+    calendar_profile_close_button: 'Close',
+    // Days of week (short)
+    day_mon: 'Mon',
+    day_tue: 'Tue',
+    day_wed: 'Wed',
+    day_thu: 'Thu',
+    day_fri: 'Fri',
+    day_sat: 'Sat',
+    day_sun: 'Sun',
+    // Months
+    month_january: 'January',
+    month_february: 'February',
+    month_march: 'March',
+    month_april: 'April',
+    month_may: 'May',
+    month_june: 'June',
+    month_july: 'July',
+    month_august: 'August',
+    month_september: 'September',
+    month_october: 'October',
+    month_november: 'November',
+    month_december: 'December',
+
+    // Connect
+    connect_title: 'Connect',
+    connect_subtitle: 'Connect with friends to see their birthdays',
+    connect_invite_label: 'Invite by email',
+    connect_invite_placeholder: 'email@example.com',
+    connect_invite_button: 'Send Invitation',
+    connect_invite_button_loading: 'Sending...',
+    connect_tab_connections: 'My Connections ({{count}})',
+    connect_tab_pending: 'Pending',
+    connect_empty_requires_login_title: 'Log in',
+    connect_empty_requires_login_text: 'Log in to connect with friends',
+    connect_empty_connections_title: 'You have no connections yet',
+    connect_empty_connections_subtitle: 'Send an invitation to connect with friends',
+    connect_empty_pending_title: 'You have no pending invitations',
+    connect_accept_invitation_success_title: 'Connected!',
+    connect_accept_invitation_success_message:
+      'You are now connected with {{name}}. Their birthdays will appear in your calendar.',
+    connect_accept_invitation_error_title: 'Error',
+    connect_accept_invitation_error_message: 'Could not accept the invitation',
+    connect_reject_invitation_error_title: 'Error',
+    connect_reject_invitation_error_message: 'Could not reject the invitation',
+    connect_disconnect_title: 'Disconnect contact',
+    connect_disconnect_message:
+      'If you disconnect from {{name}}, you will no longer see their birthdays in your calendar.',
+    connect_disconnect_confirm: 'Disconnect',
+    connect_disconnect_cancel: 'Cancel',
+    connect_disconnect_error_title: 'Error',
+    connect_disconnect_error_message: 'Could not disconnect',
+
+    // Profile
+    profile_title: 'My Profile',
+    profile_edit: 'Edit',
+    profile_name: 'Name',
+    profile_avatar: 'Avatar',
+    profile_email: 'Email',
+    profile_birthdate: 'Date of birth',
+    profile_privacy_hide_age: 'Hide age',
+    profile_privacy_info: 'When enabled, other users will see only your next birthday (day and month) instead of your full date of birth.',
+    profile_privacy_preview: 'Others will see:',
+    profile_hobbies: 'Hobbies',
+    profile_hobbies_empty: 'No hobbies',
+    profile_hobbies_other: 'Other',
+    profile_hobbies_custom_placeholder: 'Write your hobby',
+    profile_hobbies_add: 'Add',
+    profile_save: 'Save',
+    profile_saving: 'Saving...',
+    profile_cancel: 'Cancel',
+    profile_change_avatar: 'Change avatar',
+    profile_select_avatar: 'Select your avatar',
+    profile_name_placeholder: 'Your name',
+    profile_error_empty_name: 'Name cannot be empty',
+    profile_error_no_user_id: 'User ID not found',
+    profile_success: 'Profile updated successfully',
+    profile_error_update: 'Could not update profile',
+    profile_error_privacy: 'Could not update settings',
+    profile_no_user_title: 'No user',
+    profile_no_user_text: 'Please log in or create a profile',
+
+    // Drawer / Navigation
+    drawer_home: 'Home',
+    drawer_profile: 'Profile',
+    drawer_calendar: 'Calendar',
+    drawer_settings: 'Settings',
+    drawer_privacy: 'Privacy Policy',
+    drawer_logout: 'Logout',
+    drawer_profile_title: 'My Profile',
+    drawer_calendar_title: 'Calendar',
+    drawer_settings_title: 'Settings',
+    drawer_privacy_title: 'Privacy Policy',
+    drawer_logout_title: 'Logout',
+
+    // In-app notifications
+    notification_new_request_title: 'New connection request',
+    notification_new_request_message: 'You have a new connection request. Tap to view.',
+  },
+  de: {
+    settings_title: 'Einstellungen',
+    settings_notifications: 'Benachrichtigungen',
+    settings_notifications_toggle: 'Push-Benachrichtigungen aktivieren',
+    settings_notifications_helper: 'Geburtstagserinnerungen und Einladungen.',
+    settings_notifications_system_disabled:
+      'Benachrichtigungen sind systemweit deaktiviert. Aktiviere sie in den Geräteeinstellungen.',
+    settings_language: 'Sprache',
+    settings_language_restart_required: 'Starte die App neu, um Sprachänderungen zu sehen',
+    settings_language_change_title: 'Sprache ändern',
+    settings_language_change_message: 'Möchtest du die App-Sprache ändern? Du musst die App schließen und neu öffnen, um die Änderungen anzuwenden.',
+    settings_language_change_cancel: 'Abbrechen',
+    settings_language_change_confirm: 'Ändern',
+    language_spanish: 'Spanisch',
+    language_english: 'Englisch',
+    language_german: 'Deutsch',
+
+    welcome_title: 'Willkommen',
+    welcome_create_profile: 'Profil erstellen',
+    welcome_login: 'Anmelden',
+
+    login_title: 'Anmelden',
+    login_subtitle: 'Melde dich mit E-Mail und Passwort an',
+    login_email_label: 'E-Mail',
+    login_email_placeholder: 'deine@email.de',
+    login_password_label: 'Passwort',
+    login_password_placeholder: 'Dein Passwort',
+    login_button: 'Anmelden',
+    login_button_loading: 'Wird angemeldet...',
+    login_back: 'Zurück',
+    login_forgot_password: 'Passwort vergessen?',
+    login_error_title: 'Fehler',
+    login_error_email_required: 'Bitte gib deine E-Mail ein',
+    login_error_password_required: 'Bitte gib dein Passwort ein',
+    login_error_generic: 'Anmeldung nicht möglich',
+
+    create_profile_email_title: 'Wie lautet deine E-Mail?',
+    create_profile_email_subtitle: 'Erstelle dein Konto, um die App zu nutzen',
+    create_profile_email_label: 'E-Mail',
+    create_profile_email_placeholder: 'deine@email.de',
+    create_profile_password_label: 'Passwort',
+    create_profile_password_placeholder: 'Mindestens 6 Zeichen',
+    create_profile_button: 'Konto erstellen',
+    create_profile_button_loading: 'Profil wird erstellt...',
+    create_profile_error_title: 'Fehler',
+    create_profile_error_email_required: 'Bitte gib deine E-Mail ein',
+    create_profile_error_email_invalid: 'Bitte gib eine gültige E-Mail-Adresse ein',
+    create_profile_error_password_required: 'Bitte gib ein Passwort ein',
+    create_profile_error_password_min_length: 'Das Passwort muss mindestens 6 Zeichen lang sein',
+    create_profile_error_password_mismatch: 'Passwörter stimmen nicht überein',
+    create_profile_error_tempuser_missing: 'Profildaten wurden nicht gefunden. Bitte starte erneut.',
+    create_profile_error_generic: 'Beim Erstellen deines Profils ist ein Fehler aufgetreten. Bitte versuche es erneut.',
+    create_profile_created_title: 'Profil erstellt',
+    create_profile_created_message: 'Dein Profil wurde erfolgreich erstellt!',
+
+    invite_invalid_id: 'Ungültige Einladungs-ID',
+    invite_not_found: 'Einladung nicht gefunden',
+    invite_expired: 'Diese Einladung ist abgelaufen',
+    invite_used: 'Diese Einladung wurde bereits verwendet',
+    invite_load_error: 'Fehler beim Laden der Einladung',
+    invite_login_title: 'Anmelden',
+    invite_login_message: 'Du musst dich anmelden, um diese Einladung zu akzeptieren',
+    invite_login_cancel: 'Abbrechen',
+    invite_login_action: 'Anmelden',
+    invite_error_self_connect: 'Du kannst dich nicht mit dir selbst verbinden',
+    invite_connected_title: 'Verbunden!',
+    invite_connected_message: 'Du bist jetzt mit {{name}} verbunden',
+    invite_connected_button: 'Verbindungen anzeigen',
+    invite_accepting: 'Wird akzeptiert...',
+    invite_accept: 'Akzeptieren',
+    invite_reject: 'Ablehnen',
+    invite_reject_title: 'Einladung ablehnen',
+    invite_reject_message: 'Bist du sicher, dass du diese Einladung ablehnen möchtest?',
+    invite_reject_cancel: 'Abbrechen',
+    invite_reject_confirm: 'Ablehnen',
+    invite_invalid_title: 'Ungültige Einladung',
+    invite_invalid_fallback: 'Einladung konnte nicht geladen werden',
+    invite_loading: 'Einladung wird geladen...',
+    invite_login_required_inline: 'Du musst dich anmelden, um diese Einladung zu akzeptieren',
+    invite_expiry_prefix: 'Diese Einladung läuft ab am ',
+
+    // Calendar
+    calendar_title: 'Kalender',
+    calendar_month_birthdays_title: 'Geburtstage im {{month}}',
+    calendar_month_birthdays_count_label: 'Geburtstage',
+    calendar_view_list: 'Liste anzeigen',
+    calendar_day_modal_title: 'Geburtstage - {{day}}. {{month}}',
+    calendar_month_modal_title: '{{month}} - {{count}} Geburtstage',
+    calendar_month_modal_empty: 'In diesem Monat gibt es keine Geburtstage',
+    calendar_day_item_age_suffix: 'Jahre',
+    calendar_profile_modal_title: 'Profil',
+    calendar_profile_birthdate_label: 'Geburtsdatum',
+    calendar_profile_age_label: 'Alter',
+    calendar_profile_email_label: 'E-Mail',
+    calendar_profile_hobbies_label: 'Hobbys',
+    calendar_profile_close_button: 'Schließen',
+    // Days of week (short)
+    day_mon: 'Mo',
+    day_tue: 'Di',
+    day_wed: 'Mi',
+    day_thu: 'Do',
+    day_fri: 'Fr',
+    day_sat: 'Sa',
+    day_sun: 'So',
+    // Months
+    month_january: 'Januar',
+    month_february: 'Februar',
+    month_march: 'März',
+    month_april: 'April',
+    month_may: 'Mai',
+    month_june: 'Juni',
+    month_july: 'Juli',
+    month_august: 'August',
+    month_september: 'September',
+    month_october: 'Oktober',
+    month_november: 'November',
+    month_december: 'Dezember',
+
+    // Connect
+    connect_title: 'Verbinden',
+    connect_subtitle: 'Verbinde dich mit Freunden, um ihre Geburtstage zu sehen',
+    connect_invite_label: 'Per E-Mail einladen',
+    connect_invite_placeholder: 'email@beispiel.de',
+    connect_invite_button: 'Einladung senden',
+    connect_invite_button_loading: 'Wird gesendet...',
+    connect_tab_connections: 'Meine Verbindungen ({{count}})',
+    connect_tab_pending: 'Ausstehend',
+    connect_empty_requires_login_title: 'Anmelden',
+    connect_empty_requires_login_text: 'Melde dich an, um dich mit Freunden zu verbinden',
+    connect_empty_connections_title: 'Du hast noch keine Verbindungen',
+    connect_empty_connections_subtitle: 'Sende eine Einladung, um dich mit Freunden zu verbinden',
+    connect_empty_pending_title: 'Du hast keine ausstehenden Einladungen',
+    connect_accept_invitation_success_title: 'Verbunden!',
+    connect_accept_invitation_success_message:
+      'Du bist jetzt mit {{name}} verbunden. Seine Geburtstage erscheinen in deinem Kalender.',
+    connect_accept_invitation_error_title: 'Fehler',
+    connect_accept_invitation_error_message: 'Einladung konnte nicht akzeptiert werden',
+    connect_reject_invitation_error_title: 'Fehler',
+    connect_reject_invitation_error_message: 'Einladung konnte nicht abgelehnt werden',
+    connect_disconnect_title: 'Kontakt trennen',
+    connect_disconnect_message:
+      'Wenn du die Verbindung zu {{name}} trennst, werden seine Geburtstage nicht mehr in deinem Kalender angezeigt.',
+    connect_disconnect_confirm: 'Trennen',
+    connect_disconnect_cancel: 'Abbrechen',
+    connect_disconnect_error_title: 'Fehler',
+    connect_disconnect_error_message: 'Trennen nicht möglich',
+
+    // Profile
+    profile_title: 'Mein Profil',
+    profile_edit: 'Bearbeiten',
+    profile_name: 'Name',
+    profile_avatar: 'Avatar',
+    profile_email: 'E-Mail',
+    profile_birthdate: 'Geburtsdatum',
+    profile_privacy_hide_age: 'Alter verbergen',
+    profile_privacy_info: 'Wenn aktiviert, sehen andere Benutzer nur deinen nächsten Geburtstag (Tag und Monat) anstelle deines vollständigen Geburtsdatums.',
+    profile_privacy_preview: 'Andere werden sehen:',
+    profile_hobbies: 'Hobbys',
+    profile_hobbies_empty: 'Keine Hobbys',
+    profile_hobbies_other: 'Andere',
+    profile_hobbies_custom_placeholder: 'Schreibe dein Hobby',
+    profile_hobbies_add: 'Hinzufügen',
+    profile_save: 'Speichern',
+    profile_saving: 'Speichern...',
+    profile_cancel: 'Abbrechen',
+    profile_change_avatar: 'Avatar ändern',
+    profile_select_avatar: 'Wähle deinen Avatar',
+    profile_name_placeholder: 'Dein Name',
+    profile_error_empty_name: 'Name darf nicht leer sein',
+    profile_error_no_user_id: 'Benutzer-ID nicht gefunden',
+    profile_success: 'Profil erfolgreich aktualisiert',
+    profile_error_update: 'Profil konnte nicht aktualisiert werden',
+    profile_error_privacy: 'Einstellungen konnten nicht aktualisiert werden',
+    profile_no_user_title: 'Kein Benutzer',
+    profile_no_user_text: 'Bitte melde dich an oder erstelle ein Profil',
+
+    // Drawer / Navigation
+    drawer_home: 'Home',
+    drawer_profile: 'Profil',
+    drawer_calendar: 'Kalender',
+    drawer_settings: 'Einstellungen',
+    drawer_privacy: 'Datenschutzerklärung',
+    drawer_logout: 'Abmelden',
+    drawer_profile_title: 'Mein Profil',
+    drawer_calendar_title: 'Kalender',
+    drawer_settings_title: 'Einstellungen',
+    drawer_privacy_title: 'Datenschutzerklärung',
+    drawer_logout_title: 'Abmelden',
+
+    // In-app notifications
+    notification_new_request_title: 'Neue Verbindungsanfrage',
+    notification_new_request_message: 'Du hast eine neue Verbindungsanfrage. Tippe zum Anzeigen.',
+  },
+} as const;
+
+export type TranslationKey = keyof typeof translations['es'];
+
+interface LanguageContextValue {
+  lang: Lang;
+  t: (key: TranslationKey) => string;
+  setLanguage: (lang: Lang) => Promise<void>;
+}
+
+const LanguageContext = createContext<LanguageContextValue | undefined>(undefined);
+
+function resolveAppLanguage(locale: string | null | undefined): Lang {
+  if (!locale) return 'en';
+  const code = locale.split('-')[0].toLowerCase();
+  if (code === 'es') return 'es';
+  if (code === 'de') return 'de';
+  return 'en';
+}
+
+export function LanguageProvider({ children }: { children: ReactNode }) {
+  const [lang, setLang] = useState<Lang>('en');
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Load language ONCE at startup - this runs only on app initialization
+  useEffect(() => {
+    let mounted = true;
+    
+    (async () => {
+      try {
+        const stored = await AsyncStorage.getItem(STORAGE_KEY);
+        
+        if (!mounted) return;
+        
+        if (stored === 'es' || stored === 'en' || stored === 'de') {
+          setLang(stored);
+        } else {
+          // Detect device locale only on first launch
+          let deviceLocale: string | null = null;
+          try {
+            const localizationModule = await import('expo-localization');
+            const localeValue = (localizationModule as any).locale || (localizationModule as any).default?.locale;
+            deviceLocale = typeof localeValue === 'string' ? localeValue : null;
+          } catch (error) {
+            console.warn('⚠️ expo-localization not available, falling back to en:', error);
+          }
+          const detectedLang = resolveAppLanguage(deviceLocale);
+          if (mounted) {
+            setLang(detectedLang);
+            // Save detected language
+            await AsyncStorage.setItem(STORAGE_KEY, detectedLang);
+          }
+        }
+      } catch (error) {
+        console.error('❌ Error loading language from storage:', error);
+      } finally {
+        if (mounted) {
+          setIsLoading(false);
+        }
+      }
+    })();
+    
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  // When user changes language, ONLY save to storage
+  // DO NOT update state - language will change on next app launch
+  const setLanguage = async (next: Lang) => {
+    try {
+      await AsyncStorage.setItem(STORAGE_KEY, next);
+      // DO NOT call setLang(next) here - we want language to change only on app restart
+    } catch (error) {
+      console.error('❌ Error saving language:', error);
+    }
+  };
+
+  // Simple translation function - no need for useCallback since lang never changes after load
+  const t = (key: TranslationKey): string => {
+    return translations[lang][key] ?? translations.en[key];
+  };
+
+  // Show a brief loading indicator while loading language (only on first app launch)
+  if (isLoading) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#1C1C1C' }}>
+        <ActivityIndicator size="large" color="#D4AF37" />
+      </View>
+    );
+  }
+
+  return (
+    <LanguageContext.Provider value={{ lang, t, setLanguage }}>
+      {children}
+    </LanguageContext.Provider>
+  );
+}
+
+export function useLanguage(): LanguageContextValue {
+  const ctx = useContext(LanguageContext);
+  if (!ctx) {
+    throw new Error('useLanguage must be used within a LanguageProvider');
+  }
+  return ctx;
+}

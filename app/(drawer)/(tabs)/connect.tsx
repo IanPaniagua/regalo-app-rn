@@ -1,19 +1,22 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { View, StyleSheet, ScrollView, Pressable, Alert, ActivityIndicator, TextInput, Modal, RefreshControl, Animated, Easing } from 'react-native';
+import { View, StyleSheet, ScrollView, Pressable, Alert, ActivityIndicator, TextInput, KeyboardAvoidingView, Platform, Modal, RefreshControl } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { AppContainer } from '@/src/components/ui/AppContainer';
 import { AppTitle } from '@/src/components/ui/AppTitle';
 import { AppText } from '@/src/components/ui/AppText';
 import { AppButton } from '@/src/components/ui/AppButton';
+import { CelebrationModal } from '@/src/components/CelebrationModal';
 import { useConnections } from '@/src/context/ConnectionsContext';
 import { useUser } from '@/src/context/UserContext';
 import { useBirthdays } from '@/src/context/BirthdaysContext';
+import { useLanguage } from '@/src/context/LanguageContext';
 import { colors } from '@/src/theme';
 import { Ionicons } from '@expo/vector-icons';
 import type { User } from '@/src/database/types';
 
 export default function ConnectTabScreen() {
   const { user } = useUser();
+  const { t } = useLanguage();
   const { refreshUsers: refreshBirthdays } = useBirthdays();
   const {
     connections,
@@ -35,8 +38,9 @@ export default function ConnectTabScreen() {
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [showUserModal, setShowUserModal] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [showCelebration, setShowCelebration] = useState(false);
+  const [celebrationUserName, setCelebrationUserName] = useState('');
   const hasViewedRef = useRef(false);
-  const invitationProgress = useRef(new Animated.Value(0)).current;
 
   // Marcar conexiones aceptadas como vistas cuando el usuario SALE de la screen
   useFocusEffect(
@@ -80,60 +84,25 @@ export default function ConnectTabScreen() {
 
   const handleSendInvitation = async () => {
     if (!email.trim()) {
-      Alert.alert('Error', 'Por favor ingresa un email');
+      Alert.alert(t('create_profile_error_title'), t('create_profile_error_email_required'));
       return;
     }
 
     // Validar formato de email
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-      Alert.alert('Error', 'Por favor ingresa un email válido');
+      Alert.alert(t('create_profile_error_title'), t('create_profile_error_email_invalid'));
       return;
     }
 
     try {
       setSendingInvitation(true);
-      invitationProgress.setValue(0);
-      const animationPromise = new Promise<void>((resolve) => {
-        Animated.timing(invitationProgress, {
-          toValue: 1,
-          duration: 400,
-          easing: Easing.out(Easing.ease),
-          useNativeDriver: false,
-        }).start(() => resolve());
-      });
-
-      const sendPromise = sendInvitationByEmail(email);
-
-      // Esperar a que terminen tanto el envío como la animación
-      await Promise.all([animationPromise, sendPromise]);
-
+      await sendInvitationByEmail(email);
       setEmail('');
-      Alert.alert('¡Enviado!', 'Invitación enviada correctamente');
-      
-      // Resetear la animación después de mostrar la alerta
-      invitationProgress.setValue(0);
+      Alert.alert(t('invite_connected_title'), t('invite_connected_message').replace('{{name}}', email));
     } catch (error: any) {
       console.error('Error sending invitation:', error);
-      
-      // Resetear la animación en caso de error
-      invitationProgress.setValue(0);
-      
-      // Mejorar mensajes de error con títulos apropiados
-      let alertTitle = 'Error';
-      let errorMessage = 'No se pudo enviar la invitación';
-      
-      if (error.message?.includes('Ya existe una invitación pendiente')) {
-        alertTitle = 'Paciencia';
-        errorMessage = 'Ya enviaste una invitación a este usuario. Espera a que la acepte.';
-      } else if (error.message?.includes('Ya estás conectado')) {
-        alertTitle = 'Ya conectado';
-        errorMessage = 'Ya estás conectado con este usuario.';
-      } else if (error.message) {
-        errorMessage = error.message;
-      }
-      
-      Alert.alert(alertTitle, errorMessage);
+      Alert.alert(t('create_profile_error_title'), error.message || t('connect_accept_invitation_error_message'));
     } finally {
       setSendingInvitation(false);
     }
@@ -144,10 +113,12 @@ export default function ConnectTabScreen() {
       await acceptInvitation(connectionId);
       // Refrescar cumpleaños para que aparezcan en el calendario
       await refreshBirthdays();
-      Alert.alert('¡Conectado!', `Ahora estás conectado con ${userName}. Sus cumpleaños aparecerán en tu calendario.`);
+      // Mostrar modal de celebración
+      setCelebrationUserName(userName);
+      setShowCelebration(true);
     } catch (error) {
       console.error('Error accepting invitation:', error);
-      Alert.alert('Error', 'No se pudo aceptar la invitación');
+      Alert.alert(t('connect_accept_invitation_error_title'), t('connect_accept_invitation_error_message'));
     }
   };
 
@@ -156,7 +127,7 @@ export default function ConnectTabScreen() {
       await rejectInvitation(connectionId);
     } catch (error) {
       console.error('Error rejecting invitation:', error);
-      Alert.alert('Error', 'No se pudo rechazar la invitación');
+      Alert.alert(t('connect_reject_invitation_error_title'), t('connect_reject_invitation_error_message'));
     }
   };
 
@@ -174,12 +145,12 @@ export default function ConnectTabScreen() {
     if (!selectedUser) return;
 
     Alert.alert(
-      'Desconectar contacto',
-      `Si desconectas de ${selectedUser.name}, dejarás de ver sus cumpleaños en tu calendario.`,
+      t('connect_disconnect_title'),
+      t('connect_disconnect_message').replace('{{name}}', selectedUser.name),
       [
-        { text: 'Cancelar', style: 'cancel' },
+        { text: t('connect_disconnect_cancel'), style: 'cancel' },
         {
-          text: 'Desconectar',
+          text: t('connect_disconnect_confirm'),
           // estilo neutro para que el botón no sea tan llamativo
           onPress: async () => {
             try {
@@ -190,11 +161,11 @@ export default function ConnectTabScreen() {
               if (connection) {
                 await disconnectUser(connection.id);
                 handleCloseModal();
-                Alert.alert('Desconectado', `Ya no estás conectado con ${selectedUser.name}`);
+                Alert.alert(t('connect_disconnect_confirm'), t('connect_disconnect_message').replace('{{name}}', selectedUser.name));
               }
             } catch (error) {
               console.error('Error disconnecting:', error);
-              Alert.alert('Error', 'No se pudo desconectar');
+              Alert.alert(t('connect_disconnect_error_title'), t('connect_disconnect_error_message'));
             }
           },
         },
@@ -207,9 +178,9 @@ export default function ConnectTabScreen() {
       <AppContainer>
         <View style={styles.emptyContainer}>
           <Ionicons name="people-outline" size={64} color="#666" />
-          <AppTitle style={styles.emptyTitle}>Inicia sesión</AppTitle>
+          <AppTitle style={styles.emptyTitle}>{t('connect_empty_requires_login_title')}</AppTitle>
           <AppText style={styles.emptyText}>
-            Inicia sesión para conectar con amigos
+            {t('connect_empty_requires_login_text')}
           </AppText>
         </View>
       </AppContainer>
@@ -231,19 +202,19 @@ export default function ConnectTabScreen() {
         }
       >
         <View style={styles.header}>
-          <AppTitle>Conectar</AppTitle>
+          <AppTitle>{t('connect_title')}</AppTitle>
           <AppText style={styles.subtitle}>
-            Conecta con amigos para ver sus cumpleaños
+            {t('connect_subtitle')}
           </AppText>
         </View>
 
         {/* Formulario de invitación por email */}
         <View style={styles.inviteForm}>
-          <AppText style={styles.formLabel}>Invitar por email</AppText>
+          <AppText style={styles.formLabel}>{t('connect_invite_label')}</AppText>
           <View style={styles.inputContainer}>
             <TextInput
               style={styles.input}
-              placeholder="email@ejemplo.com"
+              placeholder={t('connect_invite_placeholder')}
               placeholderTextColor="#666"
               value={email}
               onChangeText={setEmail}
@@ -251,37 +222,14 @@ export default function ConnectTabScreen() {
               autoCapitalize="none"
               autoCorrect={false}
               editable={!sendingInvitation}
-              returnKeyType="send"
-              onSubmitEditing={handleSendInvitation}
-              blurOnSubmit={false}
             />
           </View>
-          <Pressable
+          <AppButton
+            title={sendingInvitation ? t('connect_invite_button_loading') : t('connect_invite_button')}
             onPress={handleSendInvitation}
             disabled={sendingInvitation || !email.trim()}
-            style={({ pressed }) => [
-              styles.sendButton,
-              pressed && !sendingInvitation && styles.sendButtonPressed,
-              (sendingInvitation || !email.trim()) && styles.sendButtonDisabled,
-            ]}
-          >
-            <View style={styles.sendButtonInner}>
-              <Animated.View
-                style={[
-                  styles.sendButtonProgress,
-                  {
-                    width: invitationProgress.interpolate({
-                      inputRange: [0, 1],
-                      outputRange: ['0%', '100%'],
-                    }),
-                  },
-                ]}
-              />
-              <AppText style={styles.sendButtonText}>
-                {sendingInvitation ? 'Enviando...' : 'Enviar Invitación'}
-              </AppText>
-            </View>
-          </Pressable>
+            style={styles.sendButton}
+          />
         </View>
 
         {/* Tabs */}
@@ -291,7 +239,7 @@ export default function ConnectTabScreen() {
             onPress={() => setActiveTab('connections')}
           >
             <AppText style={[styles.tabText, activeTab === 'connections' && styles.tabTextActive]}>
-              Mis Conexiones ({connectedUsers.length})
+              {t('connect_tab_connections').replace('{{count}}', connectedUsers.length.toString())}
             </AppText>
           </Pressable>
           <Pressable
@@ -299,7 +247,7 @@ export default function ConnectTabScreen() {
             onPress={() => setActiveTab('pending')}
           >
             <AppText style={[styles.tabText, activeTab === 'pending' && styles.tabTextActive]}>
-              Pendientes
+              {t('connect_tab_pending')}
             </AppText>
             {pendingInvitationsWithDetails.length > 0 && (
               <View style={styles.badge}>
@@ -322,10 +270,10 @@ export default function ConnectTabScreen() {
                   <View style={styles.emptyState}>
                     <Ionicons name="people-outline" size={48} color="#666" />
                     <AppText style={styles.emptyStateText}>
-                      No tienes conexiones todavía
+                      {t('connect_empty_connections_title')}
                     </AppText>
                     <AppText style={styles.emptyStateSubtext}>
-                      Envía una invitación para conectar con amigos
+                      {t('connect_empty_connections_subtitle')}
                     </AppText>
                   </View>
                 ) : (
@@ -371,7 +319,7 @@ export default function ConnectTabScreen() {
                   <View style={styles.emptyState}>
                     <Ionicons name="mail-outline" size={48} color="#666" />
                     <AppText style={styles.emptyStateText}>
-                      No tienes invitaciones pendientes
+                      {t('connect_empty_pending_title')}
                     </AppText>
                   </View>
                 ) : (
@@ -399,14 +347,14 @@ export default function ConnectTabScreen() {
                           onPress={() => handleAcceptInvitation(invitation.id, invitation.fromUser?.name || 'usuario')}
                         >
                           <Ionicons name="checkmark" size={20} color={colors.white} />
-                          <AppText style={styles.actionButtonText}>Aceptar</AppText>
+                          <AppText style={styles.actionButtonText}>{t('invite_accept')}</AppText>
                         </Pressable>
                         <Pressable
                           style={[styles.actionButton, styles.rejectButton]}
                           onPress={() => handleRejectInvitation(invitation.id)}
                         >
                           <Ionicons name="close" size={20} color={colors.white} />
-                          <AppText style={styles.actionButtonText}>Rechazar</AppText>
+                          <AppText style={styles.actionButtonText}>{t('invite_reject')}</AppText>
                         </Pressable>
                       </View>
                     </View>
@@ -429,7 +377,7 @@ export default function ConnectTabScreen() {
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
-              <AppTitle style={styles.modalTitle}>Información</AppTitle>
+              <AppTitle style={styles.modalTitle}>{t('calendar_profile_modal_title')}</AppTitle>
               <Pressable onPress={handleCloseModal} style={styles.closeButton}>
                 <Ionicons name="close" size={28} color={colors.white} />
               </Pressable>
@@ -446,7 +394,7 @@ export default function ConnectTabScreen() {
                 <View style={styles.infoSection}>
                   <View style={styles.infoRow}>
                     <Ionicons name="calendar-outline" size={20} color={colors.primary} />
-                    <AppText style={styles.infoLabel}>Cumpleaños</AppText>
+                    <AppText style={styles.infoLabel}>{t('calendar_profile_birthdate_label')}</AppText>
                   </View>
                   <AppText style={styles.infoValue}>
                     {selectedUser.birthdate.toLocaleDateString('es-ES', {
@@ -461,7 +409,7 @@ export default function ConnectTabScreen() {
                   <View style={styles.infoSection}>
                     <View style={styles.infoRow}>
                       <Ionicons name="heart-outline" size={20} color={colors.primary} />
-                      <AppText style={styles.infoLabel}>Intereses</AppText>
+                      <AppText style={styles.infoLabel}>{t('calendar_profile_hobbies_label')}</AppText>
                     </View>
                     <View style={styles.hobbiesContainer}>
                       {selectedUser.hobbies.map((hobby, index) => (
@@ -475,7 +423,7 @@ export default function ConnectTabScreen() {
 
                 <View style={styles.disconnectSection}>
                   <AppButton
-                    title="Desconectar"
+                    title={t('connect_disconnect_confirm')}
                     variant="secondary"
                     onPress={handleDisconnect}
                     style={styles.disconnectButtonModal}
@@ -486,6 +434,15 @@ export default function ConnectTabScreen() {
           </View>
         </View>
       </Modal>
+
+      {/* Modal de celebración con confetti */}
+      <CelebrationModal
+        visible={showCelebration}
+        title={t('connect_accept_invitation_success_title')}
+        message={t('connect_accept_invitation_success_message').replace('{{name}}', celebrationUserName)}
+        buttonText={t('invite_connected_button')}
+        onButtonPress={() => setShowCelebration(false)}
+      />
     </AppContainer>
   );
 }
@@ -528,34 +485,6 @@ const styles = StyleSheet.create({
   },
   sendButton: {
     marginTop: 4,
-    borderRadius: 12,
-    overflow: 'hidden',
-  },
-  sendButtonInner: {
-    backgroundColor: colors.primary,
-    paddingVertical: 14,
-    paddingHorizontal: 24,
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  sendButtonProgress: {
-    position: 'absolute',
-    left: 0,
-    top: 0,
-    bottom: 0,
-    backgroundColor: colors.gold,
-  },
-  sendButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: colors.secondary,
-  },
-  sendButtonPressed: {
-    opacity: 0.9,
-  },
-  sendButtonDisabled: {
-    opacity: 0.6,
   },
   tabs: {
     flexDirection: 'row',
@@ -689,10 +618,12 @@ const styles = StyleSheet.create({
     padding: 4,
   },
   invitationCard: {
-    backgroundColor: '#2A2A2A',
+    backgroundColor: colors.successGreen,
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
+    borderWidth: 2,
+    borderColor: colors.primary,
   },
   invitationHeader: {
     flexDirection: 'row',
@@ -710,15 +641,16 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     marginBottom: 2,
+    color: '#2C5F2D',
   },
   invitationEmail: {
     fontSize: 13,
-    color: '#999',
+    color: '#2C5F2D',
     marginBottom: 4,
   },
   invitationDate: {
     fontSize: 12,
-    color: '#666',
+    color: '#2C5F2D',
   },
   invitationActions: {
     flexDirection: 'row',
