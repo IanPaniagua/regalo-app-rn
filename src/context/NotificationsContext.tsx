@@ -75,6 +75,13 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
     }
   }, [fcmToken, user, notificationsEnabled]);
 
+  // Limpiar badge al abrir la app
+  useEffect(() => {
+    Notifications.setBadgeCountAsync(0).catch((error) => {
+      console.error('❌ Error clearing badge count:', error);
+    });
+  }, []);
+
   // Listeners de notificaciones
   useEffect(() => {
     // Listener cuando llega una notificación
@@ -87,6 +94,10 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
     responseListener.current = Notifications.addNotificationResponseReceivedListener(response => {
       console.log('👆 Notification tapped:', response);
       handleNotificationResponse(response);
+      // Limpiar badge al tocar notificación
+      Notifications.setBadgeCountAsync(0).catch((error) => {
+        console.error('❌ Error clearing badge count:', error);
+      });
     });
 
     return () => {
