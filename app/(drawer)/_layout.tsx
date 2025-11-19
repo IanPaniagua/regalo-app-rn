@@ -1,8 +1,8 @@
 import { Drawer } from 'expo-router/drawer';
 import { Ionicons } from '@expo/vector-icons';
-import { Image } from 'expo-image';
 import { View, StyleSheet } from 'react-native';
 import { AppText } from '@/src/components/ui/AppText';
+import { HeaderLogo } from '@/src/components/HeaderLogo';
 import { useUser } from '@/src/context/UserContext';
 import { useLanguage } from '@/src/context/LanguageContext';
 import { colors } from '@/src/theme';
@@ -40,15 +40,7 @@ export default function DrawerLayout() {
         options={{
           drawerLabel: t('drawer_home'),
           title: '',
-          headerTitle: () => (
-            <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-              <Image
-                source={require('@/assets/images/icon.png')}
-                style={{ width: 40, height: 40 }}
-                contentFit="contain"
-              />
-            </View>
-          ),
+          headerTitle: () => <HeaderLogo />,
           headerTitleAlign: 'center',
           drawerIcon: ({ color, size }) => (
             <Ionicons name="home-outline" size={size} color={color} />

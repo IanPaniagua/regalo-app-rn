@@ -74,7 +74,7 @@ export function UserProfileModal({
             {/* Avatar y nombre */}
             <View style={styles.profileSection}>
               <View style={styles.avatarWrapper}>
-                <View style={[styles.avatarCircle, { borderColor: colors.primary }]} />
+                <View style={[styles.avatarCircle, { borderColor: theme.primary }]} />
                 <View style={[styles.avatarContainer, { backgroundColor: theme.cardBg }]}>
                   <AppText style={styles.avatar}>{user.avatar}</AppText>
                 </View>
@@ -91,8 +91,8 @@ export function UserProfileModal({
             <View style={styles.infoCards}>
               {/* Cumpleaños */}
               <View style={[styles.infoCard, { backgroundColor: theme.cardBg }]}>
-                <View style={[styles.iconCircle, { backgroundColor: `${colors.primary}20` }]}>
-                  <Ionicons name="calendar" size={24} color={colors.primary} />
+                <View style={[styles.iconCircle, { backgroundColor: `${theme.primary}20` }]}>
+                  <Ionicons name="calendar" size={24} color={theme.primary} />
                 </View>
                 <AppText style={[styles.infoLabel, { color: theme.textMuted }]}>
                   {t('calendar_profile_birthdate_label')}
@@ -108,8 +108,8 @@ export function UserProfileModal({
 
               {/* Edad */}
               <View style={[styles.infoCard, { backgroundColor: theme.cardBg }]}>
-                <View style={[styles.iconCircle, { backgroundColor: `${colors.primary}20` }]}>
-                  <Ionicons name="gift" size={24} color={colors.primary} />
+                <View style={[styles.iconCircle, { backgroundColor: `${theme.primary}20` }]}>
+                  <Ionicons name="gift" size={24} color={theme.primary} />
                 </View>
                 <AppText style={[styles.infoLabel, { color: theme.textMuted }]}>
                   {t('calendar_profile_age_label')}
@@ -124,7 +124,7 @@ export function UserProfileModal({
             {user.hobbies && user.hobbies.length > 0 && (
               <View style={[styles.section, { backgroundColor: theme.cardBg, borderRadius: 16, padding: 16 }]}>
                 <View style={styles.sectionHeader}>
-                  <Ionicons name="heart" size={20} color={colors.primary} />
+                  <Ionicons name="heart" size={20} color={theme.primary} />
                   <AppText style={[styles.sectionTitle, { color: theme.text }]}>
                     {t('calendar_profile_hobbies_label')}
                   </AppText>
@@ -135,7 +135,7 @@ export function UserProfileModal({
                       key={index} 
                       style={[styles.hobbyTag, { 
                         backgroundColor: theme.surface,
-                        borderColor: colors.primary,
+                        borderColor: theme.primary,
                       }]}
                     >
                       <AppText style={[styles.hobbyText, { color: theme.text }]}>

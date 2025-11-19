@@ -1,10 +1,10 @@
 import React, { useEffect, useRef } from 'react';
-import { Modal, View, StyleSheet, Animated, Pressable } from 'react-native';
+import { Modal, View, StyleSheet, Animated, Pressable, useColorScheme } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import ConfettiCannon from 'react-native-confetti-cannon';
 import { AppText } from './ui/AppText';
 import { AppButton } from './ui/AppButton';
-import { colors } from '@/src/theme';
+import { colors, lightTheme, darkTheme } from '@/src/theme';
 
 interface CelebrationModalProps {
   visible: boolean;
@@ -21,6 +21,8 @@ export function CelebrationModal({
   buttonText,
   onButtonPress,
 }: CelebrationModalProps) {
+  const colorScheme = useColorScheme();
+  const theme = colorScheme === 'dark' ? darkTheme : lightTheme;
   const scaleAnim = useRef(new Animated.Value(0)).current;
   const confettiRef = useRef<any>(null);
 
@@ -58,13 +60,14 @@ export function CelebrationModal({
             styles.modalContainer,
             {
               transform: [{ scale: scaleAnim }],
+              borderColor: theme.primary,
             },
           ]}
         >
           {/* Icono de celebración */}
           <View style={styles.iconContainer}>
-            <View style={styles.iconCircle}>
-              <Ionicons name="checkmark-circle" size={64} color={colors.primary} />
+            <View style={[styles.iconCircle, { backgroundColor: `${theme.primary}20` }]}>
+              <Ionicons name="checkmark-circle" size={64} color={theme.primary} />
             </View>
           </View>
 
@@ -91,7 +94,7 @@ export function CelebrationModal({
           fadeOut={true}
           explosionSpeed={350}
           fallSpeed={2500}
-          colors={[colors.primary, '#FFD700', '#FF6B6B', '#4ECDC4', '#95E1D3']}
+          colors={[theme.primary, '#FFD700', '#FF6B6B', '#4ECDC4', '#95E1D3']}
         />
       </View>
     </Modal>
@@ -119,7 +122,7 @@ const styles = StyleSheet.create({
     shadowRadius: 16,
     elevation: 10,
     borderWidth: 2,
-    borderColor: colors.primary,
+    // borderColor se aplica dinámicamente
   },
   iconContainer: {
     marginBottom: 20,
@@ -128,7 +131,7 @@ const styles = StyleSheet.create({
     width: 96,
     height: 96,
     borderRadius: 48,
-    backgroundColor: colors.primary + '20',
+    // backgroundColor se aplica dinámicamente
     justifyContent: 'center',
     alignItems: 'center',
   },

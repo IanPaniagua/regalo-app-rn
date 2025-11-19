@@ -1,8 +1,8 @@
 import React, { useEffect, useRef } from 'react';
-import { View, StyleSheet, Pressable, Animated, Platform } from 'react-native';
+import { View, StyleSheet, Pressable, Animated, Platform, useColorScheme } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { AppText } from './ui/AppText';
-import { colors } from '@/src/theme';
+import { colors, lightTheme, darkTheme } from '@/src/theme';
 
 interface InAppNotificationProps {
   visible: boolean;
@@ -21,6 +21,8 @@ export function InAppNotification({
   onDismiss,
   duration = 5000,
 }: InAppNotificationProps) {
+  const colorScheme = useColorScheme();
+  const theme = colorScheme === 'dark' ? darkTheme : lightTheme;
   const slideAnim = useRef(new Animated.Value(-100)).current;
   const timeoutRef = useRef<NodeJS.Timeout>();
 
@@ -82,9 +84,9 @@ export function InAppNotification({
         },
       ]}
     >
-      <Pressable style={styles.content} onPress={handlePress}>
+      <Pressable style={[styles.content, { borderColor: `${theme.primary}30` }]} onPress={handlePress}>
         <View style={styles.iconContainer}>
-          <Ionicons name="notifications" size={24} color={colors.primary} />
+          <Ionicons name="notifications" size={24} color={theme.primary} />
         </View>
         <View style={styles.textContainer}>
           <AppText style={styles.title}>{title}</AppText>
@@ -119,7 +121,7 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 8,
     borderWidth: 1,
-    borderColor: colors.primary + '30',
+    // borderColor se aplica dinámicamente
   },
   iconContainer: {
     marginRight: 12,

@@ -1,7 +1,7 @@
 // Colores base compartidos
 export const baseColors = {
-  primary: '#D4AF37', // oro principal
-  gold: '#D4AF37',
+  primary: '#cab097', // arena/beige como color principal por defecto (dark mode)
+  gold: '#D4AF37',    // dorado solo para light mode
   tertiary: '#D9534F',
   successGreen: '#A8E6CF',
 
@@ -14,7 +14,7 @@ export const baseColors = {
 // Tema oscuro (actual)
 export const darkTheme = {
   ...baseColors,
-  primary: '#cab097', // beige/arena para modo dark (en lugar del dorado)
+  primary: '#cab097', // beige/arena para modo dark
   background: '#1A1A1A',
   backgroundImage: 'bg-dark',
   overlay: 'rgba(0, 0, 0, 0.4)',
@@ -32,6 +32,7 @@ export const darkTheme = {
 // Tema claro (nuevo, azul elegante)
 export const lightTheme = {
   ...baseColors,
+  primary: '#D4AF37',  // dorado para modo light
   background: '#E6F0FF', // azul muy claro
   backgroundImage: 'bg-light',
   overlay: 'rgba(255, 255, 255, 0.3)',

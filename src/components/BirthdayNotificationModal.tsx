@@ -105,9 +105,9 @@ export function BirthdayNotificationModal({
           onPress={(e) => e.stopPropagation()}
         >
           {/* Header */}
-          <View style={styles.header}>
+          <View style={[styles.header, { borderBottomColor: `${theme.primary}20` }]}>
             <View style={styles.headerIcon}>
-              <Ionicons name="gift" size={28} color={colors.primary} />
+              <Ionicons name="gift" size={28} color={theme.primary} />
             </View>
             <Text style={[styles.headerTitle, { color: theme.text }]}>
               🎉 {birthdayUsers.length === 1 ? '¡Cumpleaños!' : '¡Cumpleaños de hoy!'}
@@ -133,7 +133,7 @@ export function BirthdayNotificationModal({
                   key={user.id}
                   style={[styles.userCard, { backgroundColor: theme.inputBg, borderColor: theme.border }]}
                 >
-                  <View style={styles.avatarContainer}>
+                  <View style={[styles.avatarContainer, { backgroundColor: `${theme.primary}20` }]}>
                     <Text style={styles.avatar}>{user.avatar}</Text>
                   </View>
                   <View style={styles.userInfo}>
@@ -145,7 +145,7 @@ export function BirthdayNotificationModal({
                     </Text>
                   </View>
                   <View style={styles.celebrationIcon}>
-                    <Ionicons name="balloon" size={32} color={colors.primary} />
+                    <Ionicons name="balloon" size={32} color={theme.primary} />
                   </View>
                 </View>
               ))
@@ -153,9 +153,9 @@ export function BirthdayNotificationModal({
           </ScrollView>
 
           {/* Footer */}
-          <View style={styles.footer}>
+          <View style={[styles.footer, { borderTopColor: `${theme.primary}20` }]}>
             <Pressable
-              style={[styles.closeButton, { backgroundColor: colors.primary }]}
+              style={[styles.closeButton, { backgroundColor: theme.primary }]}
               onPress={onClose}
             >
               <Text style={styles.closeButtonText}>Cerrar</Text>
@@ -192,7 +192,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 20,
     borderBottomWidth: 1,
-    borderBottomColor: colors.primary + '20',
+    // borderBottomColor se aplica dinámicamente en el componente
   },
   headerIcon: {
     marginRight: 12,
@@ -230,7 +230,7 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: colors.primary + '20',
+    // backgroundColor se aplica dinámicamente en el componente
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
@@ -257,7 +257,7 @@ const styles = StyleSheet.create({
   footer: {
     padding: 20,
     borderTopWidth: 1,
-    borderTopColor: colors.primary + '20',
+    // borderTopColor se aplica dinámicamente en el componente
   },
   closeButton: {
     paddingVertical: 14,

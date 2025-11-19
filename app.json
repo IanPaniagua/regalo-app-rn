@@ -11,18 +11,33 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.manolodev.regalo-app",
-      "buildNumber": "4",
+      "buildNumber": "6",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
+      },
+      "splash": {
+        "image": "./assets/images/splash-ios.png",
+        "resizeMode": "cover",
+        "backgroundColor": "#cab097"
       }
     },
     "android": {
-      "versionCode": 2,
+      "versionCode": 3,
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/images/icon.png",
         "backgroundImage": "./assets/images/icon.png",
         "monochromeImage": "./assets/images/icon.png"
+      },
+      "splash": {
+        "image": "./assets/images/splash-android.png",
+        "resizeMode": "cover",
+        "backgroundColor": "#cab097",
+        "mdpi": "./assets/images/splash-android.png",
+        "hdpi": "./assets/images/splash-android.png",
+        "xhdpi": "./assets/images/splash-android.png",
+        "xxhdpi": "./assets/images/splash-android.png",
+        "xxxhdpi": "./assets/images/splash-android.png"
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
@@ -32,17 +47,19 @@
       "output": "static",
       "favicon": "./assets/images/favicon.png"
     },
+    "splash": {
+      "image": "./assets/images/splash-android.png",
+      "resizeMode": "cover",
+      "backgroundColor": "#cab097"
+    },
     "plugins": [
       "expo-router",
       [
         "expo-splash-screen",
         {
-          "image": "./assets/images/splash-icon.png",
-          "resizeMode": "contain",
-          "backgroundColor": "#E6F0FF",
-          "dark": {
-            "backgroundColor": "#000000"
-          }
+          "image": "./assets/images/splash-android.png",
+          "resizeMode": "cover",
+          "backgroundColor": "#cab097"
         }
       ],
       "expo-notifications",
