@@ -95,13 +95,19 @@ export default function DrawerLayout() {
         }}
       />
       <Drawer.Screen
+        name="account"
+        options={{
+          drawerLabel: 'Account',
+          title: 'Account Management',
+          drawerIcon: ({ color, size }) => (
+            <Ionicons name="person-circle-outline" size={size} color={color} />
+          ),
+        }}
+      />
+      <Drawer.Screen
         name="logout"
         options={{
-          drawerLabel: t('drawer_logout'),
-          title: t('drawer_logout_title'),
-          drawerIcon: ({ color, size }) => (
-            <Ionicons name="log-out-outline" size={size} color={color} />
-          ),
+          drawerItemStyle: { display: 'none' },
         }}
       />
     </Drawer>

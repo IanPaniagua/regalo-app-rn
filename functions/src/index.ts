@@ -74,7 +74,7 @@ async function sendExpoPushNotifications(
 export const sendDailyBirthdayReminders = functions
   .region('europe-west1') // Servidor en Europa para mejor latencia
   .pubsub
-  .schedule('48 12 * * *') // Cron: 9:00 AM todos los días
+  .schedule('35 12 * * *') // Cron: 9:00 AM todos los días
   .timeZone(TIMEZONE)
   .onRun(async (context) => {
     console.log('🎂 Starting daily birthday reminders...');
@@ -400,22 +400,103 @@ export const testBirthdayNotifications = functions
   .https
   .onRequest(async (req, res) => {
     try {
-      console.log('🧪 Testing birthday notifications...');
+      console.log('🧪 Testing birthday notifications manually...');
       
-      // Ejecutar función de cumpleaños diarios manualmente
+      // Usar la misma zona horaria que el scheduler (Europe/Berlin)
       const today = new Date();
-      console.log('Manual test triggered for date:', today);
+      const berlinTime = new Date(today.toLocaleString('en-US', { timeZone: 'Europe/Berlin' }));
+      const todayMonth = berlinTime.getMonth(); // 0-11
+      const todayDay = berlinTime.getDate(); // 1-31
+      
+      console.log(`📅 Manual test - Checking birthdays for: ${todayDay}/${todayMonth + 1} (Berlin time)`);
+      
+      // 1. Obtener todos los usuarios
+      const usersSnapshot = await db.collection('users').get();
+      const users = usersSnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      })) as UserData[];
+      
+      console.log(`👥 Total users: ${users.length}`);
+      
+      // Log detallado de todos los usuarios y sus cumpleaños
+      console.log('📋 All users birthdays:');
+      const allBirthdays = users.map(user => {
+        if (user.birthdate) {
+          const birthdate = user.birthdate.toDate();
+          return {
+            name: user.name,
+            day: birthdate.getDate(),
+            month: birthdate.getMonth() + 1,
+            year: birthdate.getFullYear(),
+            formatted: `${birthdate.getDate()}/${birthdate.getMonth() + 1}/${birthdate.getFullYear()}`
+          };
+        }
+        return { name: user.name, error: 'NO BIRTHDATE' };
+      });
+      
+      allBirthdays.forEach(b => {
+        console.log(`  - ${b.name}: ${b.formatted || b.error}`);
+      });
+      
+      // 2. Filtrar usuarios que cumplen años HOY
+      const birthdayUsers = users.filter(user => {
+        if (!user.birthdate) return false;
+        
+        const birthdate = user.birthdate.toDate();
+        const birthMonth = birthdate.getMonth();
+        const birthDay = birthdate.getDate();
+        
+        const matches = birthMonth === todayMonth && birthDay === todayDay;
+        
+        if (matches) {
+          console.log(`✅ MATCH: ${user.name} - ${birthDay}/${birthMonth + 1} matches ${todayDay}/${todayMonth + 1}`);
+        }
+        
+        return matches;
+      });
+      
+      console.log(`🎉 Users with birthday today: ${birthdayUsers.length}`);
+      
+      if (birthdayUsers.length === 0) {
+        console.log('✅ No birthdays today');
+        res.status(200).send({
+          success: true,
+          message: 'No birthdays today',
+          date: `${todayDay}/${todayMonth + 1}`,
+          totalUsers: users.length,
+          allBirthdays: allBirthdays
+        });
+        return;
+      }
+      
+      // 3. Para cada usuario que cumple años, notificar a sus conexiones
+      const results = [];
+      for (const birthdayUser of birthdayUsers) {
+        console.log(`🎂 Processing birthday for: ${birthdayUser.name}`);
+        await notifyConnectionsAboutBirthday(birthdayUser);
+        results.push({
+          name: birthdayUser.name,
+          id: birthdayUser.id
+        });
+      }
+      
+      console.log('✅ Manual test completed - notifications sent');
       
       res.status(200).send({
         success: true,
-        message: 'Test completed successfully. Check Cloud Functions logs.'
+        message: 'Birthday notifications sent successfully',
+        date: `${todayDay}/${todayMonth + 1}`,
+        birthdayUsers: results,
+        totalUsers: users.length
       });
       
     } catch (error: any) {
       console.error('❌ Test failed:', error);
       res.status(500).send({
         success: false,
-        error: error?.message || 'Unknown error'
+        error: error?.message || 'Unknown error',
+        stack: error?.stack
       });
     }
   });
