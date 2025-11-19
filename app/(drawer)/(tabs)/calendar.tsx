@@ -175,7 +175,7 @@ export default function CalendarTabScreen() {
             <Ionicons name="chevron-back" size={28} color={colors.primary} />
           </Pressable>
           
-          <AppText style={styles.monthText}>
+          <AppText style={[styles.monthText, { color: theme.text }]}>
             {MONTHS[currentDate.getMonth()]} {currentDate.getFullYear()}
           </AppText>
           
@@ -188,7 +188,7 @@ export default function CalendarTabScreen() {
         <View style={styles.weekDaysContainer}>
           {DAYS_OF_WEEK.map((day) => (
             <View key={day} style={styles.weekDayCell}>
-              <AppText style={styles.weekDayText}>{day}</AppText>
+              <AppText style={[styles.weekDayText, { color: theme.text, fontWeight: '700' }]}>{day}</AppText>
             </View>
           ))}
         </View>

@@ -257,50 +257,49 @@ export default function ProfileScreen() {
                 )}
               </View>
 
-              {/* Nombre */}
-              <View style={styles.section}>
-                <AppText style={styles.label}>{t('profile_name')}</AppText>
+              {/* Avatar centrado en círculo */}
+              <View style={styles.avatarSection}>
+                {isEditing ? (
+                  <Pressable
+                    style={[styles.avatarCircle, { backgroundColor: theme.surface, borderColor: theme.border }]}
+                    onPress={() => {
+                      Keyboard.dismiss();
+                      setShowAvatarPicker(true);
+                    }}
+                  >
+                    <AppText style={styles.avatarEmojiLarge}>{editedAvatar}</AppText>
+                  </Pressable>
+                ) : (
+                  <View style={[styles.avatarCircle, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+                    <AppText style={styles.avatarEmojiLarge}>{user.avatar}</AppText>
+                  </View>
+                )}
+                {isEditing && (
+                  <AppText style={[styles.changeAvatarHint, { color: theme.textMuted }]}>{t('profile_change_avatar')}</AppText>
+                )}
+              </View>
+
+              {/* Nombre centrado */}
+              <View style={styles.nameSection}>
                 {isEditing ? (
                   <TextInput
-                    style={[styles.input, { backgroundColor: theme.inputBg, color: theme.text, borderColor: theme.border }]}
+                    style={[styles.nameInput, { backgroundColor: theme.inputBg, color: theme.text, borderColor: theme.border }]}
                     value={editedName}
                     onChangeText={setEditedName}
                     placeholder={t('profile_name_placeholder')}
                     placeholderTextColor="#666"
                     returnKeyType="done"
                     onSubmitEditing={Keyboard.dismiss}
+                    textAlign="center"
                   />
                 ) : (
-                  <View style={[styles.valueContainer, { backgroundColor: theme.surface }]}>
-                    <AppText style={styles.value}>{user.name}</AppText>
-                  </View>
-                )}
-              </View>
-
-              {/* Avatar */}
-              <View style={styles.section}>
-                <AppText style={styles.label}>{t('profile_avatar')}</AppText>
-                {isEditing ? (
-                  <Pressable
-                    style={styles.avatarButton}
-                    onPress={() => {
-                      Keyboard.dismiss();
-                      setShowAvatarPicker(true);
-                    }}
-                  >
-                    <AppText style={styles.avatarEmoji}>{editedAvatar}</AppText>
-                    <AppText style={styles.changeAvatarText}>{t('profile_change_avatar')}</AppText>
-                  </Pressable>
-                ) : (
-                  <View style={styles.valueContainer}>
-                    <AppText style={styles.avatarEmoji}>{user.avatar}</AppText>
-                  </View>
+                  <AppText style={[styles.nameText, { color: theme.text }]}>{user.name}</AppText>
                 )}
               </View>
 
               {/* Email (no editable) */}
               <View style={styles.section}>
-                <AppText style={styles.label}>{t('profile_email')}</AppText>
+                <AppText style={[styles.label, { color: theme.textSecondary }]}>{t('profile_email')}</AppText>
                 <View style={[styles.valueContainer, { backgroundColor: theme.surface }, styles.disabledContainer]}>
                   <AppText style={styles.value}>{user.email}</AppText>
                   <Ionicons name="lock-closed" size={16} color="#666" />
@@ -309,7 +308,7 @@ export default function ProfileScreen() {
 
               {/* Fecha de nacimiento */}
               <View style={styles.section}>
-                <AppText style={styles.label}>{t('profile_birthdate')}</AppText>
+                <AppText style={[styles.label, { color: theme.textSecondary }]}>{t('profile_birthdate')}</AppText>
                 <View style={[styles.valueContainer, { backgroundColor: theme.surface }, styles.disabledContainer]}>
                   <AppText style={styles.value}>{formatDate(user.birthdate)}</AppText>
                   <Ionicons name="lock-closed" size={16} color="#666" />
@@ -391,7 +390,7 @@ export default function ProfileScreen() {
 
               {/* Hobbies */}
               <View style={styles.section}>
-                <AppText style={styles.label}>{t('profile_hobbies')}</AppText>
+                <AppText style={[styles.label, { color: theme.textSecondary }]}>{t('profile_hobbies')}</AppText>
                 {isEditing ? (
                   <>
                     <View style={styles.hobbiesGrid}>
@@ -536,7 +535,45 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 30,
+    marginBottom: 20,
+  },
+  avatarSection: {
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  avatarCircle: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    borderWidth: 3,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  avatarEmojiLarge: {
+    fontSize: 64,
+  },
+  changeAvatarHint: {
+    fontSize: 13,
+    marginTop: 4,
+  },
+  nameSection: {
+    alignItems: 'center',
+    marginBottom: 32,
+  },
+  nameText: {
+    fontSize: 24,
+    fontWeight: '700',
+  },
+  nameInput: {
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderRadius: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    fontSize: 20,
+    fontWeight: '600',
+    minWidth: 200,
   },
   editButton: {
     flexDirection: 'row',

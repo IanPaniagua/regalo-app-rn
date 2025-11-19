@@ -205,7 +205,7 @@ export default function ConnectTabScreen() {
       >
         <View style={styles.header}>
           <AppTitle>{t('connect_title')}</AppTitle>
-          <AppText style={styles.subtitle}>
+          <AppText style={[styles.subtitle, { color: theme.textSecondary }]}>
             {t('connect_subtitle')}
           </AppText>
         </View>
@@ -235,20 +235,20 @@ export default function ConnectTabScreen() {
         </View>
 
         {/* Tabs */}
-        <View style={styles.tabs}>
+        <View style={[styles.tabs, { backgroundColor: theme.surface, borderRadius: 12, padding: 4 }]}>
           <Pressable
-            style={[styles.tab, activeTab === 'connections' && styles.tabActive]}
+            style={[styles.tab, activeTab === 'connections' && styles.tabActive, activeTab === 'connections' && { backgroundColor: theme.cardBg, borderRadius: 8 }]}
             onPress={() => setActiveTab('connections')}
           >
-            <AppText style={[styles.tabText, activeTab === 'connections' && styles.tabTextActive]}>
+            <AppText style={[styles.tabText, { color: theme.textSecondary }, activeTab === 'connections' && styles.tabTextActive]}>
               {t('connect_tab_connections').replace('{{count}}', connectedUsers.length.toString())}
             </AppText>
           </Pressable>
           <Pressable
-            style={[styles.tab, activeTab === 'pending' && styles.tabActive]}
+            style={[styles.tab, activeTab === 'pending' && styles.tabActive, activeTab === 'pending' && { backgroundColor: theme.cardBg, borderRadius: 8 }]}
             onPress={() => setActiveTab('pending')}
           >
-            <AppText style={[styles.tabText, activeTab === 'pending' && styles.tabTextActive]}>
+            <AppText style={[styles.tabText, { color: theme.textSecondary }, activeTab === 'pending' && styles.tabTextActive]}>
               {t('connect_tab_pending')}
             </AppText>
             {pendingInvitationsWithDetails.length > 0 && (
@@ -267,7 +267,7 @@ export default function ConnectTabScreen() {
           <>
             {/* Tab: Mis Conexiones */}
             {activeTab === 'connections' && (
-              <View style={styles.content}>
+              <View style={[styles.content, { backgroundColor: theme.cardBg, borderRadius: 16, padding: 16 }]}>
                 {connectedUsers.length === 0 ? (
                   <View style={styles.emptyState}>
                     <Ionicons name="people-outline" size={48} color="#666" />
@@ -316,7 +316,7 @@ export default function ConnectTabScreen() {
 
             {/* Tab: Invitaciones Pendientes */}
             {activeTab === 'pending' && (
-              <View style={styles.content}>
+              <View style={[styles.content, { backgroundColor: theme.cardBg, borderRadius: 16, padding: 16 }]}>
                 {pendingInvitationsWithDetails.length === 0 ? (
                   <View style={styles.emptyState}>
                     <Ionicons name="mail-outline" size={48} color="#666" />
@@ -326,19 +326,19 @@ export default function ConnectTabScreen() {
                   </View>
                 ) : (
                   pendingInvitationsWithDetails.map((invitation) => (
-                    <View key={invitation.id} style={styles.invitationCard}>
+                    <View key={invitation.id} style={[styles.invitationCard, { backgroundColor: theme.surface, borderColor: colors.primary }]}>
                       <View style={styles.invitationHeader}>
                         <AppText style={styles.invitationAvatar}>
                           {invitation.fromUser?.avatar || '👤'}
                         </AppText>
                         <View style={styles.invitationInfo}>
-                          <AppText style={styles.invitationText}>
+                          <AppText style={[styles.invitationText, { color: theme.text }]}>
                             {invitation.fromUser?.name || 'Usuario'}
                           </AppText>
-                          <AppText style={styles.invitationEmail}>
+                          <AppText style={[styles.invitationEmail, { color: theme.textSecondary }]}>
                             {invitation.fromUser?.email || ''}
                           </AppText>
-                          <AppText style={styles.invitationDate}>
+                          <AppText style={[styles.invitationDate, { color: theme.textMuted }]}>
                             {invitation.createdAt.toLocaleDateString('es-ES')}
                           </AppText>
                         </View>
@@ -491,8 +491,6 @@ const styles = StyleSheet.create({
   tabs: {
     flexDirection: 'row',
     marginBottom: 24,
-    borderBottomWidth: 1,
-    borderBottomColor: '#333',
   },
   tab: {
     flex: 1,
@@ -501,8 +499,6 @@ const styles = StyleSheet.create({
     position: 'relative',
   },
   tabActive: {
-    borderBottomWidth: 2,
-    borderBottomColor: colors.primary,
   },
   tabText: {
     fontSize: 14,

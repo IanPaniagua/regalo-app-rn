@@ -286,7 +286,9 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   sectionTitle: {
+    fontSize: 18,
     fontWeight: '700',
+    marginBottom: 4,
   },
   row: {
     flexDirection: 'row',

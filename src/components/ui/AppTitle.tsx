@@ -14,9 +14,10 @@ export function AppTitle({ children, style, ...rest }: AppTitleProps) {
     <Text 
       style={[
         {
-          color: theme.primary,
+          color: theme.text,
           fontFamily: fonts.title,
           fontSize: 28,
+          fontWeight: '700',
         },
         style
       ]} 
