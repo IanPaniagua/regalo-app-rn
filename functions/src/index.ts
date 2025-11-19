@@ -74,7 +74,7 @@ async function sendExpoPushNotifications(
 export const sendDailyBirthdayReminders = functions
   .region('europe-west1') // Servidor en Europa para mejor latencia
   .pubsub
-  .schedule('15 13 * * *') // Cron: 9:00 AM todos los días
+  .schedule('25 13 * * *') // Cron: 9:00 AM todos los días
   .timeZone(TIMEZONE)
   .onRun(async (context) => {
     console.log('🎂 Starting daily birthday reminders...');

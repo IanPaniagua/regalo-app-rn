@@ -6,6 +6,7 @@ import Constants from 'expo-constants';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { db } from '@/src/database';
 import { useUser } from './UserContext';
+import { BirthdayNotificationModal } from '@/src/components/BirthdayNotificationModal';
 
 // Configurar cómo se manejan las notificaciones cuando la app está en foreground
 Notifications.setNotificationHandler({
@@ -25,6 +26,7 @@ interface NotificationsContextType {
   isPermissionGranted: boolean;
   notificationsEnabled: boolean;
   setNotificationsEnabled: (enabled: boolean) => Promise<void>;
+  showBirthdayModal: (userId?: string) => void;
 }
 
 const NotificationsContext = createContext<NotificationsContextType | undefined>(undefined);
@@ -35,9 +37,11 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
   const [notification, setNotification] = useState<Notifications.Notification | null>(null);
   const [isPermissionGranted, setIsPermissionGranted] = useState(false);
   const [notificationsEnabled, setNotificationsEnabledState] = useState(true);
+  const [birthdayModalVisible, setBirthdayModalVisible] = useState(false);
+  const [birthdayUserId, setBirthdayUserId] = useState<string | undefined>();
   
-  const notificationListener = useRef<Notifications.Subscription | undefined>();
-  const responseListener = useRef<Notifications.Subscription | undefined>();
+  const notificationListener = useRef<Notifications.Subscription>();
+  const responseListener = useRef<Notifications.Subscription>();
 
   const NOTIFICATIONS_ENABLED_KEY = '@regalo_app_notifications_enabled';
 
@@ -184,7 +188,7 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
         if (user?.id && fcmToken) {
           try {
             await db.getAdapter().updateUser(user.id, {
-              fcmToken: null,
+              fcmToken: undefined,
             });
             console.log('ℹ️ Notifications disabled, FCM token cleared from Firestore');
           } catch (error) {
@@ -239,16 +243,19 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
       return;
     }
     
-    // Aquí puedes navegar a diferentes pantallas según el tipo de notificación
+    // Mostrar modal según el tipo de notificación
     if (data.type === 'birthday') {
-      // Navegar al perfil del usuario
-      console.log(`Navigate to user profile: ${data.userId}`);
-      // router.push(`/profile/${data.userId}`);
+      const userId = typeof data.userId === 'string' ? data.userId : undefined;
+      showBirthdayModal(userId);
     } else if (data.type === 'monthly_summary') {
-      // Navegar al calendario
-      console.log('Navigate to calendar');
-      // router.push('/calendar');
+      // Mostrar modal con todos los cumpleaños del mes
+      showBirthdayModal();
     }
+  }
+
+  function showBirthdayModal(userId?: string) {
+    setBirthdayUserId(userId);
+    setBirthdayModalVisible(true);
   }
 
   return (
@@ -260,9 +267,15 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
         isPermissionGranted,
         notificationsEnabled,
         setNotificationsEnabled,
+        showBirthdayModal,
       }}
     >
       {children}
+      <BirthdayNotificationModal
+        visible={birthdayModalVisible}
+        onClose={() => setBirthdayModalVisible(false)}
+        userId={birthdayUserId}
+      />
     </NotificationsContext.Provider>
   );
 }
