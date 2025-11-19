@@ -101,8 +101,15 @@ export default function CalendarTabScreen() {
 
     // Espacios vacíos antes del primer día
     for (let i = 1; i < firstDay; i++) {
+      const isLastInRow = i % 7 === 0;
       days.push(
-        <View key={`empty-${i}`} style={styles.dayCell} />
+        <View 
+          key={`empty-${i}`} 
+          style={[
+            styles.dayCell,
+            isLastInRow && styles.lastInRow
+          ]} 
+        />
       );
     }
 
@@ -119,6 +126,10 @@ export default function CalendarTabScreen() {
         return userDay === day && userMonth === currentDate.getMonth();
       });
 
+      // Calcular posición en la semana (firstDay - 1 espacios vacíos + day)
+      const totalPosition = (firstDay - 1) + day;
+      const isLastInRow = totalPosition % 7 === 0;
+
       days.push(
         <Pressable
           key={day}
@@ -127,6 +138,7 @@ export default function CalendarTabScreen() {
             { backgroundColor: theme.inputBg, borderColor: theme.border, borderWidth: 1 },
             isToday && styles.todayCell,
             isSelected && styles.selectedCell,
+            isLastInRow && styles.lastInRow,
           ]}
           onPress={() => handleDayPress(day)}
         >
@@ -426,7 +438,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   weekDayCell: {
-    flex: 1,
+    width: DAY_SIZE,
     alignItems: 'center',
     paddingVertical: 8,
   },
@@ -441,7 +453,6 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(246, 250, 255, 0.92)',
     borderRadius: 16,
     padding: 8,
-    gap: 4,
   },
   dayCell: {
     width: DAY_SIZE,
@@ -451,6 +462,11 @@ const styles = StyleSheet.create({
     padding: 6,
     alignItems: 'center',
     justifyContent: 'flex-start',
+    marginRight: GAP,
+    marginBottom: GAP,
+  },
+  lastInRow: {
+    marginRight: 0,
   },
   todayCell: {
     borderWidth: 2,
