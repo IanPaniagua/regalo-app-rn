@@ -110,17 +110,17 @@ export default function LoginScreen() {
             <View style={styles.content}>
               <AppTitle style={styles.title}>{t('login_title')}</AppTitle>
               
-              <AppText style={styles.subtitle}>
+              <AppText style={[styles.subtitle, { color: theme.textSecondary }]}>
                 {t('login_subtitle')}
               </AppText>
 
               <View style={styles.inputContainer}>
                 <View style={styles.labelRow}>
                   <Ionicons name="mail-outline" size={18} color={colors.primary} />
-                  <AppText style={styles.label}>{t('login_email_label')}</AppText>
+                  <AppText style={[styles.label, { color: theme.textSecondary }]}>{t('login_email_label')}</AppText>
                 </View>
                 <TextInput
-                  style={styles.input}
+                  style={[styles.input, { backgroundColor: theme.inputBg, color: theme.text, borderColor: theme.border }]}
                   value={email}
                   onChangeText={setEmail}
                   placeholder={t('login_email_placeholder')}
@@ -136,11 +136,11 @@ export default function LoginScreen() {
               <View style={styles.inputContainer}>
                 <View style={styles.labelRow}>
                   <Ionicons name="lock-closed-outline" size={18} color={colors.primary} />
-                  <AppText style={styles.label}>{t('login_password_label')}</AppText>
+                  <AppText style={[styles.label, { color: theme.textSecondary }]}>{t('login_password_label')}</AppText>
                 </View>
                 <View style={styles.passwordContainer}>
                   <TextInput
-                    style={styles.passwordInput}
+                    style={[styles.passwordInput, { backgroundColor: theme.inputBg, color: theme.text, borderColor: theme.border }]}
                     value={password}
                     onChangeText={setPassword}
                     placeholder={t('login_password_placeholder')}
@@ -229,30 +229,23 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 14,
-    color: '#CCCCCC',
     fontWeight: '600',
   },
   input: {
-    backgroundColor: '#2A2A2A',
     borderWidth: 1,
-    borderColor: '#444',
     borderRadius: 12,
     padding: 16,
     fontSize: 16,
-    color: '#FFFFFF',
   },
   passwordContainer: {
     position: 'relative',
   },
   passwordInput: {
-    backgroundColor: '#2A2A2A',
     borderWidth: 1,
-    borderColor: '#444',
     borderRadius: 12,
     padding: 16,
     paddingRight: 50,
     fontSize: 16,
-    color: '#FFFFFF',
   },
   eyeIcon: {
     position: 'absolute',

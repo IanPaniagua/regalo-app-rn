@@ -19,10 +19,12 @@ import { AppTitle } from '@/src/components/ui/AppTitle';
 import { AppText } from '@/src/components/ui/AppText';
 import { AppButton } from '@/src/components/ui/AppButton';
 import { colors, fonts } from '@/src/theme';
+import { useAppTheme } from '@/src/theme/ThemeProvider';
 import { useUser } from '@/src/context/UserContext';
 
 export default function CreateProfileStep1() {
   const router = useRouter();
+  const { theme } = useAppTheme();
   const { tempUser, setTempUser } = useUser();
   const [name, setName] = useState(tempUser?.name || '');
   const [birthdate, setBirthdate] = useState(tempUser?.birthdate || new Date(2000, 0, 1)); // Fecha por defecto más razonable
@@ -68,9 +70,9 @@ export default function CreateProfileStep1() {
               <AppTitle style={styles.title}>Vamos a crear tu perfil</AppTitle>
 
               <View style={styles.inputGroup}>
-                <AppText style={styles.label}>Nombre</AppText>
+                <AppText style={[styles.label, { color: theme.textSecondary }]}>Nombre</AppText>
                 <TextInput
-                  style={styles.input}
+                  style={[styles.input, { backgroundColor: theme.inputBg, color: theme.text, borderColor: theme.border }]}
                   value={name}
                   onChangeText={setName}
                   placeholder="Tu nombre"
@@ -81,9 +83,9 @@ export default function CreateProfileStep1() {
               </View>
 
               <View style={styles.inputGroup}>
-                <AppText style={styles.label}>Fecha de nacimiento</AppText>
+                <AppText style={[styles.label, { color: theme.textSecondary }]}>Fecha de nacimiento</AppText>
                 <Pressable
-                  style={styles.dateButton}
+                  style={[styles.dateButton, { backgroundColor: theme.inputBg, borderColor: theme.border }]}
                   onPress={() => {
                     Keyboard.dismiss();
                     setShowDatePicker(true);
@@ -183,20 +185,15 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   input: {
-    backgroundColor: '#2A2A2A',
     borderWidth: 1,
-    borderColor: '#3498db',
     borderRadius: 12,
     paddingVertical: 16,
     paddingHorizontal: 16,
-    color: '#FFFFFF',
     fontFamily: fonts.text,
     fontSize: 16,
   },
   dateButton: {
-    backgroundColor: '#2A2A2A',
     borderWidth: 1,
-    borderColor: '#3498db',
     borderRadius: 12,
     paddingVertical: 16,
     paddingHorizontal: 16,

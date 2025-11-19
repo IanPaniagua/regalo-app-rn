@@ -289,7 +289,7 @@ export default function ConnectTabScreen() {
                     return (
                       <Pressable 
                         key={user.id} 
-                        style={[styles.userCard, { backgroundColor: theme.surface }]}
+                        style={[styles.userCard, { backgroundColor: theme.inputBg, borderColor: theme.border, borderWidth: 1 }]}
                         onPress={() => handleUserPress(user)}
                       >
                         <View style={styles.userInfo}>
@@ -326,7 +326,7 @@ export default function ConnectTabScreen() {
                   </View>
                 ) : (
                   pendingInvitationsWithDetails.map((invitation) => (
-                    <View key={invitation.id} style={[styles.invitationCard, { backgroundColor: theme.surface, borderColor: colors.primary }]}>
+                    <View key={invitation.id} style={[styles.invitationCard, { backgroundColor: theme.inputBg, borderColor: colors.primary, borderWidth: 2 }]}>
                       <View style={styles.invitationHeader}>
                         <AppText style={styles.invitationAvatar}>
                           {invitation.fromUser?.avatar || '👤'}

@@ -124,7 +124,7 @@ export default function CalendarTabScreen() {
           key={day}
           style={[
             styles.dayCell,
-            { backgroundColor: theme.surface },
+            { backgroundColor: theme.inputBg, borderColor: theme.border, borderWidth: 1 },
             isToday && styles.todayCell,
             isSelected && styles.selectedCell,
           ]}
@@ -231,13 +231,13 @@ export default function CalendarTabScreen() {
         onRequestClose={closeModals}
       >
         <Pressable style={styles.modalOverlay} onPress={closeModals}>
-          <Pressable style={styles.modalContent} onPress={(e) => e.stopPropagation()}>
-            <View style={styles.modalHeader}>
-              <AppText style={styles.modalTitle}>
+          <Pressable style={[styles.modalContent, { backgroundColor: theme.modalBg }]} onPress={(e) => e.stopPropagation()}>
+            <View style={[styles.modalHeader, { borderBottomColor: theme.border }]}>
+              <AppText style={[styles.modalTitle, { color: theme.text }]}>
                 {t('calendar_day_modal_title').replace('{{day}}', selectedDay?.toString() || '').replace('{{month}}', MONTHS[currentDate.getMonth()])}
               </AppText>
               <Pressable onPress={closeModals}>
-                <Ionicons name="close" size={24} color={colors.white} />
+                <Ionicons name="close" size={24} color={theme.text} />
               </Pressable>
             </View>
 
@@ -245,7 +245,7 @@ export default function CalendarTabScreen() {
               {selectedDayBirthdays.map((user) => (
                 <Pressable
                   key={user.id}
-                  style={[styles.birthdayItem, { backgroundColor: theme.surface }]}
+                  style={[styles.birthdayItem, { backgroundColor: theme.inputBg, borderColor: theme.border, borderWidth: 1 }]}
                   onPress={() => handleUserSelect(user)}
                 >
                   <View style={styles.userAvatar}>
