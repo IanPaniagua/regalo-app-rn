@@ -33,7 +33,7 @@ export const lightTheme = {
   ...baseColors,
   background: '#E6F0FF', // azul muy claro
   backgroundImage: 'bg-light',
-  overlay: 'rgba(230, 240, 255, 0.35)',
+  overlay: 'rgba(255, 255, 255, 0.3)',
 
   surface: '#F6FAFF',
   surfaceHover: '#EDF3FF',

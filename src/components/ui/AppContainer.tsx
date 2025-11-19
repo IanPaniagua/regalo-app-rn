@@ -11,7 +11,7 @@ interface AppContainerProps extends ViewProps {
 
 export const AppContainer = memo(function AppContainer({ children, style, ...rest }: AppContainerProps) {
   const { theme, themeMode } = useAppTheme();
-  const backgroundImage = themeMode === 'light' ? BgLight : BgDark;
+  const backgroundImage = themeMode === 'dark' ? BgDark : BgLight;
 
   return (
     <View style={styles.container}>
