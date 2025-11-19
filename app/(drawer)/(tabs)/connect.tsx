@@ -6,6 +6,7 @@ import { AppTitle } from '@/src/components/ui/AppTitle';
 import { AppText } from '@/src/components/ui/AppText';
 import { AppButton } from '@/src/components/ui/AppButton';
 import { CelebrationModal } from '@/src/components/CelebrationModal';
+import { UserProfileModal } from '@/src/components/UserProfileModal';
 import { useConnections } from '@/src/context/ConnectionsContext';
 import { useUser } from '@/src/context/UserContext';
 import { useBirthdays } from '@/src/context/BirthdaysContext';
@@ -370,72 +371,13 @@ export default function ConnectTabScreen() {
       </ScrollView>
 
       {/* Modal de Información del Usuario */}
-      <Modal
+      <UserProfileModal
         visible={showUserModal}
-        animationType="slide"
-        transparent={true}
-        onRequestClose={handleCloseModal}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <AppTitle style={styles.modalTitle}>{t('calendar_profile_modal_title')}</AppTitle>
-              <Pressable onPress={handleCloseModal} style={styles.closeButton}>
-                <Ionicons name="close" size={28} color={colors.white} />
-              </Pressable>
-            </View>
-
-            {selectedUser && (
-              <ScrollView style={styles.modalBody}>
-                <View style={styles.userProfileSection}>
-                  <AppText style={styles.modalAvatar}>{selectedUser.avatar}</AppText>
-                  <AppText style={styles.modalUserName}>{selectedUser.name}</AppText>
-                  <AppText style={styles.modalUserEmail}>{selectedUser.email}</AppText>
-                </View>
-
-                <View style={styles.infoSection}>
-                  <View style={styles.infoRow}>
-                    <Ionicons name="calendar-outline" size={20} color={colors.primary} />
-                    <AppText style={styles.infoLabel}>{t('calendar_profile_birthdate_label')}</AppText>
-                  </View>
-                  <AppText style={styles.infoValue}>
-                    {selectedUser.birthdate.toLocaleDateString('es-ES', {
-                      day: 'numeric',
-                      month: 'long',
-                      year: 'numeric',
-                    })}
-                  </AppText>
-                </View>
-
-                {selectedUser.hobbies && selectedUser.hobbies.length > 0 && (
-                  <View style={styles.infoSection}>
-                    <View style={styles.infoRow}>
-                      <Ionicons name="heart-outline" size={20} color={colors.primary} />
-                      <AppText style={styles.infoLabel}>{t('calendar_profile_hobbies_label')}</AppText>
-                    </View>
-                    <View style={styles.hobbiesContainer}>
-                      {selectedUser.hobbies.map((hobby, index) => (
-                        <View key={index} style={styles.hobbyTag}>
-                          <AppText style={styles.hobbyText}>{hobby}</AppText>
-                        </View>
-                      ))}
-                    </View>
-                  </View>
-                )}
-
-                <View style={styles.disconnectSection}>
-                  <AppButton
-                    title={t('connect_disconnect_confirm')}
-                    variant="secondary"
-                    onPress={handleDisconnect}
-                    style={styles.disconnectButtonModal}
-                  />
-                </View>
-              </ScrollView>
-            )}
-          </View>
-        </View>
-      </Modal>
+        user={selectedUser}
+        onClose={handleCloseModal}
+        onDisconnect={handleDisconnect}
+        showDisconnect={true}
+      />
 
       {/* Modal de celebración con confetti */}
       <CelebrationModal
@@ -455,6 +397,7 @@ const styles = StyleSheet.create({
   },
   header: {
     marginBottom: 24,
+    alignItems: 'center',
   },
   subtitle: {
     fontSize: 14,
@@ -682,7 +625,6 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   modalContent: {
-    backgroundColor: '#F6FAFF',
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     maxHeight: '90%',
@@ -693,7 +635,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 20,
     borderBottomWidth: 1,
-    borderBottomColor: '#333',
   },
   modalTitle: {
     fontSize: 20,
@@ -708,7 +649,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 20,
     borderBottomWidth: 1,
-    borderBottomColor: '#333',
     marginBottom: 20,
   },
   modalAvatar: {
@@ -722,7 +662,6 @@ const styles = StyleSheet.create({
   },
   modalUserEmail: {
     fontSize: 14,
-    color: '#64748B',
   },
   infoSection: {
     marginBottom: 24,
@@ -739,7 +678,6 @@ const styles = StyleSheet.create({
   },
   infoValue: {
     fontSize: 15,
-    color: '#334155',
     marginLeft: 28,
   },
   hobbiesContainer: {
@@ -749,7 +687,6 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   hobbyTag: {
-    backgroundColor: '#F6FAFF',
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 16,
@@ -758,13 +695,11 @@ const styles = StyleSheet.create({
   },
   hobbyText: {
     fontSize: 14,
-    color: '#0F172A',
   },
   disconnectSection: {
     marginTop: 12,
     paddingTop: 24,
     borderTopWidth: 1,
-    borderTopColor: '#333',
   },
   disconnectButtonModal: {
     marginBottom: 12,

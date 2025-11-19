@@ -93,7 +93,7 @@ export default function RootLayout() {
                       <Stack.Screen name="(drawer)" />
                       <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
                     </Stack>
-                    <StatusBar style="light" />
+                    <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
                   </ThemeProvider>
                 </BirthdaysProvider>
               </ConnectionsProvider>

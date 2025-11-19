@@ -41,12 +41,15 @@ export default function DrawerLayout() {
           drawerLabel: t('drawer_home'),
           title: '',
           headerTitle: () => (
-            <Image
-              source={require('@/assets/images/icon.png')}
-              style={{ width: 40, height: 40 }}
-              contentFit="contain"
-            />
+            <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+              <Image
+                source={require('@/assets/images/icon.png')}
+                style={{ width: 40, height: 40 }}
+                contentFit="contain"
+              />
+            </View>
           ),
+          headerTitleAlign: 'center',
           drawerIcon: ({ color, size }) => (
             <Ionicons name="home-outline" size={size} color={color} />
           ),

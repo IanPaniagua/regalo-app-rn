@@ -5,16 +5,14 @@ import { AppContainer } from '@/src/components/ui/AppContainer';
 import { AppTitle } from '@/src/components/ui/AppTitle';
 import { AppText } from '@/src/components/ui/AppText';
 import { AppButton } from '@/src/components/ui/AppButton';
+import { UserProfileModal } from '@/src/components/UserProfileModal';
 import { colors } from '@/src/theme';
 import { useAppTheme } from '@/src/theme/ThemeProvider';
 import { useBirthdays, BirthdayUser } from '@/src/context/BirthdaysContext';
 import { useLanguage } from '@/src/context/LanguageContext';
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const CALENDAR_PADDING = 20; // padding horizontal del scroll (10 * 2) - reducido
-const GRID_PADDING = 16; // padding del grid (8 * 2)
-const GAP = 4; // gap reducido
-const DAY_SIZE = (SCREEN_WIDTH - CALENDAR_PADDING - GRID_PADDING - (GAP * 6)) / 7;
+// Usar porcentaje en lugar de cálculos fijos para mejor compatibilidad cross-platform
+const DAY_WIDTH_PERCENT = 14.28; // 100% / 7 días ≈ 14.28%
 
 export default function CalendarTabScreen() {
   const { users, getUsersByDate } = useBirthdays();
@@ -198,8 +196,14 @@ export default function CalendarTabScreen() {
 
         {/* Días de la semana */}
         <View style={styles.weekDaysContainer}>
-          {DAYS_OF_WEEK.map((day) => (
-            <View key={day} style={styles.weekDayCell}>
+          {DAYS_OF_WEEK.map((day, index) => (
+            <View 
+              key={day} 
+              style={[
+                styles.weekDayCell,
+                index === 6 && styles.lastInRow
+              ]}
+            >
               <AppText style={[styles.weekDayText, { color: theme.text, fontWeight: '700' }]}>{day}</AppText>
             </View>
           ))}
@@ -329,80 +333,12 @@ export default function CalendarTabScreen() {
       </Modal>
 
       {/* Modal: Detalles del usuario */}
-      <Modal
+      <UserProfileModal
         visible={!!selectedUser}
-        transparent
-        animationType="slide"
-        onRequestClose={closeModals}
-      >
-        <Pressable style={styles.modalOverlay} onPress={closeModals}>
-          <Pressable style={styles.modalContent} onPress={(e) => e.stopPropagation()}>
-            {selectedUser && (
-              <>
-                <View style={styles.modalHeader}>
-                  <Pressable onPress={() => setSelectedUser(null)}>
-                    <Ionicons name="arrow-back" size={24} color={colors.white} />
-                  </Pressable>
-                  <AppText style={styles.modalTitle}>{t('calendar_profile_modal_title')}</AppText>
-                  <Pressable onPress={closeModals}>
-                    <Ionicons name="close" size={24} color={colors.white} />
-                  </Pressable>
-                </View>
-
-                <ScrollView style={styles.userDetails}>
-                  <View style={styles.userAvatarLarge}>
-                    <AppText style={styles.userAvatarLargeText}>{selectedUser.avatar}</AppText>
-                  </View>
-
-                  <AppText style={styles.userNameLarge}>{selectedUser.name}</AppText>
-
-                  <View style={styles.detailSection}>
-                    <AppText style={styles.detailLabel}>{t('calendar_profile_birthdate_label')}</AppText>
-                    <AppText style={styles.detailValue}>
-                      {selectedUser.birthdate.toLocaleDateString('es-ES', {
-                        day: 'numeric',
-                        month: 'long',
-                        year: 'numeric',
-                      })}
-                    </AppText>
-                  </View>
-
-                  <View style={styles.detailSection}>
-                    <AppText style={styles.detailLabel}>{t('calendar_profile_age_label')}</AppText>
-                    <AppText style={styles.detailValue}>
-                      {new Date().getFullYear() - selectedUser.birthdate.getFullYear()} {t('calendar_day_item_age_suffix')}
-                    </AppText>
-                  </View>
-
-                  {selectedUser.email && (
-                    <View style={styles.detailSection}>
-                      <AppText style={styles.detailLabel}>{t('calendar_profile_email_label')}</AppText>
-                      <AppText style={styles.detailValue}>{selectedUser.email}</AppText>
-                    </View>
-                  )}
-
-                  <View style={styles.detailSection}>
-                    <AppText style={styles.detailLabel}>{t('calendar_profile_hobbies_label')}</AppText>
-                    <View style={styles.hobbiesContainer}>
-                      {selectedUser.hobbies.map((hobby, index) => (
-                        <View key={index} style={styles.hobbyBadge}>
-                          <AppText style={styles.hobbyText}>{hobby}</AppText>
-                        </View>
-                      ))}
-                    </View>
-                  </View>
-
-                  <AppButton
-                    title={t('calendar_profile_close_button')}
-                    onPress={closeModals}
-                    style={styles.closeButton}
-                  />
-                </ScrollView>
-              </>
-            )}
-          </Pressable>
-        </Pressable>
-      </Modal>
+        user={selectedUser}
+        onClose={closeModals}
+        showDisconnect={false}
+      />
     </AppContainer>
   );
 }
@@ -438,7 +374,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   weekDayCell: {
-    width: DAY_SIZE,
+    width: `${DAY_WIDTH_PERCENT}%`,
     alignItems: 'center',
     paddingVertical: 8,
   },
@@ -452,21 +388,21 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     backgroundColor: 'rgba(246, 250, 255, 0.92)',
     borderRadius: 16,
-    padding: 8,
+    padding: 4,
   },
   dayCell: {
-    width: DAY_SIZE,
-    height: DAY_SIZE,
+    width: `${DAY_WIDTH_PERCENT}%`,
+    height: 50,
     backgroundColor: 'rgba(15, 23, 42, 0.04)',
     borderRadius: 10,
-    padding: 6,
+    padding: 4,
     alignItems: 'center',
     justifyContent: 'flex-start',
-    marginRight: GAP,
-    marginBottom: GAP,
+    marginBottom: 4,
+    overflow: 'hidden',
   },
   lastInRow: {
-    marginRight: 0,
+    // No necesario con porcentajes
   },
   todayCell: {
     borderWidth: 2,
@@ -476,10 +412,10 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primary,
   },
   dayNumber: {
-    fontSize: 13,
+    fontSize: 11,
     color: '#0F172A',
     fontWeight: '700',
-    marginBottom: 0,
+    marginBottom: 2,
     alignSelf: 'flex-start',
   },
   todayText: {
@@ -489,49 +425,50 @@ const styles = StyleSheet.create({
     color: colors.secondary,
   },
   iconsContainer: {
+    flex: 1,
     width: '100%',
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'center',
-    alignItems: 'flex-start',
-    gap: 4,
+    alignItems: 'center',
+    gap: 2,
   },
   avatarWithCounter: {
     position: 'relative',
-    width: 32,
-    height: 32,
+    width: 20,
+    height: 20,
   },
   iconWrapper: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: 20,
+    height: 20,
+    borderRadius: 10,
     backgroundColor: 'rgba(212, 175, 55, 0.3)',
     justifyContent: 'center',
     alignItems: 'center',
   },
   iconEmoji: {
-    fontSize: 18,
+    fontSize: 12,
   },
   counterBadge: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: 20,
+    height: 20,
+    borderRadius: 10,
     backgroundColor: '#E74C3C', // Rojo
     justifyContent: 'center',
     alignItems: 'center',
   },
   counterText: {
-    fontSize: 12,
+    fontSize: 9,
     fontWeight: '700',
     color: colors.white,
   },
   counterBadgeSmall: {
     position: 'absolute',
-    top: -5,
-    right: -5,
-    width: 20,
-    height: 20,
-    borderRadius: 10,
+    top: -3,
+    right: -3,
+    width: 14,
+    height: 14,
+    borderRadius: 7,
     backgroundColor: '#E74C3C', // Rojo
     justifyContent: 'center',
     alignItems: 'center',
@@ -539,7 +476,7 @@ const styles = StyleSheet.create({
     borderColor: '#1C1C1C',
   },
   counterTextSmall: {
-    fontSize: 10,
+    fontSize: 8,
     fontWeight: '700',
     color: colors.white,
   },

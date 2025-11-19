@@ -14,6 +14,7 @@ export const baseColors = {
 // Tema oscuro (actual)
 export const darkTheme = {
   ...baseColors,
+  primary: '#cab097', // beige/arena para modo dark (en lugar del dorado)
   background: '#1A1A1A',
   backgroundImage: 'bg-dark',
   overlay: 'rgba(0, 0, 0, 0.4)',
@@ -57,5 +58,6 @@ export const getTheme = (mode: ThemeMode): Theme => {
   return mode === 'light' ? lightTheme : darkTheme;
 };
 
-// Exportar colores legacy para compatibilidad
-export const colors = darkTheme;
+// Exportar colores base para compatibilidad (usa el dorado por defecto)
+// Los componentes que necesiten el color del tema deben usar theme.primary
+export const colors = baseColors;
