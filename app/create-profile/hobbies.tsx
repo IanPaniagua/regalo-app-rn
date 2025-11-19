@@ -16,6 +16,7 @@ import { AppTitle } from '@/src/components/ui/AppTitle';
 import { AppText } from '@/src/components/ui/AppText';
 import { AppButton } from '@/src/components/ui/AppButton';
 import { colors, fonts } from '@/src/theme';
+import { useAppTheme } from '@/src/theme/ThemeProvider';
 import { useUser } from '@/src/context/UserContext';
 
 const HOBBIES = [
@@ -33,6 +34,7 @@ const HOBBIES = [
 
 export default function CreateProfileStep2() {
   const router = useRouter();
+  const { theme } = useAppTheme();
   const { tempUser, setTempUser } = useUser();
   const [selectedHobbies, setSelectedHobbies] = useState<string[]>(tempUser?.hobbies || []);
   const [customHobby, setCustomHobby] = useState('');
@@ -99,6 +101,7 @@ export default function CreateProfileStep2() {
                     key={hobby}
                     style={[
                       styles.hobbyChip,
+                      { backgroundColor: theme.inputBg, borderColor: theme.border },
                       selectedHobbies.includes(hobby) && styles.hobbyChipSelected,
                     ]}
                     onPress={() => toggleHobby(hobby)}
@@ -106,6 +109,7 @@ export default function CreateProfileStep2() {
                     <AppText
                       style={[
                         styles.hobbyText,
+                        { color: theme.text },
                         selectedHobbies.includes(hobby) && styles.hobbyTextSelected,
                       ]}
                     >
@@ -115,21 +119,28 @@ export default function CreateProfileStep2() {
                 ))}
 
                 <Pressable
-                  style={[styles.hobbyChip, styles.hobbyChipOther]}
+                  style={[
+                    styles.hobbyChip,
+                    { backgroundColor: theme.inputBg, borderColor: theme.border },
+                    styles.hobbyChipOther,
+                  ]}
                   onPress={() => setShowCustomInput(!showCustomInput)}
                 >
-                  <AppText style={styles.hobbyText}>Otro</AppText>
+                  <AppText style={[styles.hobbyText, { color: theme.text }]}>Otro</AppText>
                 </Pressable>
               </View>
 
               {showCustomInput && (
                 <View style={styles.customInputContainer}>
                   <TextInput
-                    style={styles.input}
+                    style={[
+                      styles.input,
+                      { backgroundColor: theme.inputBg, borderColor: theme.border, color: theme.text },
+                    ]}
                     value={customHobby}
                     onChangeText={setCustomHobby}
                     placeholder="Escribe tu hobby"
-                    placeholderTextColor="#666"
+                    placeholderTextColor={theme.textMuted}
                     onSubmitEditing={addCustomHobby}
                   />
                   <Pressable style={styles.addButton} onPress={addCustomHobby}>
@@ -140,7 +151,7 @@ export default function CreateProfileStep2() {
 
               {selectedHobbies.length > 0 && (
                 <View style={styles.selectedContainer}>
-                  <AppText style={styles.selectedLabel}>Seleccionados:</AppText>
+                  <AppText style={[styles.selectedLabel, { color: theme.text }]}>Seleccionados:</AppText>
                   <View style={styles.selectedList}>
                     {selectedHobbies.map((hobby, index) => (
                       <View key={index} style={styles.selectedChip}>
@@ -162,7 +173,13 @@ export default function CreateProfileStep2() {
                 onPressIn={() => setSkipPressed(true)}
                 onPressOut={() => setSkipPressed(false)}
               >
-                <AppText style={[styles.skipText, skipPressed && styles.skipTextPressed]}>
+                <AppText
+                  style={[
+                    styles.skipText,
+                    { color: theme.textMuted },
+                    skipPressed && styles.skipTextPressed,
+                  ]}
+                >
                   Saltar
                 </AppText>
               </Pressable>
@@ -196,9 +213,7 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   hobbyChip: {
-    backgroundColor: '#2A2A2A',
     borderWidth: 1,
-    borderColor: colors.primary,
     borderRadius: 20,
     paddingVertical: 10,
     paddingHorizontal: 20,
@@ -211,7 +226,6 @@ const styles = StyleSheet.create({
   },
   hobbyText: {
     fontSize: 14,
-    color: colors.white,
   },
   hobbyTextSelected: {
     color: colors.secondary,
@@ -224,13 +238,11 @@ const styles = StyleSheet.create({
   },
   input: {
     flex: 1,
-    backgroundColor: '#2A2A2A',
     borderWidth: 1,
-    borderColor: colors.primary,
     borderRadius: 12,
     paddingVertical: 12,
     paddingHorizontal: 16,
-    color: '#FFFFFF',
+    fontFamily: fonts.text,
     fontSize: 16,
   },
   addButton: {
@@ -274,7 +286,6 @@ const styles = StyleSheet.create({
   skipText: {
     textAlign: 'center',
     fontSize: 16,
-    color: '#888',
   },
   skipTextPressed: {
     textDecorationLine: 'underline',

@@ -19,12 +19,14 @@ import { AppText } from '@/src/components/ui/AppText';
 import { AppButton } from '@/src/components/ui/AppButton';
 import { useLanguage } from '@/src/context/LanguageContext';
 import { colors, fonts } from '@/src/theme';
+import { useAppTheme } from '@/src/theme/ThemeProvider';
 import { useUser } from '@/src/context/UserContext';
 import { useBirthdays } from '@/src/context/BirthdaysContext';
 import { authService } from '@/src/services/auth.service';
 
 export default function CreateProfileStep3() {
   const router = useRouter();
+  const { theme } = useAppTheme();
   const { tempUser, setUser, clearTempUser } = useUser();
   const { addUser } = useBirthdays();
   const { t } = useLanguage();
@@ -154,21 +156,24 @@ export default function CreateProfileStep3() {
             <View style={styles.content}>
               <AppTitle style={styles.title}>¿Cuál es tu email?</AppTitle>
 
-              <AppText style={styles.subtitle}>
+              <AppText style={[styles.subtitle, { color: theme.textSecondary }]}>
                 Crea tu cuenta para acceder a la app
               </AppText>
 
               <View style={styles.inputContainer}>
                 <View style={styles.labelRow}>
                   <Ionicons name="mail-outline" size={18} color={colors.primary} />
-                  <AppText style={styles.label}>Email</AppText>
+                  <AppText style={[styles.label, { color: theme.text }]}>Email</AppText>
                 </View>
                 <TextInput
-                  style={styles.input}
+                  style={[
+                    styles.input,
+                    { backgroundColor: theme.inputBg, borderColor: theme.border, color: theme.text },
+                  ]}
                   value={email}
                   onChangeText={setEmail}
                   placeholder="tu@email.com"
-                  placeholderTextColor="#666"
+                  placeholderTextColor={theme.textMuted}
                   keyboardType="email-address"
                   autoCapitalize="none"
                   autoCorrect={false}
@@ -180,15 +185,18 @@ export default function CreateProfileStep3() {
               <View style={styles.inputContainer}>
                 <View style={styles.labelRow}>
                   <Ionicons name="lock-closed-outline" size={18} color={colors.primary} />
-                  <AppText style={styles.label}>Contraseña</AppText>
+                  <AppText style={[styles.label, { color: theme.text }]}>Contraseña</AppText>
                 </View>
                 <View style={styles.passwordContainer}>
                   <TextInput
-                    style={styles.passwordInput}
+                    style={[
+                      styles.passwordInput,
+                      { backgroundColor: theme.inputBg, borderColor: theme.border, color: theme.text },
+                    ]}
                     value={password}
                     onChangeText={setPassword}
                     placeholder="Mínimo 8 caracteres"
-                    placeholderTextColor="#666"
+                    placeholderTextColor={theme.textMuted}
                     secureTextEntry={!showPassword}
                     autoCapitalize="none"
                     autoCorrect={false}
@@ -201,7 +209,7 @@ export default function CreateProfileStep3() {
                     <Ionicons
                       name={showPassword ? "eye-off-outline" : "eye-outline"}
                       size={22}
-                      color="#999"
+                      color={theme.textMuted}
                     />
                   </Pressable>
                 </View>
@@ -210,15 +218,18 @@ export default function CreateProfileStep3() {
               <View style={styles.inputContainer}>
                 <View style={styles.labelRow}>
                   <Ionicons name="lock-closed-outline" size={18} color={colors.primary} />
-                  <AppText style={styles.label}>Confirmar Contraseña</AppText>
+                  <AppText style={[styles.label, { color: theme.text }]}>Confirmar Contraseña</AppText>
                 </View>
                 <View style={styles.passwordContainer}>
                   <TextInput
-                    style={styles.passwordInput}
+                    style={[
+                      styles.passwordInput,
+                      { backgroundColor: theme.inputBg, borderColor: theme.border, color: theme.text },
+                    ]}
                     value={confirmPassword}
                     onChangeText={setConfirmPassword}
                     placeholder="Repite tu contraseña"
-                    placeholderTextColor="#666"
+                    placeholderTextColor={theme.textMuted}
                     secureTextEntry={!showConfirmPassword}
                     autoCapitalize="none"
                     autoCorrect={false}
@@ -232,7 +243,7 @@ export default function CreateProfileStep3() {
                     <Ionicons
                       name={showConfirmPassword ? "eye-off-outline" : "eye-outline"}
                       size={22}
-                      color="#999"
+                      color={theme.textMuted}
                     />
                   </Pressable>
                 </View>
@@ -270,7 +281,6 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     fontSize: 16,
-    color: '#999',
     marginBottom: 32,
   },
   inputContainer: {
@@ -284,30 +294,25 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 14,
-    color: colors.white,
     fontWeight: '600',
   },
   input: {
-    backgroundColor: '#2A2A2A',
     borderRadius: 12,
     padding: 16,
+    fontFamily: fonts.text,
     fontSize: 16,
-    color: '#FFFFFF',
     borderWidth: 1,
-    borderColor: '#444',
   },
   passwordContainer: {
     position: 'relative',
   },
   passwordInput: {
-    backgroundColor: '#2A2A2A',
     borderRadius: 12,
     padding: 16,
     paddingRight: 50,
+    fontFamily: fonts.text,
     fontSize: 16,
-    color: '#FFFFFF',
     borderWidth: 1,
-    borderColor: '#444',
   },
   eyeIcon: {
     position: 'absolute',
@@ -319,7 +324,6 @@ const styles = StyleSheet.create({
   },
   hint: {
     fontSize: 14,
-    color: '#666',
     textAlign: 'center',
     marginTop: 16,
     fontStyle: 'italic',

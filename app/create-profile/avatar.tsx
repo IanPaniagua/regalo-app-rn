@@ -13,6 +13,7 @@ import { AppTitle } from '@/src/components/ui/AppTitle';
 import { AppText } from '@/src/components/ui/AppText';
 import { AppButton } from '@/src/components/ui/AppButton';
 import { colors } from '@/src/theme';
+import { useAppTheme } from '@/src/theme/ThemeProvider';
 import { useUser } from '@/src/context/UserContext';
 
 const AVATARS = [
@@ -37,6 +38,7 @@ const AVATARS = [
 
 export default function CreateProfileAvatar() {
   const router = useRouter();
+  const { theme } = useAppTheme();
   const { tempUser, setTempUser } = useUser();
   const [selectedAvatar, setSelectedAvatar] = useState(tempUser?.avatar || '');
 
@@ -64,7 +66,7 @@ export default function CreateProfileAvatar() {
           <View style={styles.content}>
             <AppTitle style={styles.title}>Elige tu avatar</AppTitle>
 
-            <AppText style={styles.subtitle}>
+            <AppText style={[styles.subtitle, { color: theme.textSecondary }]}>
               Selecciona un icono que te represente
             </AppText>
 
@@ -74,6 +76,7 @@ export default function CreateProfileAvatar() {
                   key={index}
                   style={[
                     styles.avatarButton,
+                    { backgroundColor: theme.inputBg, borderColor: theme.border },
                     selectedAvatar === avatar && styles.avatarButtonSelected,
                   ]}
                   onPress={() => setSelectedAvatar(avatar)}
@@ -91,7 +94,7 @@ export default function CreateProfileAvatar() {
             />
 
             {!selectedAvatar && (
-              <AppText style={styles.hint}>
+              <AppText style={[styles.hint, { color: theme.textMuted }]}>
                 Selecciona un avatar para continuar
               </AppText>
             )}
@@ -119,7 +122,6 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     fontSize: 16,
-    color: '#999',
     marginBottom: 32,
     textAlign: 'center',
   },
@@ -133,16 +135,13 @@ const styles = StyleSheet.create({
   avatarButton: {
     width: 60,
     height: 60,
-    backgroundColor: '#2A2A2A',
     borderWidth: 2,
-    borderColor: '#444',
     borderRadius: 30,
     justifyContent: 'center',
     alignItems: 'center',
   },
   avatarButtonSelected: {
     borderColor: colors.primary,
-    backgroundColor: '#3A3A3A',
   },
   avatarEmoji: {
     fontSize: 32,
@@ -153,7 +152,6 @@ const styles = StyleSheet.create({
   },
   hint: {
     fontSize: 14,
-    color: '#666',
     textAlign: 'center',
     fontStyle: 'italic',
   },
