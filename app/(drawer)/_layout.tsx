@@ -60,6 +60,7 @@ export default function DrawerLayout() {
           drawerIcon: ({ color, size }) => (
             <Ionicons name="person-outline" size={size} color={color} />
           ),
+          drawerItemStyle: { display: 'none' },
         }}
       />
       <Drawer.Screen
@@ -70,6 +71,7 @@ export default function DrawerLayout() {
           drawerIcon: ({ color, size }) => (
             <Ionicons name="calendar-outline" size={size} color={color} />
           ),
+          drawerItemStyle: { display: 'none' },
         }}
       />
       <Drawer.Screen
