@@ -27,7 +27,9 @@ export default function CreateProfileStep1() {
   const { theme } = useAppTheme();
   const { tempUser, setTempUser } = useUser();
   const [name, setName] = useState(tempUser?.name || '');
-  const [birthdate, setBirthdate] = useState(tempUser?.birthdate || new Date(2000, 0, 1)); // Fecha por defecto más razonable
+  const [birthdate, setBirthdate] = useState(
+    tempUser?.birthdate || new Date(2000, 0, 1, 12, 0, 0, 0) // Fecha por defecto a las 12:00 del mediodía
+  );
   const [showDatePicker, setShowDatePicker] = useState(false);
 
   const handleContinue = () => {
@@ -112,13 +114,26 @@ export default function CreateProfileStep1() {
             onRequestClose={() => setShowDatePicker(false)}
           >
             <View style={styles.modalOverlay}>
-              <View style={styles.modalContent}>
-                <View style={styles.modalHeader}>
+              <View style={[styles.modalContent, { backgroundColor: theme.modalBg }] }>
+                <View
+                  style={[
+                    styles.modalHeader,
+                    { borderBottomColor: theme.border },
+                  ]}
+                >
                   <Pressable onPress={() => setShowDatePicker(false)}>
-                    <AppText style={styles.modalButton}>Cancelar</AppText>
+                    <AppText style={[styles.modalButton, { color: theme.text }]}>
+                      Cancelar
+                    </AppText>
                   </Pressable>
                   <Pressable onPress={() => setShowDatePicker(false)}>
-                    <AppText style={[styles.modalButton, styles.modalButtonDone]}>
+                    <AppText
+                      style={[
+                        styles.modalButton,
+                        styles.modalButtonDone,
+                        { color: colors.primary },
+                      ]}
+                    >
                       Listo
                     </AppText>
                   </Pressable>
@@ -129,12 +144,19 @@ export default function CreateProfileStep1() {
                   display="spinner"
                   onChange={(_event: any, selectedDate?: Date) => {
                     if (selectedDate) {
-                      setBirthdate(selectedDate);
+                      // Normalizar a las 12:00 del mediodía para evitar problemas de zona horaria
+                      const normalizedDate = new Date(
+                        selectedDate.getFullYear(),
+                        selectedDate.getMonth(),
+                        selectedDate.getDate(),
+                        12, 0, 0, 0
+                      );
+                      setBirthdate(normalizedDate);
                     }
                   }}
                   maximumDate={new Date()}
-                  textColor={colors.white}
-                  style={styles.datePicker}
+                  textColor={theme.text}
+                  style={[styles.datePicker, { backgroundColor: theme.modalBg }]}
                 />
               </View>
             </View>
@@ -150,7 +172,14 @@ export default function CreateProfileStep1() {
             onChange={(_event: any, selectedDate?: Date) => {
               setShowDatePicker(false);
               if (selectedDate) {
-                setBirthdate(selectedDate);
+                // Normalizar a las 12:00 del mediodía para evitar problemas de zona horaria
+                const normalizedDate = new Date(
+                  selectedDate.getFullYear(),
+                  selectedDate.getMonth(),
+                  selectedDate.getDate(),
+                  12, 0, 0, 0
+                );
+                setBirthdate(normalizedDate);
               }
             }}
             maximumDate={new Date()}
@@ -212,7 +241,6 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
   modalContent: {
-    backgroundColor: '#F6FAFF',
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     paddingBottom: 40,
@@ -227,13 +255,10 @@ const styles = StyleSheet.create({
   },
   modalButton: {
     fontSize: 16,
-    color: colors.white,
   },
   modalButtonDone: {
     color: colors.primary,
     fontWeight: '600',
   },
-  datePicker: {
-    backgroundColor: '#F6FAFF',
-  },
+  datePicker: {},
 });
