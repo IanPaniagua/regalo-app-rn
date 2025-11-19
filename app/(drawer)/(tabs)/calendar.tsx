@@ -6,6 +6,7 @@ import { AppTitle } from '@/src/components/ui/AppTitle';
 import { AppText } from '@/src/components/ui/AppText';
 import { AppButton } from '@/src/components/ui/AppButton';
 import { colors } from '@/src/theme';
+import { useAppTheme } from '@/src/theme/ThemeProvider';
 import { useBirthdays, BirthdayUser } from '@/src/context/BirthdaysContext';
 import { useLanguage } from '@/src/context/LanguageContext';
 
@@ -18,6 +19,7 @@ const DAY_SIZE = (SCREEN_WIDTH - CALENDAR_PADDING - GRID_PADDING - (GAP * 6)) / 
 export default function CalendarTabScreen() {
   const { users, getUsersByDate } = useBirthdays();
   const { t } = useLanguage();
+  const { theme } = useAppTheme();
 
   // Get translated days and months
   const DAYS_OF_WEEK = [t('day_mon'), t('day_tue'), t('day_wed'), t('day_thu'), t('day_fri'), t('day_sat'), t('day_sun')];
@@ -122,6 +124,7 @@ export default function CalendarTabScreen() {
           key={day}
           style={[
             styles.dayCell,
+            { backgroundColor: theme.surface },
             isToday && styles.todayCell,
             isSelected && styles.selectedCell,
           ]}
@@ -129,6 +132,7 @@ export default function CalendarTabScreen() {
         >
           <AppText style={[
             styles.dayNumber,
+            { color: theme.text },
             isToday && styles.todayText,
             isSelected && styles.selectedText,
           ]}>
@@ -190,15 +194,15 @@ export default function CalendarTabScreen() {
         </View>
 
         {/* Grid del calendario */}
-        <View style={styles.calendarGrid}>
+        <View style={[styles.calendarGrid, { backgroundColor: theme.cardBg }]}>
           {renderCalendarDays()}
         </View>
 
         {/* Resumen del mes */}
-        <View style={styles.monthSummaryContainer}>
+        <View style={[styles.monthSummaryContainer, { backgroundColor: theme.cardBg }]}>
           <View style={styles.summaryHeader}>
             <Ionicons name="gift" size={24} color={colors.primary} />
-            <AppText style={styles.summaryTitle}>
+            <AppText style={[styles.summaryTitle, { color: theme.text }]}>
               {t('calendar_month_birthdays_title').replace('{{month}}', MONTHS[currentDate.getMonth()])}
             </AppText>
           </View>
@@ -206,7 +210,7 @@ export default function CalendarTabScreen() {
           <View style={styles.summaryContent}>
             <View style={styles.totalCount}>
               <AppText style={styles.totalNumber}>{getMonthBirthdays().length}</AppText>
-              <AppText style={styles.totalLabel}>
+              <AppText style={[styles.totalLabel, { color: theme.textMuted }]}>
                 {t('calendar_month_birthdays_count_label')}
               </AppText>
             </View>
@@ -241,15 +245,15 @@ export default function CalendarTabScreen() {
               {selectedDayBirthdays.map((user) => (
                 <Pressable
                   key={user.id}
-                  style={styles.birthdayItem}
+                  style={[styles.birthdayItem, { backgroundColor: theme.surface }]}
                   onPress={() => handleUserSelect(user)}
                 >
                   <View style={styles.userAvatar}>
                     <AppText style={styles.userAvatarText}>{user.avatar}</AppText>
                   </View>
                   <View style={styles.userInfo}>
-                    <AppText style={styles.userName}>{user.name}</AppText>
-                    <AppText style={styles.userAge}>
+                    <AppText style={[styles.userName, { color: theme.text }]}>{user.name}</AppText>
+                    <AppText style={[styles.userAge, { color: theme.textMuted }]}>
                       {new Date().getFullYear() - user.birthdate.getFullYear()} {t('calendar_day_item_age_suffix')}
                     </AppText>
                   </View>
@@ -415,7 +419,7 @@ const styles = StyleSheet.create({
   monthText: {
     fontSize: 22,
     fontWeight: '700',
-    color: colors.white,
+    color: '#FFFFFF',
   },
   weekDaysContainer: {
     flexDirection: 'row',
@@ -434,7 +438,7 @@ const styles = StyleSheet.create({
   calendarGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    backgroundColor: 'rgba(42, 42, 42, 0.7)',
+    backgroundColor: 'rgba(246, 250, 255, 0.92)',
     borderRadius: 16,
     padding: 8,
     gap: 4,
@@ -442,7 +446,7 @@ const styles = StyleSheet.create({
   dayCell: {
     width: DAY_SIZE,
     height: DAY_SIZE,
-    backgroundColor: 'rgba(28, 28, 28, 0.8)',
+    backgroundColor: 'rgba(15, 23, 42, 0.04)',
     borderRadius: 10,
     padding: 6,
     alignItems: 'center',
@@ -457,7 +461,7 @@ const styles = StyleSheet.create({
   },
   dayNumber: {
     fontSize: 13,
-    color: colors.white,
+    color: '#0F172A',
     fontWeight: '700',
     marginBottom: 0,
     alignSelf: 'flex-start',
@@ -526,7 +530,7 @@ const styles = StyleSheet.create({
   monthSummaryContainer: {
     marginTop: 16,
     padding: 20,
-    backgroundColor: 'rgba(42, 42, 42, 0.7)',
+    backgroundColor: 'rgba(246, 250, 255, 0.92)',
     borderRadius: 16,
     marginBottom: 16,
   },
@@ -539,7 +543,7 @@ const styles = StyleSheet.create({
   summaryTitle: {
     fontSize: 18,
     fontWeight: '700',
-    color: colors.white,
+    color: '#0F172A',
   },
   summaryContent: {
     flexDirection: 'row',
@@ -556,7 +560,7 @@ const styles = StyleSheet.create({
   },
   totalLabel: {
     fontSize: 14,
-    color: '#999',
+    color: '#64748B',
     marginTop: 4,
   },
   viewListButton: {
@@ -581,7 +585,7 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: 16,
-    color: '#999',
+    color: '#64748B',
     marginTop: 12,
   },
   // Estilos para modales
@@ -593,7 +597,7 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   modalContent: {
-    backgroundColor: '#1C1C1C',
+    backgroundColor: '#F6FAFF',
     borderRadius: 20,
     width: '100%',
     maxHeight: '80%',
@@ -610,7 +614,7 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: 18,
     fontWeight: '700',
-    color: colors.white,
+    color: '#0F172A',
     flex: 1,
     textAlign: 'center',
   },
@@ -621,7 +625,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     padding: 16,
-    backgroundColor: 'rgba(42, 42, 42, 0.8)',
+    backgroundColor: 'rgba(246, 250, 255, 0.96)',
     borderRadius: 12,
     marginBottom: 12,
   },
@@ -643,12 +647,12 @@ const styles = StyleSheet.create({
   userName: {
     fontSize: 16,
     fontWeight: '600',
-    color: colors.white,
+    color: '#0F172A',
     marginBottom: 4,
   },
   userAge: {
     fontSize: 14,
-    color: '#999',
+    color: '#64748B',
   },
   userDetails: {
     padding: 20,
@@ -669,7 +673,7 @@ const styles = StyleSheet.create({
   userNameLarge: {
     fontSize: 24,
     fontWeight: '700',
-    color: colors.white,
+    color: '#0F172A',
     textAlign: 'center',
     marginBottom: 24,
   },
@@ -678,14 +682,14 @@ const styles = StyleSheet.create({
   },
   detailLabel: {
     fontSize: 14,
-    color: '#999',
+    color: '#64748B',
     marginBottom: 8,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
   detailValue: {
     fontSize: 16,
-    color: colors.white,
+    color: '#0F172A',
   },
   hobbiesContainer: {
     flexDirection: 'row',

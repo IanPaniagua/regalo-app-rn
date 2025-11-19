@@ -1,23 +1,28 @@
 import { ReactNode } from 'react';
-import { StyleSheet, Text, TextProps } from 'react-native';
-import { colors, fonts } from '@/src/theme';
+import { Text, TextProps } from 'react-native';
+import { fonts } from '@/src/theme';
+import { useAppTheme } from '@/src/theme/ThemeProvider';
 
 export interface AppTitleProps extends TextProps {
   children: ReactNode;
 }
 
 export function AppTitle({ children, style, ...rest }: AppTitleProps) {
+  const { theme } = useAppTheme();
+  
   return (
-    <Text style={[styles.title, style]} {...rest}>
+    <Text 
+      style={[
+        {
+          color: theme.primary,
+          fontFamily: fonts.title,
+          fontSize: 28,
+        },
+        style
+      ]} 
+      {...rest}
+    >
       {children}
     </Text>
   );
 }
-
-const styles = StyleSheet.create({
-  title: {
-    color: colors.primary,
-    fontFamily: fonts.title,
-    fontSize: 28,
-  },
-});

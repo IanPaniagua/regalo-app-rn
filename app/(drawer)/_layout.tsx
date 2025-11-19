@@ -6,24 +6,26 @@ import { AppText } from '@/src/components/ui/AppText';
 import { useUser } from '@/src/context/UserContext';
 import { useLanguage } from '@/src/context/LanguageContext';
 import { colors } from '@/src/theme';
+import { useAppTheme } from '@/src/theme/ThemeProvider';
 
 export default function DrawerLayout() {
   const { user } = useUser();
   const { t } = useLanguage();
+  const { theme } = useAppTheme();
 
   return (
     <Drawer
       screenOptions={{
         headerShown: true,
         drawerActiveTintColor: colors.primary,
-        drawerInactiveTintColor: colors.white,
+        drawerInactiveTintColor: theme.text,
         drawerStyle: {
-          backgroundColor: colors.secondary,
+          backgroundColor: theme.surface,
         },
         headerStyle: {
-          backgroundColor: colors.secondary,
+          backgroundColor: theme.surface,
         },
-        headerTintColor: colors.white,
+        headerTintColor: theme.text,
         headerRight: () => (
           user ? (
             <View style={styles.userContainer}>
@@ -41,7 +43,7 @@ export default function DrawerLayout() {
           headerTitle: () => (
             <Image
               source={require('@/assets/logo.svg')}
-              style={{ width: 32, height: 32, tintColor: colors.white }}
+              style={{ width: 32, height: 32, tintColor: theme.text }}
               contentFit="contain"
             />
           ),
@@ -115,6 +117,6 @@ const styles = StyleSheet.create({
   userName: {
     fontSize: 14,
     fontWeight: '600',
-    color: colors.secondary,
+    color: '#1A1A1A',
   },
 });

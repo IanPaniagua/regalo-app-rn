@@ -6,11 +6,13 @@ import { useConnections } from '@/src/context/ConnectionsContext';
 import { useLanguage } from '@/src/context/LanguageContext';
 import { InAppNotification } from '@/src/components/InAppNotification';
 import { colors } from '@/src/theme';
+import { useAppTheme } from '@/src/theme/ThemeProvider';
 
 export default function TabLayout() {
   const router = useRouter();
   const { notificationCount, pendingInvitations } = useConnections();
   const { t } = useLanguage();
+  const { theme } = useAppTheme();
   const [showNotification, setShowNotification] = useState(false);
   const [lastNotificationCount, setLastNotificationCount] = useState(0);
 
@@ -46,9 +48,10 @@ export default function TabLayout() {
     <Tabs
       screenOptions={{
         tabBarActiveTintColor: colors.primary,
-        tabBarInactiveTintColor: colors.white,
+        tabBarInactiveTintColor: theme.textMuted,
         tabBarStyle: {
-          backgroundColor: colors.secondary,
+          backgroundColor: theme.surface,
+          borderTopColor: theme.border,
         },
         headerShown: false,
       }}>

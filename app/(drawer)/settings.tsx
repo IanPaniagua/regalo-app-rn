@@ -3,7 +3,7 @@ import { AppContainer } from '@/src/components/ui/AppContainer';
 import { AppTitle } from '@/src/components/ui/AppTitle';
 import { AppText } from '@/src/components/ui/AppText';
 import { useNotifications } from '@/src/context/NotificationsContext';
-import { colors } from '@/src/theme';
+import { useAppTheme } from '@/src/theme/ThemeProvider';
 import { useLanguage, type Lang } from '@/src/context/LanguageContext';
 import { Ionicons } from '@expo/vector-icons';
 import { useState, useEffect } from 'react';
@@ -16,6 +16,7 @@ export default function SettingsScreen() {
     isPermissionGranted,
     requestPermissions,
   } = useNotifications();
+  const { theme, themeMode, setThemeMode } = useAppTheme();
   const { lang, t, setLanguage } = useLanguage();
   const [showLanguageModal, setShowLanguageModal] = useState(false);
   const [pendingLanguage, setPendingLanguage] = useState<Lang | null>(null);
@@ -127,6 +128,27 @@ export default function SettingsScreen() {
         <AppTitle>{t('settings_title')}</AppTitle>
 
         <View style={styles.section}>
+          <AppText style={styles.sectionTitle}>{t('settings_appearance')}</AppText>
+
+          <Pressable 
+            style={[styles.themeButton, { backgroundColor: theme.surface, borderColor: theme.border }]} 
+            onPress={() => setThemeMode(themeMode === 'dark' ? 'light' : 'dark')}
+          >
+            <View style={styles.themeButtonContent}>
+              <Ionicons 
+                name={themeMode === 'dark' ? 'moon' : 'sunny'} 
+                size={20} 
+                color={theme.primary} 
+              />
+              <AppText style={styles.themeButtonText}>
+                {t('settings_theme')}: {themeMode === 'dark' ? t('settings_theme_dark') : t('settings_theme_light')}
+              </AppText>
+            </View>
+            <Ionicons name="chevron-forward" size={20} color={theme.textMuted} />
+          </Pressable>
+        </View>
+
+        <View style={styles.section}>
           <AppText style={styles.sectionTitle}>{t('settings_notifications')}</AppText>
 
           <View style={styles.row}>
@@ -139,7 +161,7 @@ export default function SettingsScreen() {
             <Switch
               value={notificationsEnabled}
               onValueChange={handleToggleNotifications}
-              trackColor={{ false: '#777', true: colors.primary }}
+              trackColor={{ false: '#777', true: theme.primary }}
               thumbColor={'#ffffff'}
             />
           </View>
@@ -154,17 +176,20 @@ export default function SettingsScreen() {
         <View style={styles.section}>
           <AppText style={styles.sectionTitle}>{t('settings_language')}</AppText>
 
-          <Pressable style={styles.languageButton} onPress={() => setShowLanguageModal(true)}>
+          <Pressable 
+            style={[styles.languageButton, { backgroundColor: theme.surface, borderColor: theme.border }]} 
+            onPress={() => setShowLanguageModal(true)}
+          >
             <View style={styles.languageButtonContent}>
-              <Ionicons name="language-outline" size={20} color={colors.primary} />
+              <Ionicons name="language-outline" size={20} color={theme.primary} />
               <AppText style={styles.languageButtonText}>{getLanguageLabel(lang)}</AppText>
             </View>
-            <Ionicons name="chevron-forward" size={20} color="#666" />
+            <Ionicons name="chevron-forward" size={20} color={theme.textMuted} />
           </Pressable>
 
           {pendingLanguage && pendingLanguage !== lang && (
-            <View style={styles.restartWarning}>
-              <Ionicons name="information-circle" size={16} color={colors.primary} />
+            <View style={[styles.restartWarning, { backgroundColor: `${theme.primary}1A`, borderLeftColor: theme.primary }]}>
+              <Ionicons name="information-circle" size={16} color={theme.primary} />
               <AppText style={styles.restartWarningText}>
                 {getTranslationInLanguage('settings_language_restart_required', pendingLanguage)}
               </AppText>
@@ -180,43 +205,67 @@ export default function SettingsScreen() {
           onRequestClose={() => setShowLanguageModal(false)}
         >
           <Pressable style={styles.modalOverlay} onPress={() => setShowLanguageModal(false)}>
-            <Pressable style={styles.modalContent} onPress={(e) => e.stopPropagation()}>
-              <View style={styles.modalHeader}>
+            <Pressable 
+              style={[styles.modalContent, { backgroundColor: theme.modalBg }]} 
+              onPress={(e) => e.stopPropagation()}
+            >
+              <View style={[styles.modalHeader, { borderBottomColor: theme.border }]}>
                 <AppText style={styles.modalTitle}>{t('settings_language')}</AppText>
                 <Pressable onPress={() => setShowLanguageModal(false)}>
-                  <Ionicons name="close" size={24} color={colors.white} />
+                  <Ionicons name="close" size={24} color={theme.text} />
                 </Pressable>
               </View>
 
               <View style={styles.languageOptions}>
                 <Pressable
-                  style={[styles.languageOption, lang === 'es' && styles.languageOptionActive]}
+                  style={[
+                    styles.languageOption, 
+                    { backgroundColor: theme.surface },
+                    lang === 'es' && { backgroundColor: `${theme.primary}26`, borderWidth: 1, borderColor: theme.primary }
+                  ]}
                   onPress={() => handleLanguageSelect('es')}
                 >
-                  <AppText style={[styles.languageOptionText, lang === 'es' && styles.languageOptionTextActive]}>
+                  <AppText style={[
+                    styles.languageOptionText,
+                    lang === 'es' && { color: theme.primary, fontWeight: '600' }
+                  ]}>
                     {t('language_spanish')}
                   </AppText>
-                  {lang === 'es' && <Ionicons name="checkmark" size={24} color={colors.primary} />}
+                  {lang === 'es' && <Ionicons name="checkmark" size={24} color={theme.primary} />}
                 </Pressable>
 
                 <Pressable
-                  style={[styles.languageOption, lang === 'en' && styles.languageOptionActive]}
+                  style={[
+                    styles.languageOption,
+                    { backgroundColor: theme.surface },
+                    lang === 'en' && { backgroundColor: `${theme.primary}26`, borderWidth: 1, borderColor: theme.primary }
+                  ]}
                   onPress={() => handleLanguageSelect('en')}
                 >
-                  <AppText style={[styles.languageOptionText, lang === 'en' && styles.languageOptionTextActive]}>
+                  <AppText style={[
+                    styles.languageOptionText,
+                    lang === 'en' && { color: theme.primary, fontWeight: '600' }
+                  ]}>
                     {t('language_english')}
                   </AppText>
-                  {lang === 'en' && <Ionicons name="checkmark" size={24} color={colors.primary} />}
+                  {lang === 'en' && <Ionicons name="checkmark" size={24} color={theme.primary} />}
                 </Pressable>
 
                 <Pressable
-                  style={[styles.languageOption, lang === 'de' && styles.languageOptionActive]}
+                  style={[
+                    styles.languageOption,
+                    { backgroundColor: theme.surface },
+                    lang === 'de' && { backgroundColor: `${theme.primary}26`, borderWidth: 1, borderColor: theme.primary }
+                  ]}
                   onPress={() => handleLanguageSelect('de')}
                 >
-                  <AppText style={[styles.languageOptionText, lang === 'de' && styles.languageOptionTextActive]}>
+                  <AppText style={[
+                    styles.languageOptionText,
+                    lang === 'de' && { color: theme.primary, fontWeight: '600' }
+                  ]}>
                     {t('language_german')}
                   </AppText>
-                  {lang === 'de' && <Ionicons name="checkmark" size={24} color={colors.primary} />}
+                  {lang === 'de' && <Ionicons name="checkmark" size={24} color={theme.primary} />}
                 </Pressable>
               </View>
             </Pressable>
@@ -257,15 +306,29 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#FF3B30',
   },
+  themeButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+  },
+  themeButtonContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  themeButtonText: {
+    fontSize: 16,
+  },
   languageButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#2A2A2A',
     padding: 16,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#444',
   },
   languageButtonContent: {
     flexDirection: 'row',
@@ -274,7 +337,6 @@ const styles = StyleSheet.create({
   },
   languageButtonText: {
     fontSize: 16,
-    color: colors.white,
   },
   modalOverlay: {
     flex: 1,
@@ -284,7 +346,6 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   modalContent: {
-    backgroundColor: '#1C1C1C',
     borderRadius: 20,
     width: '100%',
     maxWidth: 400,
@@ -296,12 +357,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 20,
     borderBottomWidth: 1,
-    borderBottomColor: '#333',
   },
   modalTitle: {
     fontSize: 18,
     fontWeight: '700',
-    color: colors.white,
   },
   languageOptions: {
     padding: 12,
@@ -313,28 +372,15 @@ const styles = StyleSheet.create({
     padding: 16,
     borderRadius: 12,
     marginBottom: 8,
-    backgroundColor: '#2A2A2A',
-  },
-  languageOptionActive: {
-    backgroundColor: 'rgba(212, 175, 55, 0.15)',
-    borderWidth: 1,
-    borderColor: colors.primary,
   },
   languageOptionText: {
     fontSize: 16,
-    color: '#ccc',
-  },
-  languageOptionTextActive: {
-    color: colors.primary,
-    fontWeight: '600',
   },
   restartWarning: {
     flexDirection: 'row',
     alignItems: 'flex-start',
     gap: 8,
-    backgroundColor: 'rgba(212, 175, 55, 0.1)',
     borderLeftWidth: 3,
-    borderLeftColor: colors.primary,
     padding: 12,
     borderRadius: 8,
     marginTop: 8,
@@ -342,7 +388,6 @@ const styles = StyleSheet.create({
   restartWarningText: {
     flex: 1,
     fontSize: 13,
-    color: '#CCC',
     lineHeight: 18,
   },
 });

@@ -22,6 +22,7 @@ import { useUser } from '@/src/context/UserContext';
 import { useBirthdays } from '@/src/context/BirthdaysContext';
 import { useLanguage } from '@/src/context/LanguageContext';
 import { colors, fonts } from '@/src/theme';
+import { useAppTheme } from '@/src/theme/ThemeProvider';
 import { Ionicons } from '@expo/vector-icons';
 import { db } from '@/src/database';
 import { useDailyChangeLimit } from '@/src/hooks/useDailyChangeLimit';
@@ -63,6 +64,7 @@ export default function ProfileScreen() {
   const { user, setUser } = useUser();
   const { refreshUsers } = useBirthdays();
   const { t } = useLanguage();
+  const { theme } = useAppTheme();
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [editedName, setEditedName] = useState(user?.name || '');
@@ -260,7 +262,7 @@ export default function ProfileScreen() {
                 <AppText style={styles.label}>{t('profile_name')}</AppText>
                 {isEditing ? (
                   <TextInput
-                    style={styles.input}
+                    style={[styles.input, { backgroundColor: theme.inputBg, color: theme.text, borderColor: theme.border }]}
                     value={editedName}
                     onChangeText={setEditedName}
                     placeholder={t('profile_name_placeholder')}
@@ -269,7 +271,7 @@ export default function ProfileScreen() {
                     onSubmitEditing={Keyboard.dismiss}
                   />
                 ) : (
-                  <View style={styles.valueContainer}>
+                  <View style={[styles.valueContainer, { backgroundColor: theme.surface }]}>
                     <AppText style={styles.value}>{user.name}</AppText>
                   </View>
                 )}
@@ -299,7 +301,7 @@ export default function ProfileScreen() {
               {/* Email (no editable) */}
               <View style={styles.section}>
                 <AppText style={styles.label}>{t('profile_email')}</AppText>
-                <View style={[styles.valueContainer, styles.disabledContainer]}>
+                <View style={[styles.valueContainer, { backgroundColor: theme.surface }, styles.disabledContainer]}>
                   <AppText style={styles.value}>{user.email}</AppText>
                   <Ionicons name="lock-closed" size={16} color="#666" />
                 </View>
@@ -308,7 +310,7 @@ export default function ProfileScreen() {
               {/* Fecha de nacimiento */}
               <View style={styles.section}>
                 <AppText style={styles.label}>{t('profile_birthdate')}</AppText>
-                <View style={[styles.valueContainer, styles.disabledContainer]}>
+                <View style={[styles.valueContainer, { backgroundColor: theme.surface }, styles.disabledContainer]}>
                   <AppText style={styles.value}>{formatDate(user.birthdate)}</AppText>
                   <Ionicons name="lock-closed" size={16} color="#666" />
                 </View>
@@ -316,9 +318,9 @@ export default function ProfileScreen() {
 
               {/* Privacidad: No revelar edad */}
               <View style={styles.section}>
-                <View style={styles.privacyRow}>
+                <View style={[styles.privacyRow, { backgroundColor: theme.surface }]}>
                   <View style={styles.privacyLabelContainer}>
-                    <AppText style={styles.privacyLabel}>{t('profile_privacy_hide_age')}</AppText>
+                    <AppText style={[styles.privacyLabel, { color: theme.text }]}>{t('profile_privacy_hide_age')}</AppText>
                     <Pressable 
                       onPress={() => setShowBirthdayInfo(!showBirthdayInfo)}
                       hitSlop={8}
@@ -398,6 +400,7 @@ export default function ProfileScreen() {
                           key={hobby}
                           style={[
                             styles.hobbyChip,
+                            { backgroundColor: theme.surface, borderColor: theme.border },
                             editedHobbies.includes(hobby) && styles.hobbyChipSelected,
                           ]}
                           onPress={() => toggleHobby(hobby)}
@@ -405,6 +408,7 @@ export default function ProfileScreen() {
                           <AppText
                             style={[
                               styles.hobbyText,
+                              { color: theme.text },
                               editedHobbies.includes(hobby) && styles.hobbyTextSelected,
                             ]}
                           >
@@ -413,17 +417,17 @@ export default function ProfileScreen() {
                         </Pressable>
                       ))}
                       <Pressable
-                        style={[styles.hobbyChip, styles.hobbyChipOther]}
+                        style={[styles.hobbyChip, { backgroundColor: theme.surface, borderColor: theme.border }, styles.hobbyChipOther]}
                         onPress={() => setShowCustomInput(!showCustomInput)}
                       >
-                        <AppText style={styles.hobbyText}>{t('profile_hobbies_other')}</AppText>
+                        <AppText style={[styles.hobbyText, { color: theme.text }]}>{t('profile_hobbies_other')}</AppText>
                       </Pressable>
                     </View>
 
                     {showCustomInput && (
                       <View style={styles.customInputContainer}>
                         <TextInput
-                          style={styles.customInput}
+                          style={[styles.customInput, { backgroundColor: theme.inputBg, color: theme.text, borderColor: theme.border }]}
                           value={customHobby}
                           onChangeText={setCustomHobby}
                           placeholder={t('profile_hobbies_custom_placeholder')}
@@ -555,23 +559,23 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 14,
     marginBottom: 8,
-    color: '#999',
+    color: '#64748B',
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
   input: {
-    backgroundColor: '#2A2A2A',
+    backgroundColor: '#FFFFFF',
     borderWidth: 1,
     borderColor: colors.primary,
     borderRadius: 12,
     paddingVertical: 16,
     paddingHorizontal: 16,
-    color: colors.white,
+    color: '#0F172A',
     fontFamily: fonts.text,
     fontSize: 16,
   },
   valueContainer: {
-    backgroundColor: '#2A2A2A',
+    backgroundColor: '#F6FAFF',
     borderRadius: 12,
     paddingVertical: 16,
     paddingHorizontal: 16,
@@ -592,7 +596,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   hobbyChip: {
-    backgroundColor: '#2A2A2A',
+    backgroundColor: '#F6FAFF',
     borderWidth: 1,
     borderColor: colors.primary,
     borderRadius: 20,
@@ -607,7 +611,7 @@ const styles = StyleSheet.create({
   },
   hobbyText: {
     fontSize: 14,
-    color: colors.white,
+    color: '#0F172A',
   },
   hobbyTextSelected: {
     color: colors.secondary,
@@ -620,13 +624,13 @@ const styles = StyleSheet.create({
   },
   customInput: {
     flex: 1,
-    backgroundColor: '#2A2A2A',
+    backgroundColor: '#FFFFFF',
     borderWidth: 1,
     borderColor: colors.primary,
     borderRadius: 12,
     paddingVertical: 12,
     paddingHorizontal: 16,
-    color: colors.white,
+    color: '#0F172A',
     fontFamily: fonts.text,
     fontSize: 16,
   },
@@ -681,7 +685,7 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: 16,
-    color: '#999',
+    color: '#64748B',
     marginTop: 8,
     textAlign: 'center',
   },
@@ -692,7 +696,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
   modalContent: {
-    backgroundColor: '#1C1C1C',
+    backgroundColor: '#F6FAFF',
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     paddingBottom: 40,
@@ -714,10 +718,10 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   datePicker: {
-    backgroundColor: '#1C1C1C',
+    backgroundColor: '#F6FAFF',
   },
   avatarButton: {
-    backgroundColor: '#2A2A2A',
+    backgroundColor: '#F6FAFF',
     borderWidth: 1,
     borderColor: colors.primary,
     borderRadius: 12,
@@ -754,9 +758,9 @@ const styles = StyleSheet.create({
   avatarOption: {
     width: 60,
     height: 60,
-    backgroundColor: '#2A2A2A',
+    backgroundColor: '#F6FAFF',
     borderWidth: 2,
-    borderColor: '#444',
+    borderColor: '#C2D4F2',
     borderRadius: 30,
     justifyContent: 'center',
     alignItems: 'center',
@@ -772,7 +776,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: '#2A2A2A',
+    backgroundColor: '#F6FAFF',
     borderRadius: 12,
     paddingVertical: 12,
     paddingHorizontal: 16,
@@ -785,7 +789,7 @@ const styles = StyleSheet.create({
   },
   privacyLabel: {
     fontSize: 16,
-    color: colors.white,
+    color: '#0F172A',
   },
   infoBox: {
     flexDirection: 'row',
@@ -801,11 +805,11 @@ const styles = StyleSheet.create({
   infoText: {
     flex: 1,
     fontSize: 13,
-    color: '#CCC',
+    color: '#334155',
     lineHeight: 18,
   },
   previewContainer: {
-    backgroundColor: '#2A2A2A',
+    backgroundColor: '#F6FAFF',
     borderRadius: 12,
     padding: 16,
     borderWidth: 1,
@@ -814,7 +818,7 @@ const styles = StyleSheet.create({
   },
   previewLabel: {
     fontSize: 12,
-    color: '#999',
+    color: '#64748B',
     marginBottom: 4,
     textTransform: 'uppercase',
     letterSpacing: 0.5,

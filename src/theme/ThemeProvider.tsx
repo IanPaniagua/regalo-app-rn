@@ -1,30 +1,85 @@
-import { PropsWithChildren, createContext, useContext } from 'react';
+import { PropsWithChildren, createContext, useContext, useState, useEffect } from 'react';
 import { ActivityIndicator, View } from 'react-native';
 import { useFonts } from 'expo-font';
 import { Inter_400Regular } from '@expo-google-fonts/inter';
 import { PlayfairDisplay_700Bold } from '@expo-google-fonts/playfair-display';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { getTheme, type Theme, type ThemeMode } from './colors';
 
-type ThemeContextValue = Record<string, never>;
+const THEME_STORAGE_KEY = '@regalo_app_theme';
 
-const ThemeContext = createContext<ThemeContextValue>({});
+type ThemeContextValue = {
+  theme: Theme;
+  themeMode: ThemeMode;
+  setThemeMode: (mode: ThemeMode) => Promise<void>;
+  toggleTheme: () => Promise<void>;
+};
+
+const ThemeContext = createContext<ThemeContextValue | undefined>(undefined);
 
 export function useAppTheme() {
-  return useContext(ThemeContext);
+  const context = useContext(ThemeContext);
+  if (!context) {
+    throw new Error('useAppTheme must be used within a ThemeProvider');
+  }
+  return context;
 }
 
 export function ThemeProvider({ children }: PropsWithChildren) {
+  const [themeMode, setThemeModeState] = useState<ThemeMode>('dark');
+  const [isThemeLoaded, setIsThemeLoaded] = useState(false);
+  
   const [fontsLoaded] = useFonts({
     TitleFont: PlayfairDisplay_700Bold,
     TextFont: Inter_400Regular,
   });
 
-  if (!fontsLoaded) {
+  // Cargar tema guardado al iniciar
+  useEffect(() => {
+    loadTheme();
+  }, []);
+
+  const loadTheme = async () => {
+    try {
+      const savedTheme = await AsyncStorage.getItem(THEME_STORAGE_KEY);
+      if (savedTheme === 'light' || savedTheme === 'dark') {
+        setThemeModeState(savedTheme);
+      }
+    } catch (error) {
+      console.error('Error loading theme:', error);
+    } finally {
+      setIsThemeLoaded(true);
+    }
+  };
+
+  const setThemeMode = async (mode: ThemeMode) => {
+    try {
+      await AsyncStorage.setItem(THEME_STORAGE_KEY, mode);
+      setThemeModeState(mode);
+      console.log('✅ Theme changed to:', mode);
+    } catch (error) {
+      console.error('❌ Error saving theme:', error);
+    }
+  };
+
+  const toggleTheme = async () => {
+    const newMode = themeMode === 'dark' ? 'light' : 'dark';
+    await setThemeMode(newMode);
+  };
+
+  const theme = getTheme(themeMode);
+
+  if (!fontsLoaded || !isThemeLoaded) {
     return (
-      <View className="flex-1 items-center justify-center bg-secondary">
+      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: '#1C1C1C' }}>
         <ActivityIndicator color="#D4AF37" />
       </View>
     );
   }
 
-  return <ThemeContext.Provider value={{}}>{children}</ThemeContext.Provider>;
+  return (
+    <ThemeContext.Provider value={{ theme, themeMode, setThemeMode, toggleTheme }}>
+      {children}
+    </ThemeContext.Provider>
+  );
 }

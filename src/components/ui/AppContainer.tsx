@@ -1,28 +1,32 @@
 import { ReactNode, memo } from 'react';
 import { StyleSheet, View, ViewProps } from 'react-native';
 import { Image } from 'expo-image';
-import { colors } from '@/src/theme';
+import { useAppTheme } from '@/src/theme/ThemeProvider';
 import BgDark from '../../../assets/images/bg-dark.png';
+import BgLight from '../../../assets/images/bg-light.png';
 
 interface AppContainerProps extends ViewProps {
   children: ReactNode;
 }
 
 export const AppContainer = memo(function AppContainer({ children, style, ...rest }: AppContainerProps) {
+  const { theme, themeMode } = useAppTheme();
+  const backgroundImage = themeMode === 'light' ? BgLight : BgDark;
+
   return (
     <View style={styles.container}>
       {/* Background image with aggressive caching */}
       <Image 
-        source={BgDark} 
+        source={backgroundImage} 
         style={StyleSheet.absoluteFillObject}
         contentFit="cover"
         cachePolicy="memory-disk"
         priority="high"
-        transition={0}
+        transition={200}
       />
       
-      {/* Capa oscura sobre la imagen, detrás del contenido */}
-      <View style={styles.darkOverlay} />
+      {/* Capa de overlay sobre la imagen, detrás del contenido */}
+      <View style={[styles.overlay, { backgroundColor: theme.overlay }]} />
 
       {/* Contenido real de la app */}
       <View style={[styles.content, style]} {...rest}>
@@ -36,10 +40,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  // Capa que oscurece solo el fondo (entre la imagen y el contenido)
-  darkOverlay: {
+  // Capa de overlay sobre el fondo (entre la imagen y el contenido)
+  overlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.4)',
   },
   content: {
     flex: 1,

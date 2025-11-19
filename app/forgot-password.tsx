@@ -151,7 +151,7 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 14,
-    color: colors.white,
+    color: '#CCCCCC',
     fontWeight: '600',
   },
   input: {
@@ -159,7 +159,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 16,
     fontSize: 16,
-    color: colors.white,
+    color: '#FFFFFF',
     borderWidth: 1,
     borderColor: '#444',
   },

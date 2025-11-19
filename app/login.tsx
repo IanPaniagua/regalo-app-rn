@@ -18,6 +18,7 @@ import { AppTitle } from '@/src/components/ui/AppTitle';
 import { AppText } from '@/src/components/ui/AppText';
 import { useLanguage } from '@/src/context/LanguageContext';
 import { colors, fonts } from '@/src/theme';
+import { useAppTheme } from '@/src/theme/ThemeProvider';
 import { useUser } from '@/src/context/UserContext';
 import { useBirthdays } from '@/src/context/BirthdaysContext';
 import { authService } from '@/src/services/auth.service';
@@ -28,6 +29,7 @@ export default function LoginScreen() {
   const { setUser, saveCredentials } = useUser();
   const { refreshUsers } = useBirthdays();
   const { t } = useLanguage();
+  const { theme } = useAppTheme();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -227,7 +229,7 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 14,
-    color: colors.white,
+    color: '#CCCCCC',
     fontWeight: '600',
   },
   input: {
@@ -237,7 +239,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 16,
     fontSize: 16,
-    color: colors.white,
+    color: '#FFFFFF',
   },
   passwordContainer: {
     position: 'relative',
@@ -250,7 +252,7 @@ const styles = StyleSheet.create({
     padding: 16,
     paddingRight: 50,
     fontSize: 16,
-    color: colors.white,
+    color: '#FFFFFF',
   },
   eyeIcon: {
     position: 'absolute',

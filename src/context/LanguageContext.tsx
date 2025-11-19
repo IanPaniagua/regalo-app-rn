@@ -14,6 +14,10 @@ const translations = {
     settings_notifications_helper: 'Recordatorios de cumpleaños e invitaciones.',
     settings_notifications_system_disabled:
       'Las notificaciones están desactivadas a nivel del sistema. Actívalas en los ajustes de tu dispositivo.',
+    settings_appearance: 'Apariencia',
+    settings_theme: 'Tema',
+    settings_theme_light: 'Claro',
+    settings_theme_dark: 'Oscuro',
     settings_language: 'Idioma',
     settings_language_restart_required: 'Reinicia la app para ver los cambios de idioma',
     settings_language_change_title: 'Cambiar idioma',
@@ -207,6 +211,10 @@ const translations = {
     settings_notifications_helper: 'Birthday reminders and invitations.',
     settings_notifications_system_disabled:
       'Notifications are disabled at system level. Enable them in your device settings.',
+    settings_appearance: 'Appearance',
+    settings_theme: 'Theme',
+    settings_theme_light: 'Light',
+    settings_theme_dark: 'Dark',
     settings_language: 'Language',
     settings_language_restart_required: 'Restart the app to see language changes',
     settings_language_change_title: 'Change language',
@@ -400,6 +408,10 @@ const translations = {
     settings_notifications_helper: 'Geburtstagserinnerungen und Einladungen.',
     settings_notifications_system_disabled:
       'Benachrichtigungen sind systemweit deaktiviert. Aktiviere sie in den Geräteeinstellungen.',
+    settings_appearance: 'Aussehen',
+    settings_theme: 'Design',
+    settings_theme_light: 'Hell',
+    settings_theme_dark: 'Dunkel',
     settings_language: 'Sprache',
     settings_language_restart_required: 'Starte die App neu, um Sprachänderungen zu sehen',
     settings_language_change_title: 'Sprache ändern',

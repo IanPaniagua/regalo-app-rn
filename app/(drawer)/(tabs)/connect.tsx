@@ -11,12 +11,14 @@ import { useUser } from '@/src/context/UserContext';
 import { useBirthdays } from '@/src/context/BirthdaysContext';
 import { useLanguage } from '@/src/context/LanguageContext';
 import { colors } from '@/src/theme';
+import { useAppTheme } from '@/src/theme/ThemeProvider';
 import { Ionicons } from '@expo/vector-icons';
 import type { User } from '@/src/database/types';
 
 export default function ConnectTabScreen() {
   const { user } = useUser();
   const { t } = useLanguage();
+  const { theme } = useAppTheme();
   const { refreshUsers: refreshBirthdays } = useBirthdays();
   const {
     connections,
@@ -209,11 +211,11 @@ export default function ConnectTabScreen() {
         </View>
 
         {/* Formulario de invitación por email */}
-        <View style={styles.inviteForm}>
-          <AppText style={styles.formLabel}>{t('connect_invite_label')}</AppText>
+        <View style={[styles.inviteForm, { backgroundColor: theme.surface }]}>
+          <AppText style={[styles.formLabel, { color: theme.text }]}>{t('connect_invite_label')}</AppText>
           <View style={styles.inputContainer}>
             <TextInput
-              style={styles.input}
+              style={[styles.input, { backgroundColor: theme.inputBg, color: theme.text, borderColor: theme.border }]}
               placeholder={t('connect_invite_placeholder')}
               placeholderTextColor="#666"
               value={email}
@@ -287,21 +289,21 @@ export default function ConnectTabScreen() {
                     return (
                       <Pressable 
                         key={user.id} 
-                        style={styles.userCard}
+                        style={[styles.userCard, { backgroundColor: theme.surface }]}
                         onPress={() => handleUserPress(user)}
                       >
                         <View style={styles.userInfo}>
                           <AppText style={styles.userAvatar}>{user.avatar}</AppText>
                           <View style={styles.userDetails}>
                             <View style={styles.userNameRow}>
-                              <AppText style={styles.userName}>{user.name}</AppText>
+                              <AppText style={[styles.userName, { color: theme.text }]}>{user.name}</AppText>
                               {isNew && (
                                 <View style={styles.newTag}>
                                   <AppText style={styles.newTagText}>NEW</AppText>
                                 </View>
                               )}
                             </View>
-                            <AppText style={styles.userBirthday}>🎂 {birthday}</AppText>
+                            <AppText style={[styles.userBirthday, { color: theme.textMuted }]}>🎂 {birthday}</AppText>
                           </View>
                         </View>
                         <Ionicons name="chevron-forward" size={24} color="#666" />
@@ -456,11 +458,11 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     fontSize: 14,
-    color: '#999',
+    color: '#64748B',
     marginTop: 4,
   },
   inviteForm: {
-    backgroundColor: '#2A2A2A',
+    backgroundColor: '#F6FAFF',
     borderRadius: 12,
     padding: 16,
     marginBottom: 24,
@@ -469,19 +471,19 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     marginBottom: 12,
-    color: colors.white,
+    color: '#0F172A',
   },
   inputContainer: {
     marginBottom: 12,
   },
   input: {
-    backgroundColor: '#1C1C1C',
+    backgroundColor: '#FFFFFF',
     borderRadius: 8,
     padding: 12,
     fontSize: 16,
-    color: colors.white,
+    color: '#0F172A',
     borderWidth: 1,
-    borderColor: '#3A3A3A',
+    borderColor: '#C2D4F2',
   },
   sendButton: {
     marginTop: 4,
@@ -504,7 +506,7 @@ const styles = StyleSheet.create({
   },
   tabText: {
     fontSize: 14,
-    color: '#999',
+    color: '#64748B',
   },
   tabTextActive: {
     color: colors.primary,
@@ -548,7 +550,7 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: 14,
-    color: '#999',
+    color: '#64748B',
     textAlign: 'center',
   },
   emptyState: {
@@ -557,18 +559,18 @@ const styles = StyleSheet.create({
   },
   emptyStateText: {
     fontSize: 16,
-    color: '#999',
+    color: '#64748B',
     marginTop: 16,
     textAlign: 'center',
   },
   emptyStateSubtext: {
     fontSize: 14,
-    color: '#666',
+    color: '#64748B',
     marginTop: 8,
     textAlign: 'center',
   },
   userCard: {
-    backgroundColor: '#2A2A2A',
+    backgroundColor: '#F6FAFF',
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
@@ -596,6 +598,7 @@ const styles = StyleSheet.create({
   userName: {
     fontSize: 16,
     fontWeight: '600',
+    color: '#0F172A',
   },
   newTag: {
     backgroundColor: colors.primary,
@@ -612,13 +615,13 @@ const styles = StyleSheet.create({
   },
   userBirthday: {
     fontSize: 14,
-    color: '#999',
+    color: '#64748B',
   },
   disconnectButton: {
     padding: 4,
   },
   invitationCard: {
-    backgroundColor: colors.successGreen,
+    backgroundColor: '#E6F0FF',
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
@@ -683,7 +686,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   modalContent: {
-    backgroundColor: '#1C1C1C',
+    backgroundColor: '#F6FAFF',
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     maxHeight: '90%',
@@ -723,7 +726,7 @@ const styles = StyleSheet.create({
   },
   modalUserEmail: {
     fontSize: 14,
-    color: '#999',
+    color: '#64748B',
   },
   infoSection: {
     marginBottom: 24,
@@ -740,7 +743,7 @@ const styles = StyleSheet.create({
   },
   infoValue: {
     fontSize: 15,
-    color: '#CCC',
+    color: '#334155',
     marginLeft: 28,
   },
   hobbiesContainer: {
@@ -750,7 +753,7 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   hobbyTag: {
-    backgroundColor: '#2A2A2A',
+    backgroundColor: '#F6FAFF',
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 16,
@@ -759,7 +762,7 @@ const styles = StyleSheet.create({
   },
   hobbyText: {
     fontSize: 14,
-    color: colors.white,
+    color: '#0F172A',
   },
   disconnectSection: {
     marginTop: 12,
@@ -772,7 +775,7 @@ const styles = StyleSheet.create({
   },
   disconnectWarning: {
     fontSize: 13,
-    color: '#999',
+    color: '#64748B',
     textAlign: 'center',
     lineHeight: 18,
   },

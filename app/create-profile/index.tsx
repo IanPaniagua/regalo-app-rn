@@ -185,21 +185,24 @@ const styles = StyleSheet.create({
   input: {
     backgroundColor: '#2A2A2A',
     borderWidth: 1,
-    borderColor: colors.primary,
+    borderColor: '#3498db',
     borderRadius: 12,
     paddingVertical: 16,
     paddingHorizontal: 16,
-    color: colors.white,
+    color: '#FFFFFF',
     fontFamily: fonts.text,
     fontSize: 16,
   },
   dateButton: {
     backgroundColor: '#2A2A2A',
     borderWidth: 1,
-    borderColor: colors.primary,
+    borderColor: '#3498db',
     borderRadius: 12,
     paddingVertical: 16,
     paddingHorizontal: 16,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
   button: {
     marginTop: 16,
@@ -212,7 +215,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
   modalContent: {
-    backgroundColor: '#1C1C1C',
+    backgroundColor: '#F6FAFF',
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     paddingBottom: 40,
@@ -234,6 +237,6 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   datePicker: {
-    backgroundColor: '#1C1C1C',
+    backgroundColor: '#F6FAFF',
   },
 });

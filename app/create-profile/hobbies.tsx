@@ -230,8 +230,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     paddingVertical: 12,
     paddingHorizontal: 16,
-    color: colors.white,
-    fontFamily: fonts.text,
+    color: '#FFFFFF',
     fontSize: 16,
   },
   addButton: {
