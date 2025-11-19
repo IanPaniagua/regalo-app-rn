@@ -1,4 +1,4 @@
-import { View, StyleSheet, Switch, Pressable, Modal, Alert } from 'react-native';
+import { View, StyleSheet, Switch, Pressable, Modal, Alert, ScrollView } from 'react-native';
 import { AppContainer } from '@/src/components/ui/AppContainer';
 import { AppTitle } from '@/src/components/ui/AppTitle';
 import { AppText } from '@/src/components/ui/AppText';
@@ -124,8 +124,12 @@ export default function SettingsScreen() {
 
   return (
     <AppContainer>
-      <View style={styles.content}>
-        <AppTitle>{t('settings_title')}</AppTitle>
+      <ScrollView 
+        style={styles.scrollView}
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+      >
+        <AppTitle style={styles.title}>{t('settings_title')}</AppTitle>
 
         <View style={styles.section}>
           <AppText style={styles.sectionTitle}>{t('settings_appearance')}</AppText>
@@ -151,10 +155,16 @@ export default function SettingsScreen() {
         <View style={styles.section}>
           <AppText style={styles.sectionTitle}>{t('settings_notifications')}</AppText>
 
-          <View style={styles.row}>
+          <View style={[styles.row, { 
+            backgroundColor: themeMode === 'dark' ? 'rgba(42, 42, 42, 0.95)' : 'rgba(255, 255, 255, 0.95)', 
+            padding: 16, 
+            borderRadius: 12,
+            borderWidth: 1,
+            borderColor: theme.border,
+          }]}>
             <View style={{ flex: 1 }}>
-              <AppText style={styles.label}>{t('settings_notifications_toggle')}</AppText>
-              <AppText style={styles.helper}>
+              <AppText style={[styles.label, { color: theme.text }]}>{t('settings_notifications_toggle')}</AppText>
+              <AppText style={[styles.helper, { color: theme.textSecondary }]}>
                 {t('settings_notifications_helper')}
               </AppText>
             </View>
@@ -167,9 +177,12 @@ export default function SettingsScreen() {
           </View>
 
           {!isPermissionGranted && (
-            <AppText style={styles.warning}>
-              {t('settings_notifications_system_disabled')}
-            </AppText>
+            <View style={[styles.warningContainer, { backgroundColor: '#FF3B3015', borderLeftColor: '#FF3B30' }]}>
+              <Ionicons name="warning" size={16} color="#FF3B30" />
+              <AppText style={styles.warning}>
+                {t('settings_notifications_system_disabled')}
+              </AppText>
+            </View>
           )}
         </View>
 
@@ -271,16 +284,22 @@ export default function SettingsScreen() {
             </Pressable>
           </Pressable>
         </Modal>
-      </View>
+      </ScrollView>
     </AppContainer>
   );
 }
 
 const styles = StyleSheet.create({
-  content: {
+  scrollView: {
     flex: 1,
+  },
+  content: {
     paddingVertical: 16,
     gap: 24,
+  },
+  title: {
+    textAlign: 'center',
+    marginBottom: 8,
   },
   section: {
     gap: 12,
@@ -296,17 +315,28 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   label: {
-    fontWeight: '500',
+    fontWeight: '600',
+    fontSize: 16,
   },
   helper: {
     marginTop: 4,
-    fontSize: 12,
-    opacity: 0.8,
+    fontSize: 13,
+    lineHeight: 18,
+  },
+  warningContainer: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 8,
+    borderLeftWidth: 3,
+    padding: 12,
+    borderRadius: 8,
+    marginTop: 8,
   },
   warning: {
-    marginTop: 8,
-    fontSize: 12,
+    flex: 1,
+    fontSize: 13,
     color: '#FF3B30',
+    lineHeight: 18,
   },
   themeButton: {
     flexDirection: 'row',

@@ -245,10 +245,16 @@ export default function ProfileScreen() {
           <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
             <View style={styles.content}>
               <View style={styles.header}>
-                <AppTitle>{t('profile_title')}</AppTitle>
+                <AppTitle style={styles.title}>{t('profile_title')}</AppTitle>
                 {!isEditing && (
                   <Pressable
-                    style={styles.editButton}
+                    style={[
+                      styles.editButton,
+                      { 
+                        backgroundColor: `${colors.primary}15`,
+                        borderColor: colors.primary,
+                      }
+                    ]}
                     onPress={() => setIsEditing(true)}
                   >
                     <Ionicons name="pencil" size={20} color={colors.primary} />
@@ -533,9 +539,13 @@ const styles = StyleSheet.create({
   },
   header: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'center',
     alignItems: 'center',
+    position: 'relative',
     marginBottom: 20,
+  },
+  title: {
+    textAlign: 'center',
   },
   avatarSection: {
     alignItems: 'center',
@@ -576,6 +586,8 @@ const styles = StyleSheet.create({
     minWidth: 200,
   },
   editButton: {
+    position: 'absolute',
+    right: 0,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
