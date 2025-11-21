@@ -35,7 +35,7 @@ export const lightTheme = {
   primary: '#cab097',  // arena/beige (mismo que dark mode)
   background: '#E6F0FF', // azul muy claro
   backgroundImage: 'bg-light',
-  overlay: 'rgba(255, 255, 255, 0.3)',
+  overlay: 'rgba(255, 255, 255, 0.65)', // Aumentado para mejor contraste de texto
 
   surface: '#F6FAFF',
   surfaceHover: '#EDF3FF',

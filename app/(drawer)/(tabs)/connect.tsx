@@ -27,7 +27,7 @@ export default function ConnectTabScreen() {
     pendingInvitationsWithDetails,
     acceptedConnectionsWithDetails,
     loading,
-    sendInvitationByEmail,
+    sendInvitationByUsername,
     acceptInvitation,
     rejectInvitation,
     disconnectUser,
@@ -35,7 +35,7 @@ export default function ConnectTabScreen() {
     refreshConnections,
   } = useConnections();
 
-  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [sendingInvitation, setSendingInvitation] = useState(false);
   const [activeTab, setActiveTab] = useState<'connections' | 'pending'>('connections');
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
@@ -86,23 +86,29 @@ export default function ConnectTabScreen() {
   };
 
   const handleSendInvitation = async () => {
-    if (!email.trim()) {
-      Alert.alert(t('create_profile_error_title'), t('create_profile_error_email_required'));
+    if (!username.trim()) {
+      Alert.alert(t('create_profile_error_title'), t('connect_invite_error_username_required'));
       return;
     }
 
-    // Validar formato de email
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      Alert.alert(t('create_profile_error_title'), t('create_profile_error_email_invalid'));
+    // Validar formato de username (solo letras, números y guiones bajos)
+    const usernameRegex = /^[a-zA-Z0-9_]+$/;
+    if (!usernameRegex.test(username)) {
+      Alert.alert(t('create_profile_error_title'), t('create_profile_username_invalid'));
+      return;
+    }
+
+    // Validar longitud
+    if (username.length < 3) {
+      Alert.alert(t('create_profile_error_title'), t('create_profile_username_too_short'));
       return;
     }
 
     try {
       setSendingInvitation(true);
-      await sendInvitationByEmail(email);
-      setEmail('');
-      Alert.alert(t('invite_connected_title'), t('invite_connected_message').replace('{{name}}', email));
+      await sendInvitationByUsername(username.toLowerCase());
+      setUsername('');
+      Alert.alert(t('invite_connected_title'), t('invite_connected_message').replace('{{name}}', '@' + username));
     } catch (error: any) {
       console.error('Error sending invitation:', error);
       Alert.alert(t('create_profile_error_title'), error.message || t('connect_accept_invitation_error_message'));
@@ -192,8 +198,8 @@ export default function ConnectTabScreen() {
 
   return (
     <AppContainer>
-      <ScrollView 
-        style={styles.scrollView} 
+      <ScrollView
+        style={styles.scrollView}
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl
@@ -211,26 +217,28 @@ export default function ConnectTabScreen() {
           </AppText>
         </View>
 
-        {/* Formulario de invitación por email */}
+        {/* Formulario de invitación por username */}
         <View style={[styles.inviteForm, { backgroundColor: theme.surface }]}>
           <AppText style={[styles.formLabel, { color: theme.text }]}>{t('connect_invite_label')}</AppText>
           <View style={styles.inputContainer}>
-            <TextInput
-              style={[styles.input, { backgroundColor: theme.inputBg, color: theme.text, borderColor: theme.border }]}
-              placeholder={t('connect_invite_placeholder')}
-              placeholderTextColor="#666"
-              value={email}
-              onChangeText={setEmail}
-              keyboardType="email-address"
-              autoCapitalize="none"
-              autoCorrect={false}
-              editable={!sendingInvitation}
-            />
+            <View style={[styles.usernameInputWrapper, { backgroundColor: theme.inputBg, borderColor: theme.border }]}>
+              <AppText style={[styles.usernamePrefix, { color: theme.text }]}>@</AppText>
+              <TextInput
+                style={[styles.usernameInput, { color: theme.text }]}
+                placeholder={t('connect_invite_placeholder')}
+                placeholderTextColor="#666"
+                value={username}
+                onChangeText={setUsername}
+                autoCapitalize="none"
+                autoCorrect={false}
+                editable={!sendingInvitation}
+              />
+            </View>
           </View>
           <AppButton
             title={sendingInvitation ? t('connect_invite_button_loading') : t('connect_invite_button')}
             onPress={handleSendInvitation}
-            disabled={sendingInvitation || !email.trim()}
+            disabled={sendingInvitation || !username.trim()}
             style={styles.sendButton}
           />
         </View>
@@ -288,8 +296,8 @@ export default function ConnectTabScreen() {
                     const isNew = isNewConnection(user.id);
 
                     return (
-                      <Pressable 
-                        key={user.id} 
+                      <Pressable
+                        key={user.id}
                         style={[styles.userCard, { backgroundColor: theme.inputBg, borderColor: theme.border, borderWidth: 1 }]}
                         onPress={() => handleUserPress(user)}
                       >
@@ -336,9 +344,11 @@ export default function ConnectTabScreen() {
                           <AppText style={[styles.invitationText, { color: theme.text }]}>
                             {invitation.fromUser?.name || 'Usuario'}
                           </AppText>
-                          <AppText style={[styles.invitationEmail, { color: theme.textSecondary }]}>
-                            {invitation.fromUser?.email || ''}
-                          </AppText>
+                          {invitation.fromUser?.username && (
+                            <AppText style={[styles.invitationUsername, { color: theme.textSecondary }]}>
+                              @{invitation.fromUser.username}
+                            </AppText>
+                          )}
                           <AppText style={[styles.invitationDate, { color: theme.textMuted }]}>
                             {invitation.createdAt.toLocaleDateString('es-ES')}
                           </AppText>
@@ -427,6 +437,23 @@ const styles = StyleSheet.create({
     color: '#0F172A',
     borderWidth: 1,
     borderColor: '#C2D4F2',
+  },
+  usernameInputWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    borderWidth: 1,
+  },
+  usernamePrefix: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginRight: 4,
+  },
+  usernameInput: {
+    flex: 1,
+    fontSize: 16,
+    paddingVertical: 12,
   },
   sendButton: {
     marginTop: 4,
@@ -585,7 +612,7 @@ const styles = StyleSheet.create({
     marginBottom: 2,
     color: '#2C5F2D',
   },
-  invitationEmail: {
+  invitationUsername: {
     fontSize: 13,
     color: '#2C5F2D',
     marginBottom: 4,
