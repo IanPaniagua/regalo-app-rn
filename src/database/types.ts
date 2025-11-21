@@ -5,6 +5,7 @@ export interface User {
   email: string;
   birthdate: Date;
   hobbies: string[];
+  giftPreferences?: string[]; // Preferencias de regalos
   avatar?: string;
   hideAge?: boolean; // Preferencia de privacidad para ocultar edad
   hideAgeChangesCount?: number; // Contador de cambios de privacidad

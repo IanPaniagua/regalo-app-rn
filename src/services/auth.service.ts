@@ -122,6 +122,7 @@ export class AuthService {
     name: string;
     birthdate: Date;
     hobbies: string[];
+    giftPreferences?: string[];
     avatar: string;
   }): Promise<{ authUser: FirebaseUser; dbUserId: string }> {
     try {
@@ -134,6 +135,7 @@ export class AuthService {
         email: data.email,
         birthdate: data.birthdate,
         hobbies: data.hobbies,
+        giftPreferences: data.giftPreferences,
         avatar: data.avatar,
       });
 

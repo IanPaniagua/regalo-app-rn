@@ -9,6 +9,7 @@ interface UserData {
   name: string;
   birthdate: Date;
   hobbies: string[];
+  giftPreferences?: string[]; // Preferencias de regalos
   avatar: string;
   email: string;
   hideAge?: boolean; // Preferencia de privacidad para ocultar edad

@@ -20,66 +20,66 @@ import { useAppTheme } from '@/src/theme/ThemeProvider';
 import { useUser } from '@/src/context/UserContext';
 import { useLanguage } from '@/src/context/LanguageContext';
 
-const HOBBY_KEYS = [
-  'hobby_sports',
-  'hobby_reading',
-  'hobby_music',
-  'hobby_movies',
-  'hobby_cooking',
-  'hobby_travel',
-  'hobby_photography',
-  'hobby_gaming',
-  'hobby_art',
-  'hobby_technology',
+const GIFT_PREFERENCE_KEYS = [
+  'gift_clothes',
+  'gift_socks',
+  'gift_books',
+  'gift_videogames',
+  'gift_technology',
+  'gift_music',
+  'gift_sports',
+  'gift_art',
+  'gift_cooking',
+  'gift_travel',
 ] as const;
 
-export default function CreateProfileStep2() {
+export default function CreateProfileGiftPreferences() {
   const router = useRouter();
   const { theme } = useAppTheme();
   const { t } = useLanguage();
   const { tempUser, setTempUser } = useUser();
-  const [selectedHobbies, setSelectedHobbies] = useState<string[]>(tempUser?.hobbies || []);
-  const [customHobby, setCustomHobby] = useState('');
+  const [selectedPreferences, setSelectedPreferences] = useState<string[]>(tempUser?.giftPreferences || []);
+  const [customPreference, setCustomPreference] = useState('');
   const [showCustomInput, setShowCustomInput] = useState(false);
   const [skipPressed, setSkipPressed] = useState(false);
 
-  const toggleHobby = (hobby: string) => {
-    if (selectedHobbies.includes(hobby)) {
-      setSelectedHobbies(selectedHobbies.filter((h) => h !== hobby));
+  const togglePreference = (preference: string) => {
+    if (selectedPreferences.includes(preference)) {
+      setSelectedPreferences(selectedPreferences.filter((p) => p !== preference));
     } else {
-      setSelectedHobbies([...selectedHobbies, hobby]);
+      setSelectedPreferences([...selectedPreferences, preference]);
     }
   };
 
-  const addCustomHobby = () => {
-    if (customHobby.trim()) {
-      setSelectedHobbies([...selectedHobbies, customHobby.trim()]);
-      setCustomHobby('');
+  const addCustomPreference = () => {
+    if (customPreference.trim()) {
+      setSelectedPreferences([...selectedPreferences, customPreference.trim()]);
+      setCustomPreference('');
       setShowCustomInput(false);
     }
   };
 
   const handleContinue = () => {
-    // Guardar hobbies TEMPORALES en el contexto (no en DB todavía)
+    // Guardar preferencias TEMPORALES en el contexto (no en DB todavía)
     if (tempUser) {
       setTempUser({
         ...tempUser,
-        hobbies: selectedHobbies,
+        giftPreferences: selectedPreferences,
       });
     }
 
-    router.push('/create-profile/gift-preferences');
+    router.push('/create-profile/avatar');
   };
 
   const handleSkip = () => {
-    // Saltar hobbies (guardar array vacío)
+    // Saltar preferencias (guardar array vacío)
     if (tempUser) {
       setTempUser({
         ...tempUser,
-        hobbies: [],
+        giftPreferences: [],
       });
     }
-    router.push('/create-profile/gift-preferences');
+    router.push('/create-profile/avatar');
   };
 
   return (
@@ -95,29 +95,29 @@ export default function CreateProfileStep2() {
         >
           <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
             <View style={styles.content}>
-              <AppTitle style={styles.title}>¿Cuáles son tus hobbies?</AppTitle>
+              <AppTitle style={styles.title}>{t('create_profile_gift_preferences_title')}</AppTitle>
 
-              <View style={styles.hobbiesGrid}>
-                {HOBBY_KEYS.map((hobbyKey) => {
-                  const hobbyLabel = t(hobbyKey);
+              <View style={styles.preferencesGrid}>
+                {GIFT_PREFERENCE_KEYS.map((prefKey) => {
+                  const prefLabel = t(prefKey);
                   return (
                     <Pressable
-                      key={hobbyKey}
+                      key={prefKey}
                       style={[
-                        styles.hobbyChip,
+                        styles.preferenceChip,
                         { backgroundColor: theme.inputBg, borderColor: theme.border },
-                        selectedHobbies.includes(hobbyLabel) && styles.hobbyChipSelected,
+                        selectedPreferences.includes(prefLabel) && styles.preferenceChipSelected,
                       ]}
-                      onPress={() => toggleHobby(hobbyLabel)}
+                      onPress={() => togglePreference(prefLabel)}
                     >
                       <AppText
                         style={[
-                          styles.hobbyText,
+                          styles.preferenceText,
                           { color: theme.text },
-                          selectedHobbies.includes(hobbyLabel) && styles.hobbyTextSelected,
+                          selectedPreferences.includes(prefLabel) && styles.preferenceTextSelected,
                         ]}
                       >
-                        {hobbyLabel}
+                        {prefLabel}
                       </AppText>
                     </Pressable>
                   );
@@ -125,13 +125,15 @@ export default function CreateProfileStep2() {
 
                 <Pressable
                   style={[
-                    styles.hobbyChip,
+                    styles.preferenceChip,
                     { backgroundColor: theme.inputBg, borderColor: theme.border },
-                    styles.hobbyChipOther,
+                    styles.preferenceChipOther,
                   ]}
                   onPress={() => setShowCustomInput(!showCustomInput)}
                 >
-                  <AppText style={[styles.hobbyText, { color: theme.text }]}>Otro</AppText>
+                  <AppText style={[styles.preferenceText, { color: theme.text }]}>
+                    {t('profile_gift_preferences_other')}
+                  </AppText>
                 </Pressable>
               </View>
 
@@ -142,25 +144,25 @@ export default function CreateProfileStep2() {
                       styles.input,
                       { backgroundColor: theme.inputBg, borderColor: theme.border, color: theme.text },
                     ]}
-                    value={customHobby}
-                    onChangeText={setCustomHobby}
-                    placeholder="Escribe tu hobby"
+                    value={customPreference}
+                    onChangeText={setCustomPreference}
+                    placeholder={t('profile_gift_preferences_custom_placeholder')}
                     placeholderTextColor={theme.textMuted}
-                    onSubmitEditing={addCustomHobby}
+                    onSubmitEditing={addCustomPreference}
                   />
-                  <Pressable style={styles.addButton} onPress={addCustomHobby}>
-                    <AppText style={styles.addButtonText}>Añadir</AppText>
+                  <Pressable style={styles.addButton} onPress={addCustomPreference}>
+                    <AppText style={styles.addButtonText}>{t('profile_gift_preferences_add')}</AppText>
                   </Pressable>
                 </View>
               )}
 
-              {selectedHobbies.length > 0 && (
+              {selectedPreferences.length > 0 && (
                 <View style={styles.selectedContainer}>
                   <AppText style={[styles.selectedLabel, { color: theme.text }]}>Seleccionados:</AppText>
                   <View style={styles.selectedList}>
-                    {selectedHobbies.map((hobby, index) => (
+                    {selectedPreferences.map((preference, index) => (
                       <View key={index} style={styles.selectedChip}>
-                        <AppText style={styles.selectedText}>{hobby}</AppText>
+                        <AppText style={styles.selectedText}>{preference}</AppText>
                       </View>
                     ))}
                   </View>
@@ -185,7 +187,7 @@ export default function CreateProfileStep2() {
                     skipPressed && styles.skipTextPressed,
                   ]}
                 >
-                  Saltar
+                  {t('create_profile_gift_preferences_skip')}
                 </AppText>
               </Pressable>
             </View>
@@ -211,28 +213,28 @@ const styles = StyleSheet.create({
     marginBottom: 40,
     textAlign: 'center',
   },
-  hobbiesGrid: {
+  preferencesGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 12,
     marginBottom: 24,
   },
-  hobbyChip: {
+  preferenceChip: {
     borderWidth: 1,
     borderRadius: 20,
     paddingVertical: 10,
     paddingHorizontal: 20,
   },
-  hobbyChipSelected: {
+  preferenceChipSelected: {
     backgroundColor: colors.primary,
   },
-  hobbyChipOther: {
+  preferenceChipOther: {
     borderStyle: 'dashed',
   },
-  hobbyText: {
+  preferenceText: {
     fontSize: 14,
   },
-  hobbyTextSelected: {
+  preferenceTextSelected: {
     color: colors.secondary,
     fontWeight: '600',
   },
