@@ -2,6 +2,7 @@
 export interface User {
   id: string;
   name: string;
+  username?: string; // Username único tipo @username
   email: string;
   birthdate: Date;
   hobbies: string[];
@@ -59,6 +60,8 @@ export interface DatabaseAdapter {
   createUser(user: Omit<User, 'id' | 'createdAt' | 'updatedAt'>): Promise<User>;
   getUser(id: string): Promise<User | null>;
   getUserByEmail(email: string): Promise<User | null>;
+  getUserByUsername(username: string): Promise<User | null>;
+  isUsernameAvailable(username: string): Promise<boolean>;
   updateUser(id: string, data: Partial<User>): Promise<User>;
   deleteUser(id: string): Promise<void>;
   getAllUsers(): Promise<User[]>;

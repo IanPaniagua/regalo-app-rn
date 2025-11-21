@@ -82,6 +82,7 @@ export default function CreateProfileStep3() {
         email,
         password,
         name: tempUser.name!,
+        username: tempUser.username,
         birthdate: tempUser.birthdate!,
         hobbies: tempUser.hobbies!,
         giftPreferences: tempUser.giftPreferences,
@@ -93,8 +94,10 @@ export default function CreateProfileStep3() {
         id: dbUserId,
         authUid: authUser.uid,
         name: tempUser.name!,
+        username: tempUser.username,
         birthdate: tempUser.birthdate!,
         hobbies: tempUser.hobbies!,
+        giftPreferences: tempUser.giftPreferences,
         avatar: tempUser.avatar!,
         email,
       };

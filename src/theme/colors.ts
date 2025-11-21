@@ -32,7 +32,7 @@ export const darkTheme = {
 // Tema claro (nuevo, azul elegante)
 export const lightTheme = {
   ...baseColors,
-  primary: '#D4AF37',  // dorado para modo light
+  primary: '#cab097',  // arena/beige (mismo que dark mode)
   background: '#E6F0FF', // azul muy claro
   backgroundImage: 'bg-light',
   overlay: 'rgba(255, 255, 255, 0.3)',
