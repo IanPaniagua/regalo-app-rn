@@ -175,10 +175,19 @@ export class FirebaseAdapter implements DatabaseAdapter {
     return {
       id: userSnap.id,
       name: data.name,
+      username: data.username,
       email: data.email,
       birthdate: this.timestampToDate(data.birthdate),
-      hobbies: data.hobbies,
+      hobbies: data.hobbies || [],
+      giftPreferences: data.giftPreferences || [],
       avatar: data.avatar,
+      hideAge: data.hideAge,
+      hideAgeChangesCount: data.hideAgeChangesCount,
+      hideAgeLastChangeDate: data.hideAgeLastChangeDate ? this.timestampToDate(data.hideAgeLastChangeDate) : undefined,
+      nameChangesCount: data.nameChangesCount,
+      nameLastChangeDate: data.nameLastChangeDate ? this.timestampToDate(data.nameLastChangeDate) : undefined,
+      fcmToken: data.fcmToken,
+      fcmTokenUpdatedAt: data.fcmTokenUpdatedAt ? this.timestampToDate(data.fcmTokenUpdatedAt) : undefined,
       createdAt: data.createdAt ? this.timestampToDate(data.createdAt) : undefined,
       updatedAt: data.updatedAt ? this.timestampToDate(data.updatedAt) : undefined,
     };
@@ -199,12 +208,63 @@ export class FirebaseAdapter implements DatabaseAdapter {
     return {
       id: doc.id,
       name: data.name,
+      username: data.username,
       email: data.email,
       birthdate: this.timestampToDate(data.birthdate),
-      hobbies: data.hobbies,
+      hobbies: data.hobbies || [],
+      giftPreferences: data.giftPreferences || [],
       avatar: data.avatar,
+      hideAge: data.hideAge,
+      hideAgeChangesCount: data.hideAgeChangesCount,
+      hideAgeLastChangeDate: data.hideAgeLastChangeDate ? this.timestampToDate(data.hideAgeLastChangeDate) : undefined,
+      nameChangesCount: data.nameChangesCount,
+      nameLastChangeDate: data.nameLastChangeDate ? this.timestampToDate(data.nameLastChangeDate) : undefined,
+      fcmToken: data.fcmToken,
+      fcmTokenUpdatedAt: data.fcmTokenUpdatedAt ? this.timestampToDate(data.fcmTokenUpdatedAt) : undefined,
       createdAt: data.createdAt ? this.timestampToDate(data.createdAt) : undefined,
       updatedAt: data.updatedAt ? this.timestampToDate(data.updatedAt) : undefined,
+    };
+  }
+
+  async isUsernameAvailable(username: string): Promise<boolean> {
+    const db = this.ensureInitialized();
+    const usersRef = collection(db, 'users');
+    // Buscar username en minúsculas para evitar duplicados como @User y @user
+    const normalizedUsername = username.toLowerCase();
+    const q = query(usersRef, where('username', '==', normalizedUsername));
+    const querySnapshot = await getDocs(q);
+    return querySnapshot.empty;
+  }
+
+  async getUserByUsername(username: string): Promise<User | null> {
+    const db = this.ensureInitialized();
+    const usersRef = collection(db, 'users');
+    const normalizedUsername = username.toLowerCase();
+    const q = query(usersRef, where('username', '==', normalizedUsername));
+    const querySnapshot = await getDocs(q);
+
+    if (querySnapshot.empty) {
+      return null;
+    }
+
+    const docSnap = querySnapshot.docs[0];
+    const data = docSnap.data();
+    return {
+      id: docSnap.id,
+      name: data.name,
+      username: data.username,
+      email: data.email,
+      birthdate: this.timestampToDate(data.birthdate),
+      hobbies: data.hobbies || [],
+      giftPreferences: data.giftPreferences || [],
+      avatar: data.avatar,
+      hideAge: data.hideAge,
+      hideAgeChangesCount: data.hideAgeChangesCount,
+      hideAgeLastChangeDate: data.hideAgeLastChangeDate ? this.timestampToDate(data.hideAgeLastChangeDate) : undefined,
+      nameChangesCount: data.nameChangesCount,
+      nameLastChangeDate: data.nameLastChangeDate ? this.timestampToDate(data.nameLastChangeDate) : undefined,
+      fcmToken: data.fcmToken,
+      fcmTokenUpdatedAt: data.fcmTokenUpdatedAt ? this.timestampToDate(data.fcmTokenUpdatedAt) : undefined,
     };
   }
 
@@ -249,10 +309,19 @@ export class FirebaseAdapter implements DatabaseAdapter {
       return {
         id: doc.id,
         name: data.name,
+        username: data.username,
         email: data.email,
         birthdate: this.timestampToDate(data.birthdate),
-        hobbies: data.hobbies,
+        hobbies: data.hobbies || [],
+        giftPreferences: data.giftPreferences || [],
         avatar: data.avatar,
+        hideAge: data.hideAge,
+        hideAgeChangesCount: data.hideAgeChangesCount,
+        hideAgeLastChangeDate: data.hideAgeLastChangeDate ? this.timestampToDate(data.hideAgeLastChangeDate) : undefined,
+        nameChangesCount: data.nameChangesCount,
+        nameLastChangeDate: data.nameLastChangeDate ? this.timestampToDate(data.nameLastChangeDate) : undefined,
+        fcmToken: data.fcmToken,
+        fcmTokenUpdatedAt: data.fcmTokenUpdatedAt ? this.timestampToDate(data.fcmTokenUpdatedAt) : undefined,
         createdAt: data.createdAt ? this.timestampToDate(data.createdAt) : undefined,
         updatedAt: data.updatedAt ? this.timestampToDate(data.updatedAt) : undefined,
       };

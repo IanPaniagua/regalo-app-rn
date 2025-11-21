@@ -120,6 +120,7 @@ export class AuthService {
     email: string;
     password: string;
     name: string;
+    username?: string;
     birthdate: Date;
     hobbies: string[];
     giftPreferences?: string[];
@@ -132,6 +133,7 @@ export class AuthService {
       // 2. Crear perfil en la base de datos
       const dbUser = await db.getAdapter().createUser({
         name: data.name,
+        username: data.username,
         email: data.email,
         birthdate: data.birthdate,
         hobbies: data.hobbies,

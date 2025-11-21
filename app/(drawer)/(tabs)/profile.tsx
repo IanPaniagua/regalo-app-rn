@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   View,
   StyleSheet,
@@ -12,6 +12,7 @@ import {
   TouchableWithoutFeedback,
   Keyboard,
   Switch,
+  ActivityIndicator,
 } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { AppContainer } from '@/src/components/ui/AppContainer';
@@ -81,6 +82,10 @@ export default function ProfileScreen() {
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [editedName, setEditedName] = useState(user?.name || '');
+  const [editedUsername, setEditedUsername] = useState(user?.username || '');
+  const [isCheckingUsername, setIsCheckingUsername] = useState(false);
+  const [isUsernameAvailable, setIsUsernameAvailable] = useState<boolean | null>(null);
+  const [usernameError, setUsernameError] = useState<string>('');
   const [editedAvatar, setEditedAvatar] = useState(user?.avatar || '');
   const [editedHobbies, setEditedHobbies] = useState<string[]>(user?.hobbies || []);
   const [editedGiftPreferences, setEditedGiftPreferences] = useState<string[]>(user?.giftPreferences || []);
@@ -139,8 +144,60 @@ export default function ProfileScreen() {
     currentCount: user?.nameChangesCount || 0,
     lastChangeDate: user?.nameLastChangeDate,
     maxChanges: 3,
-    fieldName: 'tu nombre',
+    fieldName: 'el nombre',
   });
+
+  // Validar username con debounce
+  useEffect(() => {
+    if (!isEditing) return;
+
+    const validateUsername = (text: string): string | null => {
+      if (text.length === 0) return null;
+      if (text.length < 3) return t('create_profile_username_too_short');
+      if (text.length > 20) return t('create_profile_username_too_long');
+      if (!/^[a-zA-Z0-9_]+$/.test(text)) return t('create_profile_username_invalid');
+      return null;
+    };
+
+    const validationError = validateUsername(editedUsername);
+    if (validationError) {
+      setUsernameError(validationError);
+      setIsUsernameAvailable(null);
+      return;
+    }
+
+    if (editedUsername.length === 0) {
+      setUsernameError('');
+      setIsUsernameAvailable(null);
+      return;
+    }
+
+    // Si el username no cambió, no validar
+    if (editedUsername.toLowerCase() === user?.username?.toLowerCase()) {
+      setUsernameError('');
+      setIsUsernameAvailable(true);
+      return;
+    }
+
+    setUsernameError('');
+    const timeoutId = setTimeout(async () => {
+      setIsCheckingUsername(true);
+      try {
+        const available = await db.getAdapter().isUsernameAvailable(editedUsername);
+        setIsUsernameAvailable(available);
+        if (!available) {
+          setUsernameError(t('create_profile_username_taken'));
+        }
+      } catch (err) {
+        console.error('Error checking username:', err);
+        setUsernameError('Error al verificar disponibilidad');
+      } finally {
+        setIsCheckingUsername(false);
+      }
+    }, 500);
+
+    return () => clearTimeout(timeoutId);
+  }, [editedUsername, isEditing, user?.username]);
 
   const toggleHobby = (hobby: string) => {
     if (editedHobbies.includes(hobby)) {
@@ -185,6 +242,18 @@ export default function ProfileScreen() {
       return;
     }
 
+    // Validar username si se está editando
+    if (editedUsername && editedUsername.length > 0) {
+      if (isCheckingUsername) {
+        Alert.alert(t('create_profile_error_title'), 'Verificando username...');
+        return;
+      }
+      if (!isUsernameAvailable) {
+        Alert.alert(t('create_profile_error_title'), usernameError || 'Username no disponible');
+        return;
+      }
+    }
+
     // Verificar si el nombre cambió
     const nameChanged = editedName !== user.name;
     
@@ -198,6 +267,7 @@ export default function ProfileScreen() {
 
       const updateData: any = {
         name: editedName,
+        username: editedUsername ? editedUsername.toLowerCase() : undefined,
         avatar: editedAvatar,
         hobbies: editedHobbies,
         giftPreferences: editedGiftPreferences,
@@ -217,6 +287,7 @@ export default function ProfileScreen() {
       setUser({
         ...user,
         name: editedName,
+        username: editedUsername ? editedUsername.toLowerCase() : undefined,
         avatar: editedAvatar,
         hobbies: editedHobbies,
         giftPreferences: editedGiftPreferences,
@@ -248,6 +319,9 @@ export default function ProfileScreen() {
 
   const handleCancel = () => {
     setEditedName(user?.name || '');
+    setEditedUsername(user?.username || '');
+    setIsUsernameAvailable(null);
+    setUsernameError('');
     setEditedAvatar(user?.avatar || '');
     setEditedHobbies(user?.hobbies || []);
     setEditedGiftPreferences(user?.giftPreferences || []);
@@ -340,7 +414,51 @@ export default function ProfileScreen() {
                 )}
               </View>
 
-              {/* Email (no editable) */}
+              {/* Username */}
+              <View style={styles.section}>
+                <AppText style={[styles.label, { color: theme.textSecondary }]}>{t('profile_username')}</AppText>
+                {isEditing ? (
+                  <>
+                    <View style={[styles.usernameInputWrapper, { backgroundColor: theme.inputBg, borderColor: theme.border }]}>
+                      <AppText style={[styles.usernamePrefix, { color: theme.text }]}>@</AppText>
+                      <TextInput
+                        style={[styles.usernameInput, { color: theme.text }]}
+                        value={editedUsername}
+                        onChangeText={setEditedUsername}
+                        placeholder={t('create_profile_username_placeholder')}
+                        placeholderTextColor={theme.textMuted}
+                        autoCapitalize="none"
+                        autoCorrect={false}
+                        autoComplete="off"
+                      />
+                      {isCheckingUsername && (
+                        <ActivityIndicator size="small" color={colors.primary} />
+                      )}
+                      {!isCheckingUsername && editedUsername.length > 0 && (
+                        <Ionicons 
+                          name={isUsernameAvailable ? "checkmark-circle" : "close-circle"} 
+                          size={20} 
+                          color={isUsernameAvailable ? "#10B981" : "#EF4444"} 
+                        />
+                      )}
+                    </View>
+                    {usernameError && editedUsername.length > 0 && (
+                      <AppText style={styles.usernameError}>{usernameError}</AppText>
+                    )}
+                    {isUsernameAvailable && editedUsername.length > 0 && !usernameError && (
+                      <AppText style={styles.usernameSuccess}>{t('create_profile_username_available')}</AppText>
+                    )}
+                  </>
+                ) : (
+                  <View style={[styles.valueContainer, { backgroundColor: theme.surface }]}>
+                    <AppText style={styles.value}>
+                      {user.username ? `@${user.username}` : t('profile_username_empty')}
+                    </AppText>
+                  </View>
+                )}
+              </View>
+
+              {/* Email (no editable - solo visible para el propio usuario) */}
               <View style={styles.section}>
                 <AppText style={[styles.label, { color: theme.textSecondary }]}>{t('profile_email')}</AppText>
                 <View style={[styles.valueContainer, { backgroundColor: theme.surface }, styles.disabledContainer]}>
@@ -578,8 +696,19 @@ export default function ProfileScreen() {
                     disabled={isSaving}
                     style={styles.saveButton}
                   />
-                  <Pressable style={styles.cancelButton} onPress={handleCancel}>
-                    <AppText style={styles.cancelButtonText}>{t('profile_cancel')}</AppText>
+                  <Pressable 
+                    style={[
+                      styles.cancelButton, 
+                      { 
+                        borderColor: theme.border,
+                        backgroundColor: theme.surface,
+                      }
+                    ]} 
+                    onPress={handleCancel}
+                  >
+                    <AppText style={[styles.cancelButtonText, { color: theme.text }]}>
+                      {t('profile_cancel')}
+                    </AppText>
                   </Pressable>
                 </View>
               )}
@@ -829,12 +958,11 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#666',
     borderRadius: 12,
   },
   cancelButtonText: {
     fontSize: 16,
-    color: '#999',
+    fontWeight: '600',
   },
   emptyContainer: {
     flex: 1,
@@ -983,5 +1111,36 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: colors.primary,
     fontWeight: '600',
+  },
+  usernameInputWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 4,
+  },
+  usernamePrefix: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginRight: 4,
+  },
+  usernameInput: {
+    flex: 1,
+    fontFamily: fonts.text,
+    fontSize: 16,
+    paddingVertical: 12,
+  },
+  usernameError: {
+    fontSize: 13,
+    color: '#EF4444',
+    marginTop: 8,
+    paddingHorizontal: 4,
+  },
+  usernameSuccess: {
+    fontSize: 13,
+    color: '#10B981',
+    marginTop: 8,
+    paddingHorizontal: 4,
   },
 });

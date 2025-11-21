@@ -50,7 +50,7 @@ export default function CreateProfileAvatar() {
       });
     }
 
-    router.push('/create-profile/email');
+    router.push('/create-profile/username');
   };
 
   return (

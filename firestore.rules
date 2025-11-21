@@ -4,7 +4,10 @@ service cloud.firestore {
     
     // Usuarios
     match /users/{userId} {
-      allow read: if request.auth != null;
+      // Permitir leer para verificar username disponible (solo queries, no documentos individuales)
+      allow list: if true;
+      // Permitir leer documento individual solo si está autenticado
+      allow get: if request.auth != null;
       allow create: if request.auth != null;
       allow update: if request.auth != null;
       allow delete: if request.auth != null;

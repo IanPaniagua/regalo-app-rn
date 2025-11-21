@@ -7,6 +7,7 @@ interface UserData {
   id?: string; // ID del usuario en la base de datos
   authUid?: string; // UID de Firebase Auth
   name: string;
+  username?: string; // Username único tipo @username
   birthdate: Date;
   hobbies: string[];
   giftPreferences?: string[]; // Preferencias de regalos
