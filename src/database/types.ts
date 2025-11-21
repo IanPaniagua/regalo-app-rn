@@ -81,7 +81,7 @@ export interface DatabaseAdapter {
   getAcceptedConnections(userId: string): Promise<Connection[]>; // Conexiones aceptadas (para notificaciones)
   markConnectionAsViewed(connectionId: string, userId: string): Promise<void>; // Marcar como visto
   deleteConnection(connectionId: string): Promise<void>; // Para desconectar usuarios
-  sendConnectionRequestByEmail(fromUserId: string, toEmail: string): Promise<Connection>; // Enviar invitación por email
+  sendConnectionRequestByUsername(fromUserId: string, toUsername: string): Promise<Connection>; // Enviar invitación por username
   
   // Utilidades
   initialize(): Promise<void>;

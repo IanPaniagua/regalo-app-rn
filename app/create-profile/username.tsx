@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
-import { 
-  View, 
-  StyleSheet, 
-  TextInput, 
+import {
+  View,
+  StyleSheet,
+  TextInput,
   Pressable,
   KeyboardAvoidingView,
   Platform,
@@ -32,7 +32,6 @@ export default function CreateProfileUsername() {
   const [isChecking, setIsChecking] = useState(false);
   const [isAvailable, setIsAvailable] = useState<boolean | null>(null);
   const [error, setError] = useState<string>('');
-  const [skipPressed, setSkipPressed] = useState(false);
 
   // Validar formato de username
   const validateUsername = (text: string): string | null => {
@@ -92,16 +91,7 @@ export default function CreateProfileUsername() {
     router.push('/create-profile/email');
   };
 
-  const handleSkip = () => {
-    // Saltar username (se puede añadir después)
-    if (tempUser) {
-      setTempUser({
-        ...tempUser,
-        username: undefined,
-      });
-    }
-    router.push('/create-profile/email');
-  };
+
 
   const getStatusIcon = () => {
     if (isChecking) {
@@ -135,7 +125,7 @@ export default function CreateProfileUsername() {
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardView}
       >
-        <ScrollView 
+        <ScrollView
           contentContainerStyle={styles.scrollContent}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
@@ -143,7 +133,7 @@ export default function CreateProfileUsername() {
           <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
             <View style={styles.content}>
               <AppTitle style={styles.title}>{t('create_profile_username_title')}</AppTitle>
-              
+
               <AppText style={[styles.subtitle, { color: theme.textMuted }]}>
                 {t('create_profile_username_subtitle')}
               </AppText>
@@ -183,22 +173,6 @@ export default function CreateProfileUsername() {
                 disabled={!isAvailable || isChecking}
                 style={styles.button}
               />
-
-              <Pressable
-                onPress={handleSkip}
-                onPressIn={() => setSkipPressed(true)}
-                onPressOut={() => setSkipPressed(false)}
-              >
-                <AppText
-                  style={[
-                    styles.skipText,
-                    { color: theme.textMuted },
-                    skipPressed && styles.skipTextPressed,
-                  ]}
-                >
-                  {t('create_profile_username_skip')}
-                </AppText>
-              </Pressable>
             </View>
           </TouchableWithoutFeedback>
         </ScrollView>
@@ -267,13 +241,5 @@ const styles = StyleSheet.create({
   },
   button: {
     marginTop: 8,
-    marginBottom: 16,
-  },
-  skipText: {
-    textAlign: 'center',
-    fontSize: 14,
-  },
-  skipTextPressed: {
-    textDecorationLine: 'underline',
   },
 });

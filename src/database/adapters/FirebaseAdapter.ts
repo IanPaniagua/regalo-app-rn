@@ -63,7 +63,7 @@ export class FirebaseAdapter implements DatabaseAdapter {
     return new Promise((resolve, reject) => {
       const unsubscribe = onAuthStateChanged(auth, async (user) => {
         unsubscribe();
-        
+
         if (user) {
           console.log('✅ User already authenticated:', user.uid);
           resolve();
@@ -135,7 +135,7 @@ export class FirebaseAdapter implements DatabaseAdapter {
   // USUARIOS
   async createUser(userData: Omit<User, 'id' | 'createdAt' | 'updatedAt'>): Promise<User> {
     const db = this.ensureInitialized();
-    
+
     // Crear documento en Firestore
     // NOTA: La autenticación se maneja por separado en authService
     const usersRef = collection(db, 'users');
@@ -493,7 +493,7 @@ export class FirebaseAdapter implements DatabaseAdapter {
     const acceptedConnections = connections.filter(c => c.status === 'accepted');
 
     // Obtener IDs de usuarios conectados
-    const connectedUserIds = acceptedConnections.map(c => 
+    const connectedUserIds = acceptedConnections.map(c =>
       c.userId1 === userId ? c.userId2 : c.userId1
     );
 
@@ -548,23 +548,23 @@ export class FirebaseAdapter implements DatabaseAdapter {
 
   async getPendingInvitations(userId: string): Promise<Connection[]> {
     const connections = await this.getConnectionsByUser(userId);
-    
+
     // Solo invitaciones pendientes donde el usuario es userId2 (receptor)
     return connections.filter(c => c.status === 'pending' && c.userId2 === userId);
   }
 
   async getAcceptedConnections(userId: string): Promise<Connection[]> {
     const connections = await this.getConnectionsByUser(userId);
-    
+
     // Conexiones aceptadas donde:
     // - El usuario es userId1 (envió) y no ha visto la respuesta (viewedByUser1 = false)
     // - O el usuario es userId2 (recibió) y no ha visto que fue aceptada (viewedByUser2 = false)
     return connections.filter(c => {
       if (c.status !== 'accepted') return false;
-      
+
       if (c.userId1 === userId && !c.viewedByUser1) return true;
       if (c.userId2 === userId && !c.viewedByUser2) return true;
-      
+
       return false;
     });
   }
@@ -572,22 +572,22 @@ export class FirebaseAdapter implements DatabaseAdapter {
   async markConnectionAsViewed(connectionId: string, userId: string): Promise<void> {
     const db = this.ensureInitialized();
     const connectionRef = doc(db, 'connections', connectionId);
-    
+
     // Obtener la conexión para saber si es userId1 o userId2
     const connectionSnap = await getDoc(connectionRef);
     if (!connectionSnap.exists()) {
       throw new Error('Connection not found');
     }
-    
+
     const connection = connectionSnap.data();
     const updateData: any = {};
-    
+
     if (connection.userId1 === userId) {
       updateData.viewedByUser1 = true;
     } else if (connection.userId2 === userId) {
       updateData.viewedByUser2 = true;
     }
-    
+
     await updateDoc(connectionRef, updateData);
     console.log('✅ Connection marked as viewed:', connectionId);
   }
@@ -599,12 +599,12 @@ export class FirebaseAdapter implements DatabaseAdapter {
     console.log('✅ Connection deleted:', connectionId);
   }
 
-  async sendConnectionRequestByEmail(fromUserId: string, toEmail: string): Promise<Connection> {
-    // Buscar usuario por email
-    const toUser = await this.getUserByEmail(toEmail);
-    
+  async sendConnectionRequestByUsername(fromUserId: string, toUsername: string): Promise<Connection> {
+    // Buscar usuario por username
+    const toUser = await this.getUserByUsername(toUsername);
+
     if (!toUser) {
-      throw new Error('Usuario no encontrado con ese email');
+      throw new Error('Usuario no encontrado con ese nombre de usuario');
     }
 
     // Verificar que no sea el mismo usuario
@@ -615,7 +615,7 @@ export class FirebaseAdapter implements DatabaseAdapter {
     // Verificar si ya existe una conexión (pendiente o aceptada)
     const existingConnections = await this.getConnectionsByUser(fromUserId);
     const alreadyConnected = existingConnections.find(
-      conn => 
+      conn =>
         (conn.userId1 === fromUserId && conn.userId2 === toUser.id) ||
         (conn.userId1 === toUser.id && conn.userId2 === fromUserId)
     );
@@ -630,8 +630,8 @@ export class FirebaseAdapter implements DatabaseAdapter {
 
     // Crear conexión pendiente
     const connection = await this.createConnection(fromUserId, toUser.id);
-    console.log('✅ Connection request sent to:', toEmail);
-    
+    console.log('✅ Connection request sent to:', toUsername);
+
     return connection;
   }
 }

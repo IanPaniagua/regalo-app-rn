@@ -133,10 +133,11 @@ const translations = {
     // Connect
     connect_title: 'Conectar',
     connect_subtitle: 'Conecta con amigos para ver sus cumpleaños',
-    connect_invite_label: 'Invitar por email',
-    connect_invite_placeholder: 'email@ejemplo.com',
+    connect_invite_label: 'Invitar por nombre de usuario',
+    connect_invite_placeholder: 'nombre_usuario',
     connect_invite_button: 'Enviar Invitación',
     connect_invite_button_loading: 'Enviando...',
+    connect_invite_error_username_required: 'Por favor ingresa un nombre de usuario',
     connect_tab_connections: 'Mis Conexiones ({{count}})',
     connect_tab_pending: 'Pendientes',
     connect_empty_requires_login_title: 'Inicia sesión',
@@ -380,10 +381,11 @@ const translations = {
     // Connect
     connect_title: 'Connect',
     connect_subtitle: 'Connect with friends to see their birthdays',
-    connect_invite_label: 'Invite by email',
-    connect_invite_placeholder: 'email@example.com',
+    connect_invite_label: 'Invite by username',
+    connect_invite_placeholder: 'username',
     connect_invite_button: 'Send Invitation',
     connect_invite_button_loading: 'Sending...',
+    connect_invite_error_username_required: 'Please enter a username',
     connect_tab_connections: 'My Connections ({{count}})',
     connect_tab_pending: 'Pending',
     connect_empty_requires_login_title: 'Log in',
@@ -627,10 +629,11 @@ const translations = {
     // Connect
     connect_title: 'Verbinden',
     connect_subtitle: 'Verbinde dich mit Freunden, um ihre Geburtstage zu sehen',
-    connect_invite_label: 'Per E-Mail einladen',
-    connect_invite_placeholder: 'email@beispiel.de',
+    connect_invite_label: 'Per Benutzername einladen',
+    connect_invite_placeholder: 'benutzername',
     connect_invite_button: 'Einladung senden',
     connect_invite_button_loading: 'Wird gesendet...',
+    connect_invite_error_username_required: 'Bitte gib einen Benutzernamen ein',
     connect_tab_connections: 'Meine Verbindungen ({{count}})',
     connect_tab_pending: 'Ausstehend',
     connect_empty_requires_login_title: 'Anmelden',
@@ -775,13 +778,13 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   // Load language ONCE at startup - this runs only on app initialization
   useEffect(() => {
     let mounted = true;
-    
+
     (async () => {
       try {
         const stored = await AsyncStorage.getItem(STORAGE_KEY);
-        
+
         if (!mounted) return;
-        
+
         if (stored === 'es' || stored === 'en' || stored === 'de') {
           setLang(stored);
         } else {
@@ -809,7 +812,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
         }
       }
     })();
-    
+
     return () => {
       mounted = false;
     };

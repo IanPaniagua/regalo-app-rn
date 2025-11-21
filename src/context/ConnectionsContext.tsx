@@ -15,7 +15,7 @@ interface ConnectionsContextType {
   notificationCount: number; // Total de notificaciones (pendientes + aceptadas no vistas)
   loading: boolean;
   createInvitation: () => Promise<string>; // Retorna el link
-  sendInvitationByEmail: (email: string) => Promise<void>; // Enviar por email
+  sendInvitationByUsername: (username: string) => Promise<void>; // Enviar por username
   acceptInvitation: (connectionId: string) => Promise<void>;
   rejectInvitation: (connectionId: string) => Promise<void>;
   disconnectUser: (connectionId: string) => Promise<void>;
@@ -130,7 +130,7 @@ export function ConnectionsProvider({ children }: { children: ReactNode }) {
       // Crear deep link
       const link = Linking.createURL(`invite/${invitation.id}`);
       console.log('✅ Invitation created:', link);
-      
+
       return link;
     } catch (error) {
       console.error('❌ Error creating invitation:', error);
@@ -138,15 +138,15 @@ export function ConnectionsProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  // Enviar invitación por email
-  const sendInvitationByEmail = async (email: string): Promise<void> => {
+  // Enviar invitación por username
+  const sendInvitationByUsername = async (username: string): Promise<void> => {
     if (!user?.id) {
       throw new Error('Usuario no autenticado');
     }
 
     try {
-      await db.getAdapter().sendConnectionRequestByEmail(user.id, email);
-      console.log('✅ Invitation sent to:', email);
+      await db.getAdapter().sendConnectionRequestByUsername(user.id, username);
+      console.log('✅ Invitation sent to:', username);
       await refreshConnections();
     } catch (error) {
       console.error('❌ Error sending invitation:', error);
@@ -229,7 +229,7 @@ export function ConnectionsProvider({ children }: { children: ReactNode }) {
         notificationCount,
         loading,
         createInvitation,
-        sendInvitationByEmail,
+        sendInvitationByUsername,
         acceptInvitation,
         rejectInvitation,
         disconnectUser,
