@@ -84,6 +84,7 @@ export default function CreateProfileStep3() {
         name: tempUser.name!,
         birthdate: tempUser.birthdate!,
         hobbies: tempUser.hobbies!,
+        giftPreferences: tempUser.giftPreferences,
         avatar: tempUser.avatar!,
       });
 

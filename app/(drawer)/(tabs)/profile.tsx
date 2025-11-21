@@ -27,18 +27,31 @@ import { Ionicons } from '@expo/vector-icons';
 import { db } from '@/src/database';
 import { useDailyChangeLimit } from '@/src/hooks/useDailyChangeLimit';
 
-const HOBBIES = [
-  'Deportes',
-  'Lectura',
-  'Música',
-  'Cine',
-  'Cocina',
-  'Viajes',
-  'Fotografía',
-  'Gaming',
-  'Arte',
-  'Tecnología',
-];
+const HOBBY_KEYS = [
+  'hobby_sports',
+  'hobby_reading',
+  'hobby_music',
+  'hobby_movies',
+  'hobby_cooking',
+  'hobby_travel',
+  'hobby_photography',
+  'hobby_gaming',
+  'hobby_art',
+  'hobby_technology',
+] as const;
+
+const GIFT_PREFERENCE_KEYS = [
+  'gift_clothes',
+  'gift_socks',
+  'gift_books',
+  'gift_videogames',
+  'gift_technology',
+  'gift_music',
+  'gift_sports',
+  'gift_art',
+  'gift_cooking',
+  'gift_travel',
+] as const;
 
 const AVATARS = [
   '👨', '👩', '🧑', '👴', '👵', '🧓',
@@ -63,21 +76,25 @@ const AVATARS = [
 export default function ProfileScreen() {
   const { user, setUser } = useUser();
   const { refreshUsers } = useBirthdays();
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
   const { theme } = useAppTheme();
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [editedName, setEditedName] = useState(user?.name || '');
   const [editedAvatar, setEditedAvatar] = useState(user?.avatar || '');
   const [editedHobbies, setEditedHobbies] = useState<string[]>(user?.hobbies || []);
+  const [editedGiftPreferences, setEditedGiftPreferences] = useState<string[]>(user?.giftPreferences || []);
   const [hideAge, setHideAge] = useState(user?.hideAge || false);
   const [showAvatarPicker, setShowAvatarPicker] = useState(false);
   const [showBirthdayInfo, setShowBirthdayInfo] = useState(false);
   const [customHobby, setCustomHobby] = useState('');
   const [showCustomInput, setShowCustomInput] = useState(false);
+  const [customGiftPreference, setCustomGiftPreference] = useState('');
+  const [showCustomGiftInput, setShowCustomGiftInput] = useState(false);
 
   const formatDate = (date: Date) => {
-    return date.toLocaleDateString('es-ES', {
+    const locale = lang === 'es' ? 'es-ES' : lang === 'de' ? 'de-DE' : 'en-US';
+    return date.toLocaleDateString(locale, {
       day: '2-digit',
       month: '2-digit',
       year: 'numeric',
@@ -102,7 +119,8 @@ export default function ProfileScreen() {
 
   const formatNextBirthday = (birthdate: Date) => {
     const nextBirthday = getNextBirthday(birthdate);
-    return nextBirthday.toLocaleDateString('es-ES', {
+    const locale = lang === 'es' ? 'es-ES' : lang === 'de' ? 'de-DE' : 'en-US';
+    return nextBirthday.toLocaleDateString(locale, {
       day: '2-digit',
       month: 'long',
     });
@@ -140,6 +158,22 @@ export default function ProfileScreen() {
     }
   };
 
+  const toggleGiftPreference = (preference: string) => {
+    if (editedGiftPreferences.includes(preference)) {
+      setEditedGiftPreferences(editedGiftPreferences.filter((p) => p !== preference));
+    } else {
+      setEditedGiftPreferences([...editedGiftPreferences, preference]);
+    }
+  };
+
+  const addCustomGiftPreference = () => {
+    if (customGiftPreference.trim()) {
+      setEditedGiftPreferences([...editedGiftPreferences, customGiftPreference.trim()]);
+      setCustomGiftPreference('');
+      setShowCustomGiftInput(false);
+    }
+  };
+
   const handleSave = async () => {
     if (!editedName.trim()) {
       Alert.alert(t('create_profile_error_title'), t('profile_error_empty_name'));
@@ -166,6 +200,7 @@ export default function ProfileScreen() {
         name: editedName,
         avatar: editedAvatar,
         hobbies: editedHobbies,
+        giftPreferences: editedGiftPreferences,
       };
 
       // Si el nombre cambió, actualizar contador
@@ -184,6 +219,7 @@ export default function ProfileScreen() {
         name: editedName,
         avatar: editedAvatar,
         hobbies: editedHobbies,
+        giftPreferences: editedGiftPreferences,
         ...(nameChanged && {
           nameChangesCount: updateData.nameChangesCount,
           nameLastChangeDate: updateData.nameLastChangeDate,
@@ -214,6 +250,7 @@ export default function ProfileScreen() {
     setEditedName(user?.name || '');
     setEditedAvatar(user?.avatar || '');
     setEditedHobbies(user?.hobbies || []);
+    setEditedGiftPreferences(user?.giftPreferences || []);
     setHideAge(user?.hideAge || false);
     setIsEditing(false);
   };
@@ -251,7 +288,7 @@ export default function ProfileScreen() {
                     style={[
                       styles.editButton,
                       { 
-                        backgroundColor: `${colors.primary}15`,
+                        backgroundColor: theme.surface,
                         borderColor: colors.primary,
                       }
                     ]}
@@ -387,8 +424,8 @@ export default function ProfileScreen() {
                 )}
 
                 {hideAge && (
-                  <View style={styles.previewContainer}>
-                    <AppText style={styles.previewLabel}>{t('profile_privacy_preview')}</AppText>
+                  <View style={[styles.previewContainer, { backgroundColor: theme.surface }]}>
+                    <AppText style={[styles.previewLabel, { color: theme.textMuted }]}>{t('profile_privacy_preview')}</AppText>
                     <AppText style={styles.previewValue}>{formatNextBirthday(user.birthdate)}</AppText>
                   </View>
                 )}
@@ -400,27 +437,30 @@ export default function ProfileScreen() {
                 {isEditing ? (
                   <>
                     <View style={styles.hobbiesGrid}>
-                      {HOBBIES.map((hobby) => (
-                        <Pressable
-                          key={hobby}
-                          style={[
-                            styles.hobbyChip,
-                            { backgroundColor: theme.surface, borderColor: theme.border },
-                            editedHobbies.includes(hobby) && styles.hobbyChipSelected,
-                          ]}
-                          onPress={() => toggleHobby(hobby)}
-                        >
-                          <AppText
+                      {HOBBY_KEYS.map((hobbyKey) => {
+                        const hobbyLabel = t(hobbyKey);
+                        return (
+                          <Pressable
+                            key={hobbyKey}
                             style={[
-                              styles.hobbyText,
-                              { color: theme.text },
-                              editedHobbies.includes(hobby) && styles.hobbyTextSelected,
+                              styles.hobbyChip,
+                              { backgroundColor: theme.surface, borderColor: theme.border },
+                              editedHobbies.includes(hobbyLabel) && styles.hobbyChipSelected,
                             ]}
+                            onPress={() => toggleHobby(hobbyLabel)}
                           >
-                            {hobby}
-                          </AppText>
-                        </Pressable>
-                      ))}
+                            <AppText
+                              style={[
+                                styles.hobbyText,
+                                { color: theme.text },
+                                editedHobbies.includes(hobbyLabel) && styles.hobbyTextSelected,
+                              ]}
+                            >
+                              {hobbyLabel}
+                            </AppText>
+                          </Pressable>
+                        );
+                      })}
                       <Pressable
                         style={[styles.hobbyChip, { backgroundColor: theme.surface, borderColor: theme.border }, styles.hobbyChipOther]}
                         onPress={() => setShowCustomInput(!showCustomInput)}
@@ -455,6 +495,75 @@ export default function ProfileScreen() {
                       ))
                     ) : (
                       <AppText style={styles.emptyText}>{t('profile_hobbies_empty')}</AppText>
+                    )}
+                  </View>
+                )}
+              </View>
+
+              {/* Gift Preferences */}
+              <View style={styles.section}>
+                <AppText style={[styles.label, { color: theme.textSecondary }]}>{t('profile_gift_preferences')}</AppText>
+                {isEditing ? (
+                  <>
+                    <View style={styles.hobbiesGrid}>
+                      {GIFT_PREFERENCE_KEYS.map((prefKey) => {
+                        const prefLabel = t(prefKey);
+                        return (
+                          <Pressable
+                            key={prefKey}
+                            style={[
+                              styles.hobbyChip,
+                              { backgroundColor: theme.surface, borderColor: theme.border },
+                              editedGiftPreferences.includes(prefLabel) && styles.hobbyChipSelected,
+                            ]}
+                            onPress={() => toggleGiftPreference(prefLabel)}
+                          >
+                            <AppText
+                              style={[
+                                styles.hobbyText,
+                                { color: theme.text },
+                                editedGiftPreferences.includes(prefLabel) && styles.hobbyTextSelected,
+                              ]}
+                            >
+                              {prefLabel}
+                            </AppText>
+                          </Pressable>
+                        );
+                      })}
+                      <Pressable
+                        style={[styles.hobbyChip, { backgroundColor: theme.surface, borderColor: theme.border }, styles.hobbyChipOther]}
+                        onPress={() => setShowCustomGiftInput(!showCustomGiftInput)}
+                      >
+                        <AppText style={[styles.hobbyText, { color: theme.text }]}>{t('profile_gift_preferences_other')}</AppText>
+                      </Pressable>
+                    </View>
+
+                    {showCustomGiftInput && (
+                      <View style={styles.customInputContainer}>
+                        <TextInput
+                          style={[styles.customInput, { backgroundColor: theme.inputBg, color: theme.text, borderColor: theme.border }]}
+                          value={customGiftPreference}
+                          onChangeText={setCustomGiftPreference}
+                          placeholder={t('profile_gift_preferences_custom_placeholder')}
+                          placeholderTextColor="#666"
+                          onSubmitEditing={addCustomGiftPreference}
+                        />
+                        <Pressable style={styles.addButton} onPress={addCustomGiftPreference}>
+                          <AppText style={styles.addButtonText}>{t('profile_gift_preferences_add')}</AppText>
+                        </Pressable>
+                      </View>
+                    )}
+                  </>
+                ) : (
+                  <View style={styles.hobbiesList}>
+                    {(user.giftPreferences && user.giftPreferences.length > 0) ? (
+                      user.giftPreferences.map((preference, index) => (
+                        <View key={index} style={styles.hobbyBadge}>
+                          <AppText style={styles.hobbyBadgeText}>{preference}</AppText>
+                        </View>
+                      ))
+                    ) : (
+                      <AppText style={styles.emptyText}>{t('profile_gift_preferences_empty')}</AppText>
                     )}
                   </View>
                 )}
@@ -858,7 +967,6 @@ const styles = StyleSheet.create({
     lineHeight: 18,
   },
   previewContainer: {
-    backgroundColor: '#F6FAFF',
     borderRadius: 12,
     padding: 16,
     borderWidth: 1,
@@ -867,7 +975,6 @@ const styles = StyleSheet.create({
   },
   previewLabel: {
     fontSize: 12,
-    color: '#64748B',
     marginBottom: 4,
     textTransform: 'uppercase',
     letterSpacing: 0.5,

@@ -16,9 +16,10 @@ export default function WelcomeScreen() {
       <AppTitle style={styles.title}>{t('welcome_title')}</AppTitle>
       
       <Image
-        source={require('@/assets/images/logo-regalo.png')}
+        source={require('@/assets/images/logo.svg')}
         style={styles.logo}
         contentFit="contain"
+        tintColor={colors.primary}
       />
 
       <View style={styles.buttonsContainer}>
