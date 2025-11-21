@@ -68,23 +68,24 @@ async function sendExpoPushNotifications(
 }
 
 /**
- * Función programada que se ejecuta todos los días a las 9:00 AM (hora de Alemania)
+ * Función programada que se ejecuta todos los días a las 08:00 AM (hora de Alemania)
  * Envía notificaciones para cumpleaños del día
  */
 export const sendDailyBirthdayReminders = functions
   .region('europe-west1') // Servidor en Europa para mejor latencia
   .pubsub
-  .schedule('08 00 * * *') // Cron: 9:00 AM todos los días
+  .schedule('0 8 * * *') // Cron: 08:00 AM todos los días
   .timeZone(TIMEZONE)
   .onRun(async (context) => {
     console.log('🎂 Starting daily birthday reminders...');
     
     try {
-      const today = new Date();
+      // Obtener la fecha actual en la zona horaria de Alemania
+      const today = new Date(new Date().toLocaleString('en-US', { timeZone: TIMEZONE }));
       const todayMonth = today.getMonth(); // 0-11
       const todayDay = today.getDate(); // 1-31
       
-      console.log(`📅 Checking birthdays for: ${todayDay}/${todayMonth + 1}`);
+      console.log(`📅 Checking birthdays for: ${todayDay}/${todayMonth + 1}/${today.getFullYear()} (${TIMEZONE})`);
       
       // 1. Obtener todos los usuarios
       const usersSnapshot = await db.collection('users').get();
@@ -99,9 +100,12 @@ export const sendDailyBirthdayReminders = functions
       const birthdayUsers = users.filter(user => {
         if (!user.birthdate) return false;
         
-        const birthdate = user.birthdate.toDate();
+        // Convertir el timestamp a fecha en la zona horaria de Alemania
+        const birthdate = new Date(user.birthdate.toDate().toLocaleString('en-US', { timeZone: TIMEZONE }));
         const birthMonth = birthdate.getMonth();
         const birthDay = birthdate.getDate();
+        
+        console.log(`  Checking ${user.name}: birthdate ${birthDay}/${birthMonth + 1} vs today ${todayDay}/${todayMonth + 1}`);
         
         return birthMonth === todayMonth && birthDay === todayDay;
       });
@@ -128,19 +132,20 @@ export const sendDailyBirthdayReminders = functions
   });
 
 /**
- * Función programada que se ejecuta el día 28 de cada mes a las 10:00 AM
+ * Función programada que se ejecuta el día 20 de cada mes a las 09:00 AM
  * Envía resumen de cumpleaños del mes siguiente
  */
 export const sendMonthlyBirthdaySummary = functions
   .region('europe-west1')
   .pubsub
-  .schedule('0 09 20 * *') // Cron: 10:00 AM del día 28 de cada mes
+  .schedule('0 9 20 * *') // Cron: 09:00 AM del día 20 de cada mes
   .timeZone(TIMEZONE)
   .onRun(async (context) => {
     console.log('📊 Starting monthly birthday summary...');
     
     try {
-      const today = new Date();
+      // Obtener la fecha actual en la zona horaria de Alemania
+      const today = new Date(new Date().toLocaleString('en-US', { timeZone: TIMEZONE }));
       const nextMonth = new Date(today.getFullYear(), today.getMonth() + 1, 1);
       const nextMonthNumber = nextMonth.getMonth(); // 0-11
       
