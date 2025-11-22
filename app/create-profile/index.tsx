@@ -21,10 +21,12 @@ import { AppButton } from '@/src/components/ui/AppButton';
 import { colors, fonts } from '@/src/theme';
 import { useAppTheme } from '@/src/theme/ThemeProvider';
 import { useUser } from '@/src/context/UserContext';
+import { useLanguage } from '@/src/context/LanguageContext';
 
 export default function CreateProfileStep1() {
   const router = useRouter();
   const { theme } = useAppTheme();
+  const { t } = useLanguage();
   const { tempUser, setTempUser } = useUser();
   const [name, setName] = useState(tempUser?.name || '');
   const [birthdate, setBirthdate] = useState(
@@ -98,7 +100,7 @@ export default function CreateProfileStep1() {
               </View>
 
               <AppButton
-                title="Save and Continue"
+                title={t('create_profile_username_continue')}
                 onPress={handleContinue}
                 style={styles.button}
               />

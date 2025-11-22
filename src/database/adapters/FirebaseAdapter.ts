@@ -294,10 +294,26 @@ export class FirebaseAdapter implements DatabaseAdapter {
       updatedAt: this.dateToTimestamp(new Date()),
     };
 
-    // Convertir Date a Timestamp si existe
+    // Convertir todos los campos Date a Timestamp
     if (data.birthdate) {
       updateData.birthdate = this.dateToTimestamp(data.birthdate);
     }
+    if (data.nameLastChangeDate) {
+      updateData.nameLastChangeDate = this.dateToTimestamp(data.nameLastChangeDate);
+    }
+    if (data.hideAgeLastChangeDate) {
+      updateData.hideAgeLastChangeDate = this.dateToTimestamp(data.hideAgeLastChangeDate);
+    }
+    if (data.fcmTokenUpdatedAt) {
+      updateData.fcmTokenUpdatedAt = this.dateToTimestamp(data.fcmTokenUpdatedAt);
+    }
+
+    // Filtrar campos undefined (Firestore no los permite)
+    Object.keys(updateData).forEach(key => {
+      if (updateData[key] === undefined) {
+        delete updateData[key];
+      }
+    });
 
     await updateDoc(userRef, updateData);
     console.log('✅ User updated:', id);

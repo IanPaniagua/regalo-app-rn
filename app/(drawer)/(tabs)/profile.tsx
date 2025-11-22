@@ -147,6 +147,18 @@ export default function ProfileScreen() {
     fieldName: 'el nombre',
   });
 
+  // Sincronizar estados cuando el usuario cambie
+  useEffect(() => {
+    if (user) {
+      setEditedName(user.name || '');
+      setEditedUsername(user.username || '');
+      setEditedAvatar(user.avatar || '');
+      setEditedHobbies(user.hobbies || []);
+      setEditedGiftPreferences(user.giftPreferences || []);
+      setHideAge(user.hideAge || false);
+    }
+  }, [user]); // Sincronizar cuando cualquier campo del usuario cambie
+
   // Validar username con debounce
   useEffect(() => {
     if (!isEditing) return;
@@ -267,11 +279,15 @@ export default function ProfileScreen() {
 
       const updateData: any = {
         name: editedName,
-        username: editedUsername ? editedUsername.toLowerCase() : undefined,
         avatar: editedAvatar,
         hobbies: editedHobbies,
         giftPreferences: editedGiftPreferences,
       };
+
+      // Solo incluir username si cambió
+      if (editedUsername && editedUsername.toLowerCase() !== user.username?.toLowerCase()) {
+        updateData.username = editedUsername.toLowerCase();
+      }
 
       // Si el nombre cambió, actualizar contador
       if (nameChanged) {
@@ -280,21 +296,14 @@ export default function ProfileScreen() {
         updateData.nameLastChangeDate = nameLimitData.lastChangeDate;
       }
 
-      // Actualizar en Firebase
-      await db.getAdapter().updateUser(user.id, updateData);
+      // Actualizar en Firebase (devuelve el usuario actualizado completo)
+      const updatedUser = await db.getAdapter().updateUser(user.id, updateData);
 
-      // Actualizar contexto local
+      // Actualizar contexto local con el usuario completo de Firebase
       setUser({
-        ...user,
-        name: editedName,
-        username: editedUsername ? editedUsername.toLowerCase() : undefined,
-        avatar: editedAvatar,
-        hobbies: editedHobbies,
-        giftPreferences: editedGiftPreferences,
-        ...(nameChanged && {
-          nameChangesCount: updateData.nameChangesCount,
-          nameLastChangeDate: updateData.nameLastChangeDate,
-        }),
+        ...updatedUser,
+        avatar: updatedUser.avatar || '🎉',
+        giftPreferences: updatedUser.giftPreferences || [],
       });
 
       // Refrescar calendario para mostrar cambios

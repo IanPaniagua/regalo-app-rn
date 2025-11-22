@@ -80,11 +80,6 @@ export function UserProfileModal({
                 </View>
               </View>
               <AppText style={[styles.userName, { color: theme.text }]}>{user.name}</AppText>
-              {user.email && (
-                <AppText style={[styles.userEmail, { color: theme.textSecondary }]}>
-                  {user.email}
-                </AppText>
-              )}
             </View>
 
             {/* Info Cards */}
@@ -140,6 +135,33 @@ export function UserProfileModal({
                     >
                       <AppText style={[styles.hobbyText, { color: theme.text }]}>
                         {hobby}
+                      </AppText>
+                    </View>
+                  ))}
+                </View>
+              </View>
+            )}
+
+            {/* Preferencias de Regalo */}
+            {user.giftPreferences && user.giftPreferences.length > 0 && (
+              <View style={[styles.section, { backgroundColor: theme.cardBg, borderRadius: 16, padding: 16 }]}>
+                <View style={styles.sectionHeader}>
+                  <Ionicons name="gift-outline" size={20} color={theme.primary} />
+                  <AppText style={[styles.sectionTitle, { color: theme.text }]}>
+                    {t('calendar_profile_gift_preferences_label')}
+                  </AppText>
+                </View>
+                <View style={styles.hobbiesContainer}>
+                  {user.giftPreferences.map((preference, index) => (
+                    <View 
+                      key={index} 
+                      style={[styles.hobbyTag, { 
+                        backgroundColor: theme.surface,
+                        borderColor: theme.primary,
+                      }]}
+                    >
+                      <AppText style={[styles.hobbyText, { color: theme.text }]}>
+                        {preference}
                       </AppText>
                     </View>
                   ))}
