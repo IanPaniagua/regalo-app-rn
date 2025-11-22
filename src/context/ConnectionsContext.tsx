@@ -4,6 +4,7 @@ import { Connection, ConnectionInvitation, User } from '@/src/database/types';
 import { useUser } from './UserContext';
 import * as Linking from 'expo-linking';
 import { Share } from 'react-native';
+import * as Notifications from 'expo-notifications';
 
 interface ConnectionsContextType {
   connections: Connection[];
@@ -117,6 +118,21 @@ export function ConnectionsProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     refreshConnections();
   }, [user?.id]);
+
+  // Actualizar badge count cuando cambien las solicitudes pendientes
+  useEffect(() => {
+    const updateBadgeCount = async () => {
+      try {
+        const badgeCount = notificationCount;
+        await Notifications.setBadgeCountAsync(badgeCount);
+        console.log(`🔔 Badge count updated: ${badgeCount}`);
+      } catch (error) {
+        console.error('❌ Error updating badge count:', error);
+      }
+    };
+
+    updateBadgeCount();
+  }, [notificationCount]);
 
   // Crear invitación
   // ✅ Memoizado para evitar recrear la función en cada render
