@@ -1,4 +1,4 @@
-import { createContext, useContext, ReactNode, useState, useEffect } from 'react';
+import { createContext, useContext, ReactNode, useState, useEffect, useMemo, useCallback } from 'react';
 import { db } from '@/src/database';
 import { Connection, ConnectionInvitation, User } from '@/src/database/types';
 import { useUser } from './UserContext';
@@ -38,7 +38,8 @@ export function ConnectionsProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(false);
 
   // Cargar conexiones del usuario
-  const refreshConnections = async () => {
+  // ✅ Memoizado para evitar recrear la función en cada render
+  const refreshConnections = useCallback(async () => {
     if (!user?.id) {
       setConnections([]);
       setConnectedUsers([]);
@@ -50,7 +51,9 @@ export function ConnectionsProvider({ children }: { children: ReactNode }) {
       setLoading(true);
 
       // Cargar todas las conexiones del usuario
+      console.log('🔄 Loading connections for user:', user.id);
       const userConnections = await db.getAdapter().getConnectionsByUser(user.id);
+      console.log('✅ Raw connections loaded:', userConnections.length);
       setConnections(userConnections);
 
       // Cargar usuarios conectados (solo aceptados)
@@ -61,28 +64,35 @@ export function ConnectionsProvider({ children }: { children: ReactNode }) {
       const pending = await db.getAdapter().getPendingInvitations(user.id);
       setPendingInvitations(pending);
 
-      // Cargar detalles de usuarios que enviaron invitaciones
-      const pendingWithDetails = await Promise.all(
-        pending.map(async (invitation) => {
-          const fromUser = await db.getAdapter().getUser(invitation.userId1);
-          return { ...invitation, fromUser: fromUser || undefined };
-        })
-      );
+      // ✅ OPTIMIZACIÓN: Cargar detalles de usuarios en batch (evita N+1 queries)
+      const pendingUserIds = pending.map(inv => inv.userId1);
+      const pendingUsers = await db.getAdapter().getUsersByIds(pendingUserIds);
+      const pendingUsersMap = new Map<string, User>(pendingUsers.map((u: User) => [u.id, u]));
+
+      const pendingWithDetails = pending.map(invitation => ({
+        ...invitation,
+        fromUser: pendingUsersMap.get(invitation.userId1),
+      }));
       setPendingInvitationsWithDetails(pendingWithDetails);
 
       // Cargar conexiones aceptadas no vistas
       const accepted = await db.getAdapter().getAcceptedConnections(user.id);
       setAcceptedConnections(accepted);
 
-      // Cargar detalles del otro usuario en conexiones aceptadas
-      const acceptedWithDetails = await Promise.all(
-        accepted.map(async (connection) => {
-          // Determinar quién es el "otro" usuario
-          const otherUserId = connection.userId1 === user.id ? connection.userId2 : connection.userId1;
-          const otherUser = await db.getAdapter().getUser(otherUserId);
-          return { ...connection, otherUser: otherUser || undefined };
-        })
+      // ✅ OPTIMIZACIÓN: Cargar detalles del otro usuario en batch (evita N+1 queries)
+      const acceptedUserIds = accepted.map(conn =>
+        conn.userId1 === user.id ? conn.userId2 : conn.userId1
       );
+      const acceptedUsers = await db.getAdapter().getUsersByIds(acceptedUserIds);
+      const acceptedUsersMap = new Map<string, User>(acceptedUsers.map((u: User) => [u.id, u]));
+
+      const acceptedWithDetails = accepted.map(connection => {
+        const otherUserId = connection.userId1 === user.id ? connection.userId2 : connection.userId1;
+        return {
+          ...connection,
+          otherUser: acceptedUsersMap.get(otherUserId),
+        };
+      });
       setAcceptedConnectionsWithDetails(acceptedWithDetails);
 
       // Calcular contador de notificaciones
@@ -101,7 +111,7 @@ export function ConnectionsProvider({ children }: { children: ReactNode }) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user?.id]);
 
   // Cargar conexiones al montar o cuando cambie el usuario
   useEffect(() => {
@@ -109,7 +119,8 @@ export function ConnectionsProvider({ children }: { children: ReactNode }) {
   }, [user?.id]);
 
   // Crear invitación
-  const createInvitation = async (): Promise<string> => {
+  // ✅ Memoizado para evitar recrear la función en cada render
+  const createInvitation = useCallback(async (): Promise<string> => {
     if (!user?.id) {
       throw new Error('Usuario no autenticado');
     }
@@ -136,10 +147,11 @@ export function ConnectionsProvider({ children }: { children: ReactNode }) {
       console.error('❌ Error creating invitation:', error);
       throw error;
     }
-  };
+  }, [user?.id, user?.name, user?.avatar]);
 
   // Enviar invitación por username
-  const sendInvitationByUsername = async (username: string): Promise<void> => {
+  // ✅ Memoizado para evitar recrear la función en cada render
+  const sendInvitationByUsername = useCallback(async (username: string): Promise<void> => {
     if (!user?.id) {
       throw new Error('Usuario no autenticado');
     }
@@ -152,10 +164,11 @@ export function ConnectionsProvider({ children }: { children: ReactNode }) {
       console.error('❌ Error sending invitation:', error);
       throw error;
     }
-  };
+  }, [user?.id, refreshConnections]);
 
   // Compartir link de invitación
-  const shareInvitationLink = async (link: string): Promise<void> => {
+  // ✅ Memoizado para evitar recrear la función en cada render
+  const shareInvitationLink = useCallback(async (link: string): Promise<void> => {
     try {
       await Share.share({
         message: `¡Únete a mi red de cumpleaños! 🎉\n\n${link}`,
@@ -165,10 +178,11 @@ export function ConnectionsProvider({ children }: { children: ReactNode }) {
       console.error('❌ Error sharing invitation:', error);
       throw error;
     }
-  };
+  }, []);
 
   // Aceptar invitación
-  const acceptInvitation = async (connectionId: string): Promise<void> => {
+  // ✅ Memoizado para evitar recrear la función en cada render
+  const acceptInvitation = useCallback(async (connectionId: string): Promise<void> => {
     try {
       await db.getAdapter().updateConnectionStatus(connectionId, 'accepted');
       console.log('✅ Invitation accepted:', connectionId);
@@ -177,10 +191,11 @@ export function ConnectionsProvider({ children }: { children: ReactNode }) {
       console.error('❌ Error accepting invitation:', error);
       throw error;
     }
-  };
+  }, [refreshConnections]);
 
   // Rechazar invitación
-  const rejectInvitation = async (connectionId: string): Promise<void> => {
+  // ✅ Memoizado para evitar recrear la función en cada render
+  const rejectInvitation = useCallback(async (connectionId: string): Promise<void> => {
     try {
       await db.getAdapter().updateConnectionStatus(connectionId, 'rejected');
       console.log('✅ Invitation rejected:', connectionId);
@@ -189,10 +204,11 @@ export function ConnectionsProvider({ children }: { children: ReactNode }) {
       console.error('❌ Error rejecting invitation:', error);
       throw error;
     }
-  };
+  }, [refreshConnections]);
 
   // Desconectar usuario
-  const disconnectUser = async (connectionId: string): Promise<void> => {
+  // ✅ Memoizado para evitar recrear la función en cada render
+  const disconnectUser = useCallback(async (connectionId: string): Promise<void> => {
     try {
       await db.getAdapter().deleteConnection(connectionId);
       console.log('✅ User disconnected:', connectionId);
@@ -201,10 +217,11 @@ export function ConnectionsProvider({ children }: { children: ReactNode }) {
       console.error('❌ Error disconnecting user:', error);
       throw error;
     }
-  };
+  }, [refreshConnections]);
 
   // Marcar notificación como vista
-  const markAsViewed = async (connectionId: string): Promise<void> => {
+  // ✅ Memoizado para evitar recrear la función en cada render
+  const markAsViewed = useCallback(async (connectionId: string): Promise<void> => {
     if (!user?.id) return;
 
     try {
@@ -215,29 +232,50 @@ export function ConnectionsProvider({ children }: { children: ReactNode }) {
       console.error('❌ Error marking as viewed:', error);
       throw error;
     }
-  };
+  }, [user?.id, refreshConnections]);
+
+  // ✅ Memoizar el value del contexto para evitar re-renders innecesarios
+  const contextValue = useMemo(
+    () => ({
+      connections,
+      connectedUsers,
+      pendingInvitations,
+      pendingInvitationsWithDetails,
+      acceptedConnections,
+      acceptedConnectionsWithDetails,
+      notificationCount,
+      loading,
+      createInvitation,
+      sendInvitationByUsername,
+      acceptInvitation,
+      rejectInvitation,
+      disconnectUser,
+      markAsViewed,
+      refreshConnections,
+      shareInvitationLink,
+    }),
+    [
+      connections,
+      connectedUsers,
+      pendingInvitations,
+      pendingInvitationsWithDetails,
+      acceptedConnections,
+      acceptedConnectionsWithDetails,
+      notificationCount,
+      loading,
+      createInvitation,
+      sendInvitationByUsername,
+      acceptInvitation,
+      rejectInvitation,
+      disconnectUser,
+      markAsViewed,
+      refreshConnections,
+      shareInvitationLink,
+    ]
+  );
 
   return (
-    <ConnectionsContext.Provider
-      value={{
-        connections,
-        connectedUsers,
-        pendingInvitations,
-        pendingInvitationsWithDetails,
-        acceptedConnections,
-        acceptedConnectionsWithDetails,
-        notificationCount,
-        loading,
-        createInvitation,
-        sendInvitationByUsername,
-        acceptInvitation,
-        rejectInvitation,
-        disconnectUser,
-        markAsViewed,
-        refreshConnections,
-        shareInvitationLink,
-      }}
-    >
+    <ConnectionsContext.Provider value={contextValue}>
       {children}
     </ConnectionsContext.Provider>
   );

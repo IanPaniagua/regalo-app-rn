@@ -52,8 +52,8 @@ export class MockAdapter implements DatabaseAdapter {
     console.log('Mock database disconnected (data preserved)');
   }
 
-  async createUser(userData: Omit<User, 'id' | 'createdAt' | 'updatedAt'>): Promise<User> {
-    const id = `user-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+  async createUser(userData: Omit<User, 'id' | 'createdAt' | 'updatedAt'>, userId?: string): Promise<User> {
+    const id = userId || `user-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
     const now = new Date();
 
     const user: User = {

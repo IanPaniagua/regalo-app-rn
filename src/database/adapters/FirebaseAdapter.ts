@@ -11,7 +11,10 @@ import {
   deleteDoc,
   query,
   where,
+  limit,
   Timestamp,
+  enableIndexedDbPersistence,
+  documentId,
 } from 'firebase/firestore';
 import {
   getAuth,
@@ -50,6 +53,19 @@ export class FirebaseAdapter implements DatabaseAdapter {
       console.log('ℹ️ Auth will be initialized by authService with AsyncStorage persistence');
 
       this.db = getFirestore(this.app);
+
+      // ✅ Habilitar caché offline para reducir lecturas de Firestore
+      try {
+        await enableIndexedDbPersistence(this.db);
+        console.log('✅ Firestore offline persistence enabled');
+      } catch (err: any) {
+        if (err.code === 'failed-precondition') {
+          console.warn('⚠️ Multiple tabs open, persistence can only be enabled in one tab at a time.');
+        } else if (err.code === 'unimplemented') {
+          console.warn('⚠️ Browser doesn\'t support persistence');
+        }
+      }
+
       this.initialized = true;
       console.log('✅ Firebase Firestore initialized successfully');
     } catch (error) {
@@ -133,13 +149,14 @@ export class FirebaseAdapter implements DatabaseAdapter {
   }
 
   // USUARIOS
-  async createUser(userData: Omit<User, 'id' | 'createdAt' | 'updatedAt'>): Promise<User> {
+  async createUser(userData: Omit<User, 'id' | 'createdAt' | 'updatedAt'>, userId?: string): Promise<User> {
     const db = this.ensureInitialized();
 
     // Crear documento en Firestore
-    // NOTA: La autenticación se maneja por separado en authService
+    // Si se proporciona userId (UID de Auth), usarlo como ID del documento
+    // Esto asegura que el ID del documento coincida con el UID de Firebase Auth
     const usersRef = collection(db, 'users');
-    const newUserRef = doc(usersRef);
+    const newUserRef = userId ? doc(usersRef, userId) : doc(usersRef);
 
     const now = new Date();
     const user: User = {
@@ -196,7 +213,7 @@ export class FirebaseAdapter implements DatabaseAdapter {
   async getUserByEmail(email: string): Promise<User | null> {
     const db = this.ensureInitialized();
     const usersRef = collection(db, 'users');
-    const q = query(usersRef, where('email', '==', email));
+    const q = query(usersRef, where('email', '==', email), limit(1));
     const querySnapshot = await getDocs(q);
 
     if (querySnapshot.empty) {
@@ -231,7 +248,7 @@ export class FirebaseAdapter implements DatabaseAdapter {
     const usersRef = collection(db, 'users');
     // Buscar username en minúsculas para evitar duplicados como @User y @user
     const normalizedUsername = username.toLowerCase();
-    const q = query(usersRef, where('username', '==', normalizedUsername));
+    const q = query(usersRef, where('username', '==', normalizedUsername), limit(1));
     const querySnapshot = await getDocs(q);
     return querySnapshot.empty;
   }
@@ -240,7 +257,7 @@ export class FirebaseAdapter implements DatabaseAdapter {
     const db = this.ensureInitialized();
     const usersRef = collection(db, 'users');
     const normalizedUsername = username.toLowerCase();
-    const q = query(usersRef, where('username', '==', normalizedUsername));
+    const q = query(usersRef, where('username', '==', normalizedUsername), limit(1));
     const querySnapshot = await getDocs(q);
 
     if (querySnapshot.empty) {
@@ -326,6 +343,51 @@ export class FirebaseAdapter implements DatabaseAdapter {
         updatedAt: data.updatedAt ? this.timestampToDate(data.updatedAt) : undefined,
       };
     });
+  }
+
+  // ✅ OPTIMIZACIÓN: Obtener múltiples usuarios en batch (evita N+1 queries)
+  async getUsersByIds(userIds: string[]): Promise<User[]> {
+    if (userIds.length === 0) return [];
+
+    const db = this.ensureInitialized();
+    const usersRef = collection(db, 'users');
+
+    // Firestore limita 'in' queries a 10 elementos, dividir en chunks
+    const chunks: string[][] = [];
+    for (let i = 0; i < userIds.length; i += 10) {
+      chunks.push(userIds.slice(i, i + 10));
+    }
+
+    const results = await Promise.all(
+      chunks.map(async (chunk) => {
+        const q = query(usersRef, where(documentId(), 'in', chunk));
+        const snapshot = await getDocs(q);
+        return snapshot.docs.map(doc => {
+          const data = doc.data();
+          return {
+            id: doc.id,
+            name: data.name,
+            username: data.username,
+            email: data.email,
+            birthdate: this.timestampToDate(data.birthdate),
+            hobbies: data.hobbies || [],
+            giftPreferences: data.giftPreferences || [],
+            avatar: data.avatar,
+            hideAge: data.hideAge,
+            hideAgeChangesCount: data.hideAgeChangesCount,
+            hideAgeLastChangeDate: data.hideAgeLastChangeDate ? this.timestampToDate(data.hideAgeLastChangeDate) : undefined,
+            nameChangesCount: data.nameChangesCount,
+            nameLastChangeDate: data.nameLastChangeDate ? this.timestampToDate(data.nameLastChangeDate) : undefined,
+            fcmToken: data.fcmToken,
+            fcmTokenUpdatedAt: data.fcmTokenUpdatedAt ? this.timestampToDate(data.fcmTokenUpdatedAt) : undefined,
+            createdAt: data.createdAt ? this.timestampToDate(data.createdAt) : undefined,
+            updatedAt: data.updatedAt ? this.timestampToDate(data.updatedAt) : undefined,
+          };
+        });
+      })
+    );
+
+    return results.flat();
   }
 
   // EVENTOS DE CUMPLEAÑOS
