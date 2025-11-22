@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { View, StyleSheet, ScrollView, Pressable, Dimensions, Modal, TextInput, Alert, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { AppContainer } from '@/src/components/ui/AppContainer';
 import { AppTitle } from '@/src/components/ui/AppTitle';
@@ -40,6 +41,11 @@ export default function CalendarTabScreen() {
   const [manualBirthdate, setManualBirthdate] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [isAddingManual, setIsAddingManual] = useState(false);
+  
+  // Estado para menú de opciones
+  const [showAddMenu, setShowAddMenu] = useState(false);
+  
+  const router = useRouter();
 
   const getDaysInMonth = (date: Date) => {
     const year = date.getFullYear();
@@ -75,6 +81,12 @@ export default function CalendarTabScreen() {
   };
 
   const handleUserSelect = (user: CalendarEntry) => {
+    // Si es un cumpleaños añadido manualmente, no abrimos el modal OG de perfil
+    // y tampoco tocamos selectedUser para no bloquear los otros modales
+    if ('isManual' in user && user.isManual) {
+      return;
+    }
+
     setSelectedUser(user);
   };
 
@@ -197,9 +209,51 @@ export default function CalendarTabScreen() {
   return (
     <AppContainer>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
-        <AppTitle style={styles.title}>{t('calendar_title')}</AppTitle>
-        
-        {/* Header del mes */}
+        {/* Título + botón Add en la misma fila */}
+        <View style={styles.topHeader}>
+          <AppTitle style={styles.title}>{t('calendar_title')}</AppTitle>
+          
+          {/* Botón Add + con menú */}
+          <View style={styles.addButtonContainer}>
+            <Pressable 
+              style={[styles.addButton, { backgroundColor: colors.primary }]}
+              onPress={() => setShowAddMenu(!showAddMenu)}
+            >
+              <AppText style={styles.addButtonText}>Add</AppText>
+              <Ionicons name="add" size={20} color="#000" />
+            </Pressable>
+            
+            {/* Menú desplegable */}
+            {showAddMenu && (
+              <View style={[styles.addMenu, { backgroundColor: theme.cardBg, borderColor: theme.border }]}>
+                <Pressable 
+                  style={[styles.menuItem, { borderBottomColor: theme.border }]}
+                  onPress={() => {
+                    setShowAddMenu(false);
+                    // @ts-ignore - Expo Router typed routes
+                    router.push('/invite-by-username');
+                  }}
+                >
+                  <Ionicons name="person-add" size={20} color={colors.primary} />
+                  <AppText style={[styles.menuItemText, { color: theme.text }]}>Create Connection</AppText>
+                </Pressable>
+                
+                <Pressable 
+                  style={[styles.menuItem, { borderBottomWidth: 0 }]}
+                  onPress={() => {
+                    setShowAddMenu(false);
+                    setShowAddManualModal(true);
+                  }}
+                >
+                  <Ionicons name="calendar" size={20} color={colors.primary} />
+                  <AppText style={[styles.menuItemText, { color: theme.text }]}>Add Manually</AppText>
+                </Pressable>
+              </View>
+            )}
+          </View>
+        </View>
+
+        {/* Header del mes, centrado */}
         <View style={styles.monthHeader}>
           <Pressable onPress={previousMonth} style={styles.arrowButton}>
             <Ionicons name="chevron-back" size={28} color={colors.primary} />
@@ -289,9 +343,11 @@ export default function CalendarTabScreen() {
                   </View>
                   <View style={styles.userInfo}>
                     <AppText style={[styles.userName, { color: theme.text }]}>{user.name}</AppText>
-                    <AppText style={[styles.userAge, { color: theme.textMuted }]}>
-                      {new Date().getFullYear() - user.birthdate.getFullYear()} {t('calendar_day_item_age_suffix')}
-                    </AppText>
+                    {!('isManual' in user && user.isManual) && (
+                      <AppText style={[styles.userAge, { color: theme.textMuted }]}>
+                        {new Date().getFullYear() - user.birthdate.getFullYear()} {t('calendar_day_item_age_suffix')}
+                      </AppText>
+                    )}
                   </View>
                   <Ionicons name="chevron-forward" size={20} color={colors.primary} />
                 </Pressable>
@@ -362,13 +418,6 @@ export default function CalendarTabScreen() {
         />
       )}
 
-      {/* Botón flotante para añadir cumpleaños manual */}
-      <Pressable
-        style={[styles.floatingButton, { backgroundColor: colors.primary }]}
-        onPress={() => setShowAddManualModal(true)}
-      >
-        <Ionicons name="add" size={28} color="#000" />
-      </Pressable>
 
       {/* Modal: Añadir cumpleaños manual */}
       <Modal
@@ -425,7 +474,6 @@ export default function CalendarTabScreen() {
                       setManualBirthdate(selectedDate);
                     }
                   }}
-                  maximumDate={new Date()}
                 />
               )}
 
@@ -433,7 +481,7 @@ export default function CalendarTabScreen() {
                 title={isAddingManual ? "Añadiendo..." : "Añadir cumpleaños"}
                 onPress={handleAddManualBirthday}
                 disabled={isAddingManual || !manualName.trim()}
-                style={styles.addButton}
+                style={styles.submitButton}
               />
             </View>
           </Pressable>
@@ -764,20 +812,59 @@ const styles = StyleSheet.create({
     marginTop: 20,
     marginBottom: 10,
   },
-  floatingButton: {
-    position: 'absolute',
-    bottom: 20,
-    right: 20,
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    justifyContent: 'center',
+  topHeader: {
+    position: 'relative',
     alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16,
+  },
+  headerContainer: {
+    position: 'relative',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  addButtonContainer: {
+    position: 'absolute',
+    right: 0,
+    top: 0,
+  },
+  addButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    gap: 6,
+  },
+  addButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#000',
+  },
+  addMenu: {
+    position: 'absolute',
+    top: 45,
+    right: 0,
+    minWidth: 200,
+    borderRadius: 12,
+    borderWidth: 1,
     elevation: 8,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    zIndex: 1000,
+  },
+  menuItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+    gap: 12,
+    borderBottomWidth: 1,
+  },
+  menuItemText: {
+    fontSize: 15,
+    fontWeight: '500',
   },
   addManualForm: {
     padding: 20,
@@ -808,7 +895,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     flex: 1,
   },
-  addButton: {
+  submitButton: {
     marginTop: 10,
   },
 });
