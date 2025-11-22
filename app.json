@@ -2,7 +2,7 @@
   "expo": {
     "name": "regalo-app",
     "slug": "regalo-app",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "regaloapp",
@@ -11,7 +11,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.manolodev.regalo-app",
-      "buildNumber": "8",
+      "buildNumber": "1",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       },

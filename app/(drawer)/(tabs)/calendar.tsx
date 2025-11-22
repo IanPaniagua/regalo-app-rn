@@ -230,8 +230,8 @@ export default function CalendarTabScreen() {
                   style={[styles.menuItem, { borderBottomColor: theme.border }]}
                   onPress={() => {
                     setShowAddMenu(false);
-                    // @ts-ignore - Expo Router typed routes
-                    router.push('/invite-by-username');
+                    // Ir a la pestaña de conexiones, donde está el formulario de invitar por username
+                    router.push('/(drawer)/(tabs)/connect' as any);
                   }}
                 >
                   <Ionicons name="person-add" size={20} color={colors.primary} />
