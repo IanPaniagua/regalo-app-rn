@@ -68,10 +68,20 @@ export default function LoginScreen() {
         id: dbUser.id,
         authUid: authUser.uid,
         name: dbUser.name,
+        username: dbUser.username,
         email: dbUser.email,
         birthdate: dbUser.birthdate,
         hobbies: dbUser.hobbies,
+        giftPreferences: dbUser.giftPreferences || [],
         avatar: dbUser.avatar || '👤',
+        hideAge: dbUser.hideAge,
+        hideAgeChangesCount: dbUser.hideAgeChangesCount,
+        hideAgeLastChangeDate: dbUser.hideAgeLastChangeDate,
+        nameChangesCount: dbUser.nameChangesCount,
+        nameLastChangeDate: dbUser.nameLastChangeDate,
+        fcmToken: dbUser.fcmToken,
+        fcmTokenUpdatedAt: dbUser.fcmTokenUpdatedAt,
+        preferredLanguage: dbUser.preferredLanguage,
       });
 
       // Refrescar calendario
