@@ -935,6 +935,43 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
+  // Sync language with Firestore when user logs in
+  useEffect(() => {
+    if (!user?.id) return;
+
+    const syncLanguageWithFirestore = async () => {
+      try {
+        if (user.preferredLanguage) {
+          // User has a preferred language in Firestore - use it
+          const firestoreLang = user.preferredLanguage;
+          if (firestoreLang === 'es' || firestoreLang === 'en' || firestoreLang === 'de') {
+            const currentLang = await AsyncStorage.getItem(STORAGE_KEY);
+            
+            // Only update if different from current
+            if (currentLang !== firestoreLang) {
+              await AsyncStorage.setItem(STORAGE_KEY, firestoreLang);
+              setLang(firestoreLang);
+              console.log(`✅ Language synced from Firestore: ${firestoreLang}`);
+            }
+          }
+        } else {
+          // User doesn't have a preferred language - save current language to Firestore
+          const currentLang = await AsyncStorage.getItem(STORAGE_KEY);
+          if (currentLang === 'es' || currentLang === 'en' || currentLang === 'de') {
+            await db.getAdapter().updateUser(user.id!, {
+              preferredLanguage: currentLang as 'es' | 'en' | 'de',
+            });
+            console.log(`✅ Initial language saved to Firestore: ${currentLang}`);
+          }
+        }
+      } catch (error) {
+        console.error('❌ Error syncing language with Firestore:', error);
+      }
+    };
+
+    syncLanguageWithFirestore();
+  }, [user?.id, user?.preferredLanguage]);
+
   // When user changes language, save to storage AND Firestore
   // DO NOT update state - language will change on next app launch
   const setLanguage = async (next: Lang) => {
