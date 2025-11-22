@@ -57,7 +57,7 @@ export interface ConnectionInvitation {
 // Interfaz genérica para operaciones de base de datos
 export interface DatabaseAdapter {
   // Usuarios
-  createUser(user: Omit<User, 'id' | 'createdAt' | 'updatedAt'>): Promise<User>;
+  createUser(user: Omit<User, 'id' | 'createdAt' | 'updatedAt'>, userId?: string): Promise<User>;
   getUser(id: string): Promise<User | null>;
   getUserByEmail(email: string): Promise<User | null>;
   getUserByUsername(username: string): Promise<User | null>;
@@ -65,11 +65,12 @@ export interface DatabaseAdapter {
   updateUser(id: string, data: Partial<User>): Promise<User>;
   deleteUser(id: string): Promise<void>;
   getAllUsers(): Promise<User[]>;
+  getUsersByIds(userIds: string[]): Promise<User[]>; // ✅ Batch query para evitar N+1
 
   // Eventos de cumpleaños
   getBirthdaysByDate(date: Date): Promise<BirthdayEvent[]>;
   getBirthdaysByMonth(year: number, month: number): Promise<BirthdayEvent[]>;
-  
+
   // Conexiones entre usuarios
   createConnectionInvitation(invitation: Omit<ConnectionInvitation, 'id' | 'createdAt'>): Promise<ConnectionInvitation>;
   getConnectionInvitation(invitationId: string): Promise<ConnectionInvitation | null>;
@@ -82,7 +83,7 @@ export interface DatabaseAdapter {
   markConnectionAsViewed(connectionId: string, userId: string): Promise<void>; // Marcar como visto
   deleteConnection(connectionId: string): Promise<void>; // Para desconectar usuarios
   sendConnectionRequestByUsername(fromUserId: string, toUsername: string): Promise<Connection>; // Enviar invitación por username
-  
+
   // Utilidades
   initialize(): Promise<void>;
   disconnect(): Promise<void>;

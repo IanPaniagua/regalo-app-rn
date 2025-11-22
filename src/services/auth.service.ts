@@ -1,4 +1,4 @@
-import { 
+import {
   getAuth,
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
@@ -130,7 +130,7 @@ export class AuthService {
       // 1. Crear usuario en Firebase Auth
       const authUser = await this.signUp(data.email, data.password, data.name);
 
-      // 2. Crear perfil en la base de datos
+      // 2. Crear perfil en la base de datos usando el UID de Auth como ID del documento
       const dbUser = await db.getAdapter().createUser({
         name: data.name,
         username: data.username,
@@ -139,11 +139,12 @@ export class AuthService {
         hobbies: data.hobbies,
         giftPreferences: data.giftPreferences,
         avatar: data.avatar,
-      });
+      }, authUser.uid); // ✅ Usar UID de Auth como ID del documento
 
       console.log('✅ Complete user profile created:', {
         authUid: authUser.uid,
         dbUserId: dbUser.id,
+        idsMatch: authUser.uid === dbUser.id, // Deberían coincidir
       });
 
       return {
