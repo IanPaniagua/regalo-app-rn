@@ -15,6 +15,7 @@ export interface User {
   nameLastChangeDate?: Date; // Fecha del último cambio de nombre
   fcmToken?: string; // Token de Firebase Cloud Messaging para notificaciones push
   fcmTokenUpdatedAt?: Date; // Fecha de última actualización del token
+  preferredLanguage?: 'es' | 'en' | 'de'; // Idioma preferido del usuario para notificaciones
   createdAt?: Date;
   updatedAt?: Date;
 }

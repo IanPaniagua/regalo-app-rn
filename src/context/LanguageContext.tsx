@@ -1,6 +1,8 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { View, ActivityIndicator } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { db } from '@/src/database';
+import { useUser } from '@/src/context/UserContext';
 
 export type Lang = 'es' | 'en' | 'de';
 
@@ -129,6 +131,14 @@ const translations = {
     month_october: 'Octubre',
     month_november: 'Noviembre',
     month_december: 'Diciembre',
+
+    // Birthday Notification Modal
+    birthday_modal_title_single: '¡Cumpleaños!',
+    birthday_modal_title_multiple: '¡Cumpleaños de hoy!',
+    birthday_modal_loading: 'Cargando...',
+    birthday_modal_empty: 'No hay cumpleaños hoy',
+    birthday_modal_age_text: 'Cumple {{age}} años hoy 🎂',
+    birthday_modal_close_button: 'Cerrar',
 
     // Connect
     connect_title: 'Conectar',
@@ -408,6 +418,14 @@ const translations = {
     month_november: 'November',
     month_december: 'December',
 
+    // Birthday Notification Modal
+    birthday_modal_title_single: 'Birthday!',
+    birthday_modal_title_multiple: 'Birthdays Today!',
+    birthday_modal_loading: 'Loading...',
+    birthday_modal_empty: 'No birthdays today',
+    birthday_modal_age_text: 'Turns {{age}} years old today 🎂',
+    birthday_modal_close_button: 'Close',
+
     // Connect
     connect_title: 'Connect',
     connect_subtitle: 'Connect with friends to see their birthdays',
@@ -686,6 +704,14 @@ const translations = {
     month_november: 'November',
     month_december: 'Dezember',
 
+    // Birthday Notification Modal
+    birthday_modal_title_single: 'Geburtstag!',
+    birthday_modal_title_multiple: 'Geburtstage heute!',
+    birthday_modal_loading: 'Laden...',
+    birthday_modal_empty: 'Heute keine Geburtstage',
+    birthday_modal_age_text: 'Wird heute {{age}} Jahre alt 🎂',
+    birthday_modal_close_button: 'Schließen',
+
     // Connect
     connect_title: 'Verbinden',
     connect_subtitle: 'Verbinde dich mit Freunden, um ihre Geburtstage zu sehen',
@@ -864,6 +890,7 @@ function resolveAppLanguage(locale: string | null | undefined): Lang {
 export function LanguageProvider({ children }: { children: ReactNode }) {
   const [lang, setLang] = useState<Lang>('en');
   const [isLoading, setIsLoading] = useState(true);
+  const { user } = useUser();
 
   // Load language ONCE at startup - this runs only on app initialization
   useEffect(() => {
@@ -908,11 +935,19 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
-  // When user changes language, ONLY save to storage
+  // When user changes language, save to storage AND Firestore
   // DO NOT update state - language will change on next app launch
   const setLanguage = async (next: Lang) => {
     try {
       await AsyncStorage.setItem(STORAGE_KEY, next);
+      
+      // Also save to Firestore if user is logged in
+      if (user?.id) {
+        await db.getAdapter().updateUser(user.id, {
+          preferredLanguage: next,
+        });
+        console.log(`✅ Language preference saved to Firestore: ${next}`);
+      }
       // DO NOT call setLang(next) here - we want language to change only on app restart
     } catch (error) {
       console.error('❌ Error saving language:', error);
