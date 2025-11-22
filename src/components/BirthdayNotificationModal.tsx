@@ -3,6 +3,7 @@ import { View, StyleSheet, Modal, Pressable, ScrollView, useColorScheme, Text } 
 import { Ionicons } from '@expo/vector-icons';
 import { colors, lightTheme, darkTheme, fonts } from '@/src/theme';
 import { db } from '@/src/database';
+import { useLanguage } from '@/src/context/LanguageContext';
 
 interface BirthdayNotificationModalProps {
   visible: boolean;
@@ -24,6 +25,7 @@ export function BirthdayNotificationModal({
 }: BirthdayNotificationModalProps) {
   const colorScheme = useColorScheme();
   const theme = colorScheme === 'dark' ? darkTheme : lightTheme;
+  const { t } = useLanguage();
   const [birthdayUsers, setBirthdayUsers] = useState<BirthdayUser[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -110,7 +112,7 @@ export function BirthdayNotificationModal({
               <Ionicons name="gift" size={28} color={theme.primary} />
             </View>
             <Text style={[styles.headerTitle, { color: theme.text }]}>
-              🎉 {birthdayUsers.length === 1 ? '¡Cumpleaños!' : '¡Cumpleaños de hoy!'}
+              🎉 {birthdayUsers.length === 1 ? t('birthday_modal_title_single') : t('birthday_modal_title_multiple')}
             </Text>
             <Pressable onPress={onClose} hitSlop={8}>
               <Ionicons name="close" size={24} color={theme.textMuted} />
@@ -121,11 +123,11 @@ export function BirthdayNotificationModal({
           <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
             {loading ? (
               <Text style={[styles.loadingText, { color: theme.textMuted }]}>
-                Cargando...
+                {t('birthday_modal_loading')}
               </Text>
             ) : birthdayUsers.length === 0 ? (
               <Text style={[styles.emptyText, { color: theme.textMuted }]}>
-                No hay cumpleaños hoy
+                {t('birthday_modal_empty')}
               </Text>
             ) : (
               birthdayUsers.map((user) => (
@@ -141,7 +143,7 @@ export function BirthdayNotificationModal({
                       {user.name}
                     </Text>
                     <Text style={[styles.userAge, { color: theme.textSecondary }]}>
-                      Cumple {user.age} años hoy 🎂
+                      {t('birthday_modal_age_text').replace('{{age}}', user.age.toString())}
                     </Text>
                   </View>
                   <View style={styles.celebrationIcon}>
@@ -158,7 +160,7 @@ export function BirthdayNotificationModal({
               style={[styles.closeButton, { backgroundColor: theme.primary }]}
               onPress={onClose}
             >
-              <Text style={styles.closeButtonText}>Cerrar</Text>
+              <Text style={styles.closeButtonText}>{t('birthday_modal_close_button')}</Text>
             </Pressable>
           </View>
         </Pressable>

@@ -79,8 +79,8 @@ export default function RootLayout() {
         </View>
       ) : (
         // Providers solo se montan después de que la DB esté lista
-        <LanguageProvider>
-          <UserProvider>
+        <UserProvider>
+          <LanguageProvider>
             <NotificationsProvider>
               <ConnectionsProvider>
                 <BirthdaysProvider>
@@ -98,8 +98,8 @@ export default function RootLayout() {
                 </BirthdaysProvider>
               </ConnectionsProvider>
             </NotificationsProvider>
-          </UserProvider>
-        </LanguageProvider>
+          </LanguageProvider>
+        </UserProvider>
       )}
     </NavigationThemeProvider>
   );

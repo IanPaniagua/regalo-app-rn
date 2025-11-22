@@ -11,13 +11,48 @@ const TIMEZONE = 'Europe/Berlin';
 // Expo Push API endpoint
 const EXPO_PUSH_API = 'https://exp.host/--/api/v2/push/send';
 
+// Traducciones para notificaciones
+const notificationTranslations = {
+  es: {
+    birthday_title: (name: string) => `🎉 ¡Hoy es el cumpleaños de ${name}!`,
+    birthday_body: (age: number) => `Cumple ${age} años. No olvides felicitarlo 🎂`,
+    monthly_summary_title: (month: string) => `🎂 Cumpleaños en ${month}`,
+    monthly_summary_body: (count: number, list: string, more: string) => 
+      `Tienes ${count} cumpleaños: ${list}${more}`,
+  },
+  en: {
+    birthday_title: (name: string) => `🎉 It's ${name}'s birthday today!`,
+    birthday_body: (age: number) => `Turns ${age} years old. Don't forget to wish them well 🎂`,
+    monthly_summary_title: (month: string) => `🎂 Birthdays in ${month}`,
+    monthly_summary_body: (count: number, list: string, more: string) => 
+      `You have ${count} birthdays: ${list}${more}`,
+  },
+  de: {
+    birthday_title: (name: string) => `🎉 Heute hat ${name} Geburtstag!`,
+    birthday_body: (age: number) => `Wird ${age} Jahre alt. Vergiss nicht zu gratulieren 🎂`,
+    monthly_summary_title: (month: string) => `🎂 Geburtstage im ${month}`,
+    monthly_summary_body: (count: number, list: string, more: string) => 
+      `Du hast ${count} Geburtstage: ${list}${more}`,
+  },
+};
+
+// Nombres de meses en diferentes idiomas
+const monthNames = {
+  es: ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'],
+  en: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
+  de: ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'],
+};
+
 // Tipos
+type Lang = 'es' | 'en' | 'de';
+
 interface UserData {
   id: string;
   name: string;
   email: string;
   birthdate: admin.firestore.Timestamp;
   fcmToken?: string;
+  preferredLanguage?: Lang;
   [key: string]: any;
 }
 
@@ -208,7 +243,7 @@ export const sendMonthlyBirthdaySummary = functions
           await sendMonthlySummaryNotification(
             user,
             nextMonthBirthdays,
-            monthNames[nextMonthNumber]
+            nextMonthNumber
           );
         }
       }
@@ -248,41 +283,46 @@ async function notifyConnectionsAboutBirthday(birthdayUser: any) {
       conn.userId1 === birthdayUser.id ? conn.userId2 : conn.userId1
     );
     
-    // Obtener tokens Expo Push de usuarios conectados
+    // Obtener datos completos de usuarios conectados (incluyendo idioma preferido)
     const usersSnapshot = await db
       .collection('users')
       .where(admin.firestore.FieldPath.documentId(), 'in', connectedUserIds)
       .get();
     
-    const tokens = usersSnapshot.docs
-      .map(doc => doc.data().fcmToken)
-      .filter(token => token && token.startsWith('ExponentPushToken[')); // Filtrar tokens Expo válidos
+    const connectedUsers = usersSnapshot.docs
+      .map(doc => ({ id: doc.id, ...doc.data() } as UserData))
+      .filter(user => user.fcmToken && user.fcmToken.startsWith('ExponentPushToken[')); // Filtrar usuarios con tokens Expo válidos
     
-    if (tokens.length === 0) {
+    if (connectedUsers.length === 0) {
       console.log('⚠️ No Expo Push tokens found for connections');
       return;
     }
     
-    console.log(`📱 Sending to ${tokens.length} devices`);
+    console.log(`📱 Sending to ${connectedUsers.length} devices`);
     
     // Calcular edad
     const birthdate = birthdayUser.birthdate.toDate();
     const age = new Date().getFullYear() - birthdate.getFullYear();
     
-    // Crear mensajes para Expo Push API
-    const messages: ExpoPushMessage[] = tokens.map(token => ({
-      to: token,
-      sound: 'default',
-      title: `🎉 ¡Hoy es el cumpleaños de ${birthdayUser.name}!`,
-      body: `Cumple ${age} años. No olvides felicitarlo 🎂`,
-      data: {
-        type: 'birthday',
-        userId: birthdayUser.id,
-        userName: birthdayUser.name,
-        age: age.toString(),
-      },
-      priority: 'high',
-    }));
+    // Crear mensajes para Expo Push API con traducciones según idioma del usuario
+    const messages: ExpoPushMessage[] = connectedUsers.map(user => {
+      const lang = user.preferredLanguage || 'en'; // Default a inglés si no tiene idioma
+      const translations = notificationTranslations[lang];
+      
+      return {
+        to: user.fcmToken!,
+        sound: 'default',
+        title: translations.birthday_title(birthdayUser.name),
+        body: translations.birthday_body(age),
+        data: {
+          type: 'birthday',
+          userId: birthdayUser.id,
+          userName: birthdayUser.name,
+          age: age.toString(),
+        },
+        priority: 'high',
+      };
+    });
     
     // Enviar notificaciones
     const response = await sendExpoPushNotifications(messages);
@@ -295,6 +335,7 @@ async function notifyConnectionsAboutBirthday(birthdayUser: any) {
     
     // Limpiar tokens inválidos
     if (failureCount > 0) {
+      const tokens = connectedUsers.map(u => u.fcmToken!);
       await cleanupInvalidExpoPushTokens(response, tokens);
     }
     
@@ -309,10 +350,14 @@ async function notifyConnectionsAboutBirthday(birthdayUser: any) {
 async function sendMonthlySummaryNotification(
   user: any,
   birthdays: any[],
-  monthName: string
+  monthIndex: number
 ) {
   try {
     if (!user.fcmToken || !user.fcmToken.startsWith('ExponentPushToken[')) return;
+    
+    const lang: Lang = user.preferredLanguage || 'en';
+    const translations = notificationTranslations[lang];
+    const monthName = monthNames[lang][monthIndex];
     
     console.log(`📊 Sending summary to ${user.name}: ${birthdays.length} birthdays in ${monthName}`);
     
@@ -330,8 +375,8 @@ async function sendMonthlySummaryNotification(
     const message: ExpoPushMessage = {
       to: user.fcmToken,
       sound: 'default',
-      title: `🎂 Cumpleaños en ${monthName}`,
-      body: `Tienes ${birthdays.length} cumpleaños: ${birthdayList}${moreText}`,
+      title: translations.monthly_summary_title(monthName),
+      body: translations.monthly_summary_body(birthdays.length, birthdayList, moreText),
       data: {
         type: 'monthly_summary',
         month: monthName,
@@ -409,9 +454,17 @@ export const testBirthdayNotifications = functions
       
       // Usar la misma zona horaria que el scheduler (Europe/Berlin)
       const today = new Date();
-      const berlinTime = new Date(today.toLocaleString('en-US', { timeZone: 'Europe/Berlin' }));
-      const todayMonth = berlinTime.getMonth(); // 0-11
-      const todayDay = berlinTime.getDate(); // 1-31
+      const berlinDateString = today.toLocaleString('en-US', { 
+        timeZone: 'Europe/Berlin',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
+      });
+      
+      // Parse la fecha correctamente (formato: MM/DD/YYYY)
+      const [month, day] = berlinDateString.split(',')[0].split('/');
+      const todayMonth = parseInt(month) - 1; // 0-11
+      const todayDay = parseInt(day); // 1-31
       
       console.log(`📅 Manual test - Checking birthdays for: ${todayDay}/${todayMonth + 1} (Berlin time)`);
       
