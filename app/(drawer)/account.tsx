@@ -6,6 +6,7 @@ import { AppContainer, AppText, AppCard } from '@/src/components/ui';
 import { useAppTheme } from '@/src/theme/ThemeProvider';
 import { colors } from '@/src/theme';
 import { useUser } from '@/src/context/UserContext';
+import { useLanguage } from '@/src/context/LanguageContext';
 import { authService } from '@/src/services/auth.service';
 import { db } from '@/src/database';
 import { deleteUser } from 'firebase/auth';
@@ -13,20 +14,21 @@ import { deleteUser } from 'firebase/auth';
 export default function AccountScreen() {
   const router = useRouter();
   const { theme } = useAppTheme();
+  const { t } = useLanguage();
   const { user, clearUser } = useUser();
   const [isLoading, setIsLoading] = useState(false);
 
   const handleLogout = () => {
     Alert.alert(
-      '¿Cerrar sesión?',
-      '¿Estás seguro de que quieres cerrar sesión?',
+      t('account_logout_confirm_title'),
+      t('account_logout_confirm_message'),
       [
         {
-          text: 'Cancelar',
+          text: t('account_logout_confirm_cancel'),
           style: 'cancel',
         },
         {
-          text: 'Cerrar sesión',
+          text: t('account_logout_confirm_button'),
           style: 'destructive',
           onPress: performLogout,
         },
@@ -50,7 +52,7 @@ export default function AccountScreen() {
       router.replace('/welcome' as any);
     } catch (error: any) {
       console.error('❌ Error logging out:', error);
-      Alert.alert('Error', 'No se pudo cerrar sesión');
+      Alert.alert(t('account_delete_error_title'), t('account_logout_error'));
     } finally {
       setIsLoading(false);
     }
@@ -58,15 +60,15 @@ export default function AccountScreen() {
 
   const handleDeleteAccount = () => {
     Alert.alert(
-      '⚠️ Eliminar cuenta',
-      'Esta acción es permanente y no se puede deshacer. Se eliminarán:\n\n• Tu perfil y datos personales\n• Todas tus conexiones\n• Tu cuenta de autenticación\n\n¿Estás completamente seguro?',
+      t('account_delete_confirm_title'),
+      t('account_delete_confirm_message'),
       [
         {
-          text: 'Cancelar',
+          text: t('account_delete_confirm_cancel'),
           style: 'cancel',
         },
         {
-          text: 'Eliminar cuenta',
+          text: t('account_delete_confirm_button'),
           style: 'destructive',
           onPress: confirmDeleteAccount,
         },
@@ -76,15 +78,15 @@ export default function AccountScreen() {
 
   const confirmDeleteAccount = () => {
     Alert.alert(
-      '⚠️ Confirmación final',
-      'Escribe "ELIMINAR" para confirmar que deseas eliminar tu cuenta permanentemente.',
+      t('account_delete_final_title'),
+      t('account_delete_final_message'),
       [
         {
-          text: 'Cancelar',
+          text: t('account_delete_final_cancel'),
           style: 'cancel',
         },
         {
-          text: 'Continuar',
+          text: t('account_delete_final_button'),
           style: 'destructive',
           onPress: performDeleteAccount,
         },
@@ -94,7 +96,7 @@ export default function AccountScreen() {
 
   const performDeleteAccount = async () => {
     if (!user) {
-      Alert.alert('Error', 'No hay usuario autenticado');
+      Alert.alert(t('account_delete_error_title'), t('account_delete_error_no_user'));
       return;
     }
 
@@ -141,8 +143,8 @@ export default function AccountScreen() {
 
       // Mostrar mensaje de éxito y redirigir
       Alert.alert(
-        'Cuenta eliminada',
-        'Tu cuenta ha sido eliminada permanentemente.',
+        t('account_delete_success_title'),
+        t('account_delete_success_message'),
         [
           {
             text: 'OK',
@@ -154,15 +156,15 @@ export default function AccountScreen() {
     } catch (error: any) {
       console.error('❌ Error deleting account:', error);
       
-      let errorMessage = 'No se pudo eliminar la cuenta. ';
+      let errorMessage = t('account_delete_error_message');
       
       if (error.code === 'auth/requires-recent-login') {
-        errorMessage += 'Por seguridad, necesitas volver a iniciar sesión antes de eliminar tu cuenta.';
+        errorMessage += t('account_delete_error_reauth');
       } else {
         errorMessage += error.message || 'Error desconocido';
       }
       
-      Alert.alert('Error', errorMessage);
+      Alert.alert(t('account_delete_error_title'), errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -174,7 +176,7 @@ export default function AccountScreen() {
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={colors.primary} />
           <AppText style={[styles.loadingText, { color: theme.textMuted }]}>
-            Procesando...
+            {t('account_processing')}
           </AppText>
         </View>
       </AppContainer>
@@ -192,7 +194,7 @@ export default function AccountScreen() {
 
         <View style={styles.section}>
           <AppText style={[styles.sectionTitle, { color: theme.text }]}>
-            Gestión de cuenta
+            {t('account_section_title')}
           </AppText>
 
           {/* Logout */}
@@ -203,10 +205,10 @@ export default function AccountScreen() {
                   <Ionicons name="log-out-outline" size={24} color={colors.primary} />
                   <View style={styles.actionText}>
                     <AppText style={[styles.actionTitle, { color: theme.text }]}>
-                      Cerrar sesión
+                      {t('account_logout_title')}
                     </AppText>
                     <AppText style={[styles.actionDescription, { color: theme.textMuted }]}>
-                      Salir de tu cuenta en este dispositivo
+                      {t('account_logout_description')}
                     </AppText>
                   </View>
                 </View>
@@ -223,10 +225,10 @@ export default function AccountScreen() {
                   <Ionicons name="trash-outline" size={24} color={colors.tertiary} />
                   <View style={styles.actionText}>
                     <AppText style={[styles.actionTitle, { color: colors.tertiary }]}>
-                      Eliminar cuenta
+                      {t('account_delete_title')}
                     </AppText>
                     <AppText style={[styles.actionDescription, { color: theme.textMuted }]}>
-                      Eliminar permanentemente tu cuenta y todos tus datos
+                      {t('account_delete_description')}
                     </AppText>
                   </View>
                 </View>
@@ -239,7 +241,7 @@ export default function AccountScreen() {
         <View style={styles.warning}>
           <Ionicons name="information-circle-outline" size={20} color={theme.textMuted} />
           <AppText style={[styles.warningText, { color: theme.textMuted }]}>
-            La eliminación de cuenta es permanente y no se puede deshacer
+            {t('account_warning')}
           </AppText>
         </View>
       </View>

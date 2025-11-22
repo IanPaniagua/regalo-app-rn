@@ -9,6 +9,7 @@ export interface BirthdayUser {
   avatar: string; // emoji o URL
   birthdate: Date;
   hobbies: string[];
+  giftPreferences: string[];
   email?: string;
 }
 
@@ -49,6 +50,7 @@ export function BirthdaysProvider({ children }: { children: ReactNode }) {
         avatar: user.avatar || '🎉',
         birthdate: user.birthdate,
         hobbies: user.hobbies,
+        giftPreferences: user.giftPreferences || [],
         email: user.email,
       }));
 

@@ -15,6 +15,7 @@ import { AppButton } from '@/src/components/ui/AppButton';
 import { colors } from '@/src/theme';
 import { useAppTheme } from '@/src/theme/ThemeProvider';
 import { useUser } from '@/src/context/UserContext';
+import { useLanguage } from '@/src/context/LanguageContext';
 
 const AVATARS = [
   '👨', '👩', '🧑', '👴', '👵', '🧓',
@@ -39,6 +40,7 @@ const AVATARS = [
 export default function CreateProfileAvatar() {
   const router = useRouter();
   const { theme } = useAppTheme();
+  const { t } = useLanguage();
   const { tempUser, setTempUser } = useUser();
   const [selectedAvatar, setSelectedAvatar] = useState(tempUser?.avatar || '');
 
@@ -87,7 +89,7 @@ export default function CreateProfileAvatar() {
             </View>
 
             <AppButton
-              title="Save and Continue"
+              title={t('create_profile_username_continue')}
               onPress={handleContinue}
               disabled={!selectedAvatar}
               style={styles.button}

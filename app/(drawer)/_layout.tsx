@@ -92,8 +92,8 @@ export default function DrawerLayout() {
       <Drawer.Screen
         name="account"
         options={{
-          drawerLabel: 'Account',
-          title: 'Account Management',
+          drawerLabel: t('drawer_account'),
+          title: t('drawer_account_title'),
           drawerIcon: ({ color, size }) => (
             <Ionicons name="person-circle-outline" size={size} color={color} />
           ),

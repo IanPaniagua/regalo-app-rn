@@ -98,24 +98,42 @@ export function UserProvider({ children }: { children: ReactNode }) {
         }
       }
       
-      // Si hay sesión (activa o restaurada), cargar datos del usuario
+      // Si hay sesión (activa o restaurada), cargar datos del usuario desde Firebase
       if (currentUser) {
-        const storedUser = await AsyncStorage.getItem(USER_STORAGE_KEY);
-        if (storedUser) {
-          const parsedUser = JSON.parse(storedUser);
-          // Convertir fechas de string a Date
-          if (parsedUser.birthdate) {
-            parsedUser.birthdate = new Date(parsedUser.birthdate);
+        try {
+          // Recargar usuario desde Firebase para tener datos actualizados
+          const dbUser = await db.getAdapter().getUser(currentUser.uid);
+          if (dbUser) {
+            const userData: UserData = {
+              ...dbUser,
+              avatar: dbUser.avatar || '🎉',
+              giftPreferences: dbUser.giftPreferences || [],
+            };
+            setUser(userData);
+            await saveUser(userData);
+            console.log('✅ User loaded from Firebase:', userData.email);
+          } else {
+            // Si no existe en Firebase, intentar desde storage como fallback
+            const storedUser = await AsyncStorage.getItem(USER_STORAGE_KEY);
+            if (storedUser) {
+              const parsedUser = JSON.parse(storedUser);
+              // Convertir fechas de string a Date
+              if (parsedUser.birthdate) {
+                parsedUser.birthdate = new Date(parsedUser.birthdate);
+              }
+              if (parsedUser.hideAgeLastChangeDate) {
+                parsedUser.hideAgeLastChangeDate = new Date(parsedUser.hideAgeLastChangeDate);
+              }
+              if (parsedUser.nameLastChangeDate) {
+                parsedUser.nameLastChangeDate = new Date(parsedUser.nameLastChangeDate);
+              }
+              
+              setUser(parsedUser);
+              console.log('✅ User loaded from storage (fallback):', parsedUser.email);
+            }
           }
-          if (parsedUser.hideAgeLastChangeDate) {
-            parsedUser.hideAgeLastChangeDate = new Date(parsedUser.hideAgeLastChangeDate);
-          }
-          if (parsedUser.nameLastChangeDate) {
-            parsedUser.nameLastChangeDate = new Date(parsedUser.nameLastChangeDate);
-          }
-          
-          setUser(parsedUser);
-          console.log('✅ User loaded from storage:', parsedUser.email);
+        } catch (error) {
+          console.error('❌ Error loading user from Firebase:', error);
         }
       }
     } catch (error) {

@@ -170,7 +170,7 @@ export default function CreateProfileGiftPreferences() {
               )}
 
               <AppButton
-                title="Save and Continue"
+                title={t('create_profile_username_continue')}
                 onPress={handleContinue}
                 style={styles.button}
               />
