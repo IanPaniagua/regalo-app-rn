@@ -19,6 +19,8 @@ const notificationTranslations = {
     monthly_summary_title: (month: string) => `🎂 Cumpleaños en ${month}`,
     monthly_summary_body: (count: number, list: string, more: string) => 
       `Tienes ${count} cumpleaños: ${list}${more}`,
+    friend_request_title: (name: string) => `👋 Nueva solicitud de ${name}`,
+    friend_request_body: (name: string) => `${name} quiere conectar contigo`,
   },
   en: {
     birthday_title: (name: string) => `🎉 It's ${name}'s birthday today!`,
@@ -26,6 +28,8 @@ const notificationTranslations = {
     monthly_summary_title: (month: string) => `🎂 Birthdays in ${month}`,
     monthly_summary_body: (count: number, list: string, more: string) => 
       `You have ${count} birthdays: ${list}${more}`,
+    friend_request_title: (name: string) => `👋 New request from ${name}`,
+    friend_request_body: (name: string) => `${name} wants to connect with you`,
   },
   de: {
     birthday_title: (name: string) => `🎉 Heute hat ${name} Geburtstag!`,
@@ -33,6 +37,8 @@ const notificationTranslations = {
     monthly_summary_title: (month: string) => `🎂 Geburtstage im ${month}`,
     monthly_summary_body: (count: number, list: string, more: string) => 
       `Du hast ${count} Geburtstage: ${list}${more}`,
+    friend_request_title: (name: string) => `👋 Neue Anfrage von ${name}`,
+    friend_request_body: (name: string) => `${name} möchte sich mit dir verbinden`,
   },
 };
 
@@ -556,5 +562,105 @@ export const testBirthdayNotifications = functions
         error: error?.message || 'Unknown error',
         stack: error?.stack
       });
+    }
+  });
+
+/**
+ * Cloud Function que se dispara cuando se crea una nueva conexión (solicitud de amistad)
+ * Envía notificación push al usuario que recibe la solicitud
+ */
+export const onConnectionCreated = functions
+  .region('europe-west1')
+  .firestore
+  .document('connections/{connectionId}')
+  .onCreate(async (snapshot, context) => {
+    try {
+      const connection = snapshot.data();
+      const connectionId = context.params.connectionId;
+      
+      console.log('🔔 New connection created:', connectionId);
+      
+      // Solo enviar notificación si está en estado pending
+      if (connection.status !== 'pending') {
+        console.log('⚠️ Connection is not pending, skipping notification');
+        return null;
+      }
+      
+      // Obtener datos del usuario que envió la solicitud (userId1)
+      const senderDoc = await db.collection('users').doc(connection.userId1).get();
+      if (!senderDoc.exists) {
+        console.log('⚠️ Sender user not found');
+        return null;
+      }
+      
+      const sender = { id: senderDoc.id, ...senderDoc.data() } as UserData;
+      
+      // Obtener datos del usuario que recibe la solicitud (userId2)
+      const receiverDoc = await db.collection('users').doc(connection.userId2).get();
+      if (!receiverDoc.exists) {
+        console.log('⚠️ Receiver user not found');
+        return null;
+      }
+      
+      const receiver = { id: receiverDoc.id, ...receiverDoc.data() } as UserData;
+      
+      // Verificar que el receptor tenga token FCM
+      if (!receiver.fcmToken || !receiver.fcmToken.startsWith('ExponentPushToken[')) {
+        console.log('⚠️ Receiver has no valid Expo Push token');
+        return null;
+      }
+      
+      // Obtener idioma preferido del receptor
+      const lang: Lang = receiver.preferredLanguage || 'en';
+      const translations = notificationTranslations[lang];
+      
+      // Contar solicitudes pendientes del receptor para el badge
+      const pendingConnectionsSnapshot = await db
+        .collection('connections')
+        .where('userId2', '==', receiver.id)
+        .where('status', '==', 'pending')
+        .get();
+      
+      const badgeCount = pendingConnectionsSnapshot.size;
+      
+      console.log(`📱 Sending friend request notification to ${receiver.name} (badge: ${badgeCount})`);
+      
+      // Crear mensaje de notificación
+      const message: ExpoPushMessage = {
+        to: receiver.fcmToken,
+        sound: 'default',
+        title: translations.friend_request_title(sender.name),
+        body: translations.friend_request_body(sender.name),
+        badge: badgeCount,
+        data: {
+          type: 'friend_request',
+          connectionId: connectionId,
+          senderId: sender.id,
+          senderName: sender.name,
+        },
+        priority: 'high',
+      };
+      
+      // Enviar notificación
+      const response = await sendExpoPushNotifications([message]);
+      
+      if (response.data[0].status === 'ok') {
+        console.log(`✅ Friend request notification sent to ${receiver.name}`);
+      } else {
+        console.error(`❌ Failed to send notification:`, response.data[0].message);
+        // Limpiar token inválido
+        if (response.data[0].details?.error === 'DeviceNotRegistered') {
+          await db.collection('users').doc(receiver.id).update({
+            fcmToken: admin.firestore.FieldValue.delete()
+          });
+          console.log(`🧹 Cleaned invalid token for ${receiver.name}`);
+        }
+      }
+      
+      return null;
+      
+    } catch (error) {
+      console.error('❌ Error sending friend request notification:', error);
+      return null;
     }
   });

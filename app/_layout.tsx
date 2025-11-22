@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { DarkTheme, DefaultTheme, ThemeProvider as NavigationThemeProvider } from '@react-navigation/native';
 import { Stack } from 'expo-router';
-import { StatusBar } from 'expo-status-bar';
 import { View, ActivityIndicator, Text } from 'react-native';
 import 'react-native-reanimated';
 import 'react-native-gesture-handler';
@@ -16,6 +15,7 @@ import { useColorScheme } from '@/hooks/use-color-scheme';
 import { db } from '@/src/database';
 import { DATABASE_TYPE } from '@/src/database/database.config';
 import { colors } from '@/src/theme';
+import { AppStatusBar } from '@/src/components/ui/AppStatusBar';
 
 export const unstable_settings = {
   initialRouteName: '(drawer)',
@@ -93,7 +93,7 @@ export default function RootLayout() {
                       <Stack.Screen name="(drawer)" />
                       <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
                     </Stack>
-                    <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
+                    <AppStatusBar />
                   </ThemeProvider>
                 </BirthdaysProvider>
               </ConnectionsProvider>
