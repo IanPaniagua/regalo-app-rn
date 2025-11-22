@@ -205,6 +205,11 @@ export class FirebaseAdapter implements DatabaseAdapter {
       nameLastChangeDate: data.nameLastChangeDate ? this.timestampToDate(data.nameLastChangeDate) : undefined,
       fcmToken: data.fcmToken,
       fcmTokenUpdatedAt: data.fcmTokenUpdatedAt ? this.timestampToDate(data.fcmTokenUpdatedAt) : undefined,
+      preferredLanguage: data.preferredLanguage,
+      manualBirthdays: data.manualBirthdays ? data.manualBirthdays.map((entry: any) => ({
+        ...entry,
+        birthdate: entry.birthdate ? this.timestampToDate(entry.birthdate) : new Date(entry.birthdate),
+      })) : undefined,
       createdAt: data.createdAt ? this.timestampToDate(data.createdAt) : undefined,
       updatedAt: data.updatedAt ? this.timestampToDate(data.updatedAt) : undefined,
     };
@@ -238,6 +243,11 @@ export class FirebaseAdapter implements DatabaseAdapter {
       nameLastChangeDate: data.nameLastChangeDate ? this.timestampToDate(data.nameLastChangeDate) : undefined,
       fcmToken: data.fcmToken,
       fcmTokenUpdatedAt: data.fcmTokenUpdatedAt ? this.timestampToDate(data.fcmTokenUpdatedAt) : undefined,
+      preferredLanguage: data.preferredLanguage,
+      manualBirthdays: data.manualBirthdays ? data.manualBirthdays.map((entry: any) => ({
+        ...entry,
+        birthdate: entry.birthdate ? this.timestampToDate(entry.birthdate) : new Date(entry.birthdate),
+      })) : undefined,
       createdAt: data.createdAt ? this.timestampToDate(data.createdAt) : undefined,
       updatedAt: data.updatedAt ? this.timestampToDate(data.updatedAt) : undefined,
     };
@@ -282,6 +292,13 @@ export class FirebaseAdapter implements DatabaseAdapter {
       nameLastChangeDate: data.nameLastChangeDate ? this.timestampToDate(data.nameLastChangeDate) : undefined,
       fcmToken: data.fcmToken,
       fcmTokenUpdatedAt: data.fcmTokenUpdatedAt ? this.timestampToDate(data.fcmTokenUpdatedAt) : undefined,
+      preferredLanguage: data.preferredLanguage,
+      manualBirthdays: data.manualBirthdays ? data.manualBirthdays.map((entry: any) => ({
+        ...entry,
+        birthdate: entry.birthdate ? this.timestampToDate(entry.birthdate) : new Date(entry.birthdate),
+      })) : undefined,
+      createdAt: data.createdAt ? this.timestampToDate(data.createdAt) : undefined,
+      updatedAt: data.updatedAt ? this.timestampToDate(data.updatedAt) : undefined,
     };
   }
 
@@ -306,6 +323,12 @@ export class FirebaseAdapter implements DatabaseAdapter {
     }
     if (data.fcmTokenUpdatedAt) {
       updateData.fcmTokenUpdatedAt = this.dateToTimestamp(data.fcmTokenUpdatedAt);
+    }
+    if (data.manualBirthdays) {
+      updateData.manualBirthdays = data.manualBirthdays.map((entry: any) => ({
+        ...entry,
+        birthdate: entry.birthdate instanceof Date ? this.dateToTimestamp(entry.birthdate) : entry.birthdate,
+      }));
     }
 
     // Filtrar campos undefined (Firestore no los permite)
