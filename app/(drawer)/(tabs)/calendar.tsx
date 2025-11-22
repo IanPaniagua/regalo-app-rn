@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { View, StyleSheet, ScrollView, Pressable, Dimensions, Modal } from 'react-native';
+import { View, StyleSheet, ScrollView, Pressable, Dimensions, Modal, TextInput, Alert, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { AppContainer } from '@/src/components/ui/AppContainer';
 import { AppTitle } from '@/src/components/ui/AppTitle';
 import { AppText } from '@/src/components/ui/AppText';
@@ -8,14 +9,14 @@ import { AppButton } from '@/src/components/ui/AppButton';
 import { UserProfileModal } from '@/src/components/UserProfileModal';
 import { colors } from '@/src/theme';
 import { useAppTheme } from '@/src/theme/ThemeProvider';
-import { useBirthdays, BirthdayUser } from '@/src/context/BirthdaysContext';
+import { useBirthdays, BirthdayUser, CalendarEntry } from '@/src/context/BirthdaysContext';
 import { useLanguage } from '@/src/context/LanguageContext';
 
 // Usar porcentaje en lugar de cálculos fijos para mejor compatibilidad cross-platform
 const DAY_WIDTH_PERCENT = 14.28; // 100% / 7 días ≈ 14.28%
 
 export default function CalendarTabScreen() {
-  const { users, getUsersByDate } = useBirthdays();
+  const { allEntries, getUsersByDate, addManualEntry } = useBirthdays();
   const { t } = useLanguage();
   const { theme } = useAppTheme();
 
@@ -29,9 +30,16 @@ export default function CalendarTabScreen() {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDay, setSelectedDay] = useState<number | null>(null);
   const [showBirthdaysModal, setShowBirthdaysModal] = useState(false);
-  const [selectedDayBirthdays, setSelectedDayBirthdays] = useState<BirthdayUser[]>([]);
-  const [selectedUser, setSelectedUser] = useState<BirthdayUser | null>(null);
+  const [selectedDayBirthdays, setSelectedDayBirthdays] = useState<CalendarEntry[]>([]);
+  const [selectedUser, setSelectedUser] = useState<CalendarEntry | null>(null);
   const [showMonthListModal, setShowMonthListModal] = useState(false);
+  
+  // Estado para modal de añadir cumpleaños manual
+  const [showAddManualModal, setShowAddManualModal] = useState(false);
+  const [manualName, setManualName] = useState('');
+  const [manualBirthdate, setManualBirthdate] = useState(new Date());
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [isAddingManual, setIsAddingManual] = useState(false);
 
   const getDaysInMonth = (date: Date) => {
     const year = date.getFullYear();
@@ -66,7 +74,7 @@ export default function CalendarTabScreen() {
     }
   };
 
-  const handleUserSelect = (user: BirthdayUser) => {
+  const handleUserSelect = (user: CalendarEntry) => {
     setSelectedUser(user);
   };
 
@@ -78,13 +86,37 @@ export default function CalendarTabScreen() {
 
   // Obtener cumpleaños del mes actual
   const getMonthBirthdays = () => {
-    return users.filter(user => {
-      return user.birthdate.getMonth() === currentDate.getMonth();
+    return allEntries.filter(entry => {
+      return entry.birthdate.getMonth() === currentDate.getMonth();
     }).sort((a, b) => a.birthdate.getDate() - b.birthdate.getDate());
   };
 
   const handleShowMonthList = () => {
     setShowMonthListModal(true);
+  };
+
+  const handleAddManualBirthday = async () => {
+    if (!manualName.trim()) {
+      Alert.alert('Error', 'Por favor ingresa un nombre');
+      return;
+    }
+
+    try {
+      setIsAddingManual(true);
+      await addManualEntry(manualName.trim(), manualBirthdate);
+      
+      // Limpiar y cerrar
+      setManualName('');
+      setManualBirthdate(new Date());
+      setShowAddManualModal(false);
+      
+      Alert.alert('Éxito', `Cumpleaños de ${manualName} añadido correctamente`);
+    } catch (error) {
+      console.error('Error adding manual birthday:', error);
+      Alert.alert('Error', 'No se pudo añadir el cumpleaños');
+    } finally {
+      setIsAddingManual(false);
+    }
   };
 
   const renderCalendarDays = () => {
@@ -111,10 +143,10 @@ export default function CalendarTabScreen() {
       
       // Filtrar cumpleaños del mes actual para este día
       const date = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
-      const birthdays = users.filter(user => {
-        const userDay = user.birthdate.getDate();
-        const userMonth = user.birthdate.getMonth();
-        return userDay === day && userMonth === currentDate.getMonth();
+      const birthdays = allEntries.filter(entry => {
+        const entryDay = entry.birthdate.getDate();
+        const entryMonth = entry.birthdate.getMonth();
+        return entryDay === day && entryMonth === currentDate.getMonth();
       });
 
       days.push(
@@ -321,12 +353,92 @@ export default function CalendarTabScreen() {
       </Modal>
 
       {/* Modal: Detalles del usuario */}
-      <UserProfileModal
-        visible={!!selectedUser}
-        user={selectedUser}
-        onClose={closeModals}
-        showDisconnect={false}
-      />
+      {selectedUser && !('isManual' in selectedUser && selectedUser.isManual) && (
+        <UserProfileModal
+          visible={!!selectedUser}
+          user={selectedUser as BirthdayUser}
+          onClose={closeModals}
+          showDisconnect={false}
+        />
+      )}
+
+      {/* Botón flotante para añadir cumpleaños manual */}
+      <Pressable
+        style={[styles.floatingButton, { backgroundColor: colors.primary }]}
+        onPress={() => setShowAddManualModal(true)}
+      >
+        <Ionicons name="add" size={28} color="#000" />
+      </Pressable>
+
+      {/* Modal: Añadir cumpleaños manual */}
+      <Modal
+        visible={showAddManualModal}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowAddManualModal(false)}
+      >
+        <Pressable style={styles.modalOverlay} onPress={() => setShowAddManualModal(false)}>
+          <Pressable style={[styles.modalContent, { backgroundColor: theme.modalBg }]} onPress={(e) => e.stopPropagation()}>
+            <View style={[styles.modalHeader, { borderBottomColor: theme.border }]}>
+              <AppText style={[styles.modalTitle, { color: theme.text }]}>
+                Añadir cumpleaños
+              </AppText>
+              <Pressable onPress={() => setShowAddManualModal(false)}>
+                <Ionicons name="close" size={24} color={theme.text} />
+              </Pressable>
+            </View>
+
+            <View style={styles.addManualForm}>
+              <View style={styles.formGroup}>
+                <AppText style={[styles.formLabel, { color: theme.text }]}>Nombre</AppText>
+                <TextInput
+                  style={[styles.input, { backgroundColor: theme.inputBg, color: theme.text, borderColor: theme.border }]}
+                  placeholder="Ej: María"
+                  placeholderTextColor={theme.textMuted}
+                  value={manualName}
+                  onChangeText={setManualName}
+                  autoFocus
+                />
+              </View>
+
+              <View style={styles.formGroup}>
+                <AppText style={[styles.formLabel, { color: theme.text }]}>Fecha de nacimiento</AppText>
+                <Pressable
+                  style={[styles.dateButton, { backgroundColor: theme.inputBg, borderColor: theme.border }]}
+                  onPress={() => setShowDatePicker(true)}
+                >
+                  <Ionicons name="calendar-outline" size={20} color={colors.primary} />
+                  <AppText style={[styles.dateButtonText, { color: theme.text }]}>
+                    {manualBirthdate.toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' })}
+                  </AppText>
+                </Pressable>
+              </View>
+
+              {showDatePicker && (
+                <DateTimePicker
+                  value={manualBirthdate}
+                  mode="date"
+                  display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                  onChange={(event, selectedDate) => {
+                    setShowDatePicker(Platform.OS === 'ios');
+                    if (selectedDate) {
+                      setManualBirthdate(selectedDate);
+                    }
+                  }}
+                  maximumDate={new Date()}
+                />
+              )}
+
+              <AppButton
+                title={isAddingManual ? "Añadiendo..." : "Añadir cumpleaños"}
+                onPress={handleAddManualBirthday}
+                disabled={isAddingManual || !manualName.trim()}
+                style={styles.addButton}
+              />
+            </View>
+          </Pressable>
+        </Pressable>
+      </Modal>
     </AppContainer>
   );
 }
@@ -651,5 +763,52 @@ const styles = StyleSheet.create({
   closeButton: {
     marginTop: 20,
     marginBottom: 10,
+  },
+  floatingButton: {
+    position: 'absolute',
+    bottom: 20,
+    right: 20,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+  },
+  addManualForm: {
+    padding: 20,
+  },
+  formGroup: {
+    marginBottom: 20,
+  },
+  formLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    marginBottom: 8,
+  },
+  input: {
+    borderWidth: 1,
+    borderRadius: 12,
+    padding: 16,
+    fontSize: 16,
+  },
+  dateButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderRadius: 12,
+    padding: 16,
+    gap: 12,
+  },
+  dateButtonText: {
+    fontSize: 16,
+    flex: 1,
+  },
+  addButton: {
+    marginTop: 10,
   },
 });

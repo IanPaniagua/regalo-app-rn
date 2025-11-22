@@ -108,6 +108,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
             const userData: UserData = {
               ...dbUser,
               avatar: dbUser.avatar || '🎉',
+              username: dbUser.username || undefined,
               giftPreferences: dbUser.giftPreferences || [],
             };
             setUser(userData);

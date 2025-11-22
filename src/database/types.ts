@@ -16,6 +16,13 @@ export interface User {
   fcmToken?: string; // Token de Firebase Cloud Messaging para notificaciones push
   fcmTokenUpdatedAt?: Date; // Fecha de última actualización del token
   preferredLanguage?: 'es' | 'en' | 'de'; // Idioma preferido del usuario para notificaciones
+  manualBirthdays?: Array<{
+    id: string;
+    name: string;
+    birthdate: Date;
+    avatar: string;
+    isManual: true;
+  }>; // Cumpleaños añadidos manualmente por el usuario
   createdAt?: Date;
   updatedAt?: Date;
 }
