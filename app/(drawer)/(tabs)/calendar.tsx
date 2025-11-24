@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { View, StyleSheet, ScrollView, Pressable, Dimensions, Modal, TextInput, Alert, Platform } from 'react-native';
+import { View, StyleSheet, ScrollView, Pressable, Dimensions, Modal, TextInput, Alert, Platform, Keyboard } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import DateTimePicker from '@react-native-community/datetimepicker';
@@ -19,7 +19,7 @@ const DAY_WIDTH_PERCENT = 14.28; // 100% / 7 días ≈ 14.28%
 export default function CalendarTabScreen() {
   const { allEntries, getUsersByDate, addManualEntry } = useBirthdays();
   const { t } = useLanguage();
-  const { theme } = useAppTheme();
+  const { theme, themeMode } = useAppTheme();
 
   // Get translated days and months
   const DAYS_OF_WEEK = [t('day_mon'), t('day_tue'), t('day_wed'), t('day_thu'), t('day_fri'), t('day_sat'), t('day_sun')];
@@ -454,7 +454,10 @@ export default function CalendarTabScreen() {
                 <AppText style={[styles.formLabel, { color: theme.text }]}>Fecha de nacimiento</AppText>
                 <Pressable
                   style={[styles.dateButton, { backgroundColor: theme.inputBg, borderColor: theme.border }]}
-                  onPress={() => setShowDatePicker(true)}
+                  onPress={() => {
+                    Keyboard.dismiss(); // Cerrar teclado antes de abrir el picker
+                    setShowDatePicker(true);
+                  }}
                 >
                   <Ionicons name="calendar-outline" size={20} color={colors.primary} />
                   <AppText style={[styles.dateButtonText, { color: theme.text }]}>
@@ -464,17 +467,34 @@ export default function CalendarTabScreen() {
               </View>
 
               {showDatePicker && (
-                <DateTimePicker
-                  value={manualBirthdate}
-                  mode="date"
-                  display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-                  onChange={(event, selectedDate) => {
-                    setShowDatePicker(Platform.OS === 'ios');
-                    if (selectedDate) {
-                      setManualBirthdate(selectedDate);
-                    }
-                  }}
-                />
+                <View style={styles.datePickerContainer}>
+                  <DateTimePicker
+                    value={manualBirthdate}
+                    mode="date"
+                    display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                    themeVariant={themeMode} // Usar el tema correcto para iOS
+                    onChange={(event, selectedDate) => {
+                      // En Android, cerrar automáticamente
+                      if (Platform.OS === 'android') {
+                        setShowDatePicker(false);
+                      }
+                      if (selectedDate) {
+                        setManualBirthdate(selectedDate);
+                      }
+                    }}
+                  />
+                  {/* Botón Done para iOS */}
+                  {Platform.OS === 'ios' && (
+                    <View style={styles.datePickerActions}>
+                      <Pressable
+                        style={[styles.doneButton, { backgroundColor: colors.primary }]}
+                        onPress={() => setShowDatePicker(false)}
+                      >
+                        <AppText style={styles.doneButtonText}>Listo</AppText>
+                      </Pressable>
+                    </View>
+                  )}
+                </View>
               )}
 
               <AppButton
@@ -897,5 +917,25 @@ const styles = StyleSheet.create({
   },
   submitButton: {
     marginTop: 10,
+  },
+  datePickerContainer: {
+    marginTop: 10,
+    marginBottom: 10,
+  },
+  datePickerActions: {
+    marginTop: 12,
+    alignItems: 'center',
+  },
+  doneButton: {
+    paddingVertical: 12,
+    paddingHorizontal: 32,
+    borderRadius: 12,
+    minWidth: 120,
+    alignItems: 'center',
+  },
+  doneButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#000',
   },
 });

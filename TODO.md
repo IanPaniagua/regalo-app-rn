@@ -3,5 +3,9 @@
 - [x] modo light, la pantalla de register cuando estamos creando el perfil aun no se ve bien, aplicale los mismos estilos que el resto que ya son dinamicas.
 - [x] hay un error de stylos en en modo dark y light, cuando tabrimos uno de los perfiles de otra persona tanto desde connections me sale un componente blanco y no se ven los botones de cerrar aunq ue si estan alli. 
 
--[ ]a parte de eso, el boton edit de perfil no se ve bien en light 
--[ ] poner que reciba una notificacion en el movil cuando tiene una nueva invitacion. 
+-[x]a parte de eso, el boton edit de perfil no se ve bien en light 
+-[x] poner que reciba una notificacion en el movil cuando tiene una nueva invitacion. 
+
+FROM JIRA:
+-[x]Fix Route to connect from calender.
+-[x] Fix Add Manually UI
