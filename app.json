@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "regalo-app",
+    "name": "Regalos",
     "slug": "regalo-app",
     "version": "1.0.1",
     "orientation": "portrait",
@@ -24,10 +24,8 @@
     "android": {
       "versionCode": 4,
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
-        "foregroundImage": "./assets/images/icon.png",
-        "backgroundImage": "./assets/images/icon.png",
-        "monochromeImage": "./assets/images/icon.png"
+        "foregroundImage": "./assets/images/icon-android-.png",
+        "backgroundColor": "#cab097"
       },
       "splash": {
         "image": "./assets/images/splash-android.png",
