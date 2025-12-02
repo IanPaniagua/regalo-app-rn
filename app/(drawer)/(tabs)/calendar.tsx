@@ -848,7 +848,7 @@ const styles = StyleSheet.create({
   },
   topHeader: {
     position: 'relative',
-    alignItems: 'center',
+    alignItems: 'stretch',
     justifyContent: 'center',
     marginBottom: 16,
   },
@@ -858,9 +858,8 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   addButtonContainer: {
-    position: 'absolute',
-    right: 0,
-    top: 0,
+    marginTop: 4,
+    alignSelf: 'flex-end',
   },
   addButton: {
     flexDirection: 'row',

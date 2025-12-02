@@ -7,6 +7,8 @@ import {
   User as FirebaseUser,
   updateProfile,
   Auth,
+  initializeAuth,
+  browserLocalPersistence,
 } from 'firebase/auth';
 import { db } from '@/src/database';
 import { getFirebaseApp } from './firebase';
@@ -27,8 +29,16 @@ export class AuthService {
   private getAuthInstance(): Auth {
     if (!this.auth) {
       const app = getFirebaseApp();
-      this.auth = getAuth(app);
-      console.log('✅ Firebase Auth initialized');
+      try {
+        // Try to get existing auth instance first
+        this.auth = getAuth(app);
+      } catch {
+        // If it doesn't exist, initialize with local persistence
+        this.auth = initializeAuth(app, {
+          persistence: browserLocalPersistence,
+        });
+      }
+      console.log('✅ Firebase Auth initialized with local persistence');
     }
     return this.auth;
   }
