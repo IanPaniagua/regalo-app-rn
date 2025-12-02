@@ -64,7 +64,7 @@ export default function CreateProfileStep3() {
     }
 
     if (password !== confirmPassword) {
-      Alert.alert(t('create_profile_error_title'), 'Las contraseñas no coinciden');
+      Alert.alert(t('create_profile_error_title'), t('create_profile_error_password_mismatch'));
       return;
     }
 
@@ -122,11 +122,11 @@ export default function CreateProfileStep3() {
       });
 
       Alert.alert(
-        'Perfil creado',
-        '¡Tu perfil ha sido creado exitosamente!',
+        t('create_profile_created_title'),
+        t('create_profile_created_message'),
         [
           {
-            text: 'OK',
+            text: t('common_ok'),
             onPress: () => {
               // @ts-ignore
               router.replace('/(drawer)/(tabs)/calendar');
@@ -137,8 +137,8 @@ export default function CreateProfileStep3() {
     } catch (error: any) {
       console.error('❌ Error creating profile:', error);
       Alert.alert(
-        'Error',
-        error.message || 'Hubo un problema al crear tu perfil. Por favor intenta de nuevo.'
+        t('create_profile_error_title'),
+        error.message || t('create_profile_error_generic')
       );
     } finally {
       setIsCreating(false);
@@ -158,16 +158,18 @@ export default function CreateProfileStep3() {
         >
           <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
             <View style={styles.content}>
-              <AppTitle style={styles.title}>¿Cuál es tu email?</AppTitle>
+              <AppTitle style={styles.title}>{t('create_profile_email_title')}</AppTitle>
 
-              <AppText style={[styles.subtitle, { color: theme.textSecondary }]}>
-                Crea tu cuenta para acceder a la app
+              <AppText style={[styles.subtitle, { color: theme.textSecondary }]}> 
+                {t('create_profile_email_subtitle')}
               </AppText>
 
               <View style={styles.inputContainer}>
                 <View style={styles.labelRow}>
                   <Ionicons name="mail-outline" size={18} color={colors.primary} />
-                  <AppText style={[styles.label, { color: theme.text }]}>Email</AppText>
+                  <AppText style={[styles.label, { color: theme.text }]}>
+                    {t('create_profile_email_label')}
+                  </AppText>
                 </View>
                 <TextInput
                   style={[
@@ -176,7 +178,7 @@ export default function CreateProfileStep3() {
                   ]}
                   value={email}
                   onChangeText={setEmail}
-                  placeholder="tu@email.com"
+                  placeholder={t('create_profile_email_placeholder')}
                   placeholderTextColor={theme.textMuted}
                   keyboardType="email-address"
                   autoCapitalize="none"
@@ -189,7 +191,9 @@ export default function CreateProfileStep3() {
               <View style={styles.inputContainer}>
                 <View style={styles.labelRow}>
                   <Ionicons name="lock-closed-outline" size={18} color={colors.primary} />
-                  <AppText style={[styles.label, { color: theme.text }]}>Contraseña</AppText>
+                  <AppText style={[styles.label, { color: theme.text }]}>
+                    {t('create_profile_password_label')}
+                  </AppText>
                 </View>
                 <View style={styles.passwordContainer}>
                   <TextInput
@@ -199,7 +203,7 @@ export default function CreateProfileStep3() {
                     ]}
                     value={password}
                     onChangeText={setPassword}
-                    placeholder="Mínimo 8 caracteres"
+                    placeholder={t('create_profile_password_placeholder')}
                     placeholderTextColor={theme.textMuted}
                     secureTextEntry={!showPassword}
                     autoCapitalize="none"
@@ -222,7 +226,9 @@ export default function CreateProfileStep3() {
               <View style={styles.inputContainer}>
                 <View style={styles.labelRow}>
                   <Ionicons name="lock-closed-outline" size={18} color={colors.primary} />
-                  <AppText style={[styles.label, { color: theme.text }]}>Confirmar Contraseña</AppText>
+                  <AppText style={[styles.label, { color: theme.text }]}>
+                    {t('create_profile_confirm_password_label')}
+                  </AppText>
                 </View>
                 <View style={styles.passwordContainer}>
                   <TextInput
@@ -232,7 +238,7 @@ export default function CreateProfileStep3() {
                     ]}
                     value={confirmPassword}
                     onChangeText={setConfirmPassword}
-                    placeholder="Repite tu contraseña"
+                    placeholder={t('create_profile_confirm_password_placeholder')}
                     placeholderTextColor={theme.textMuted}
                     secureTextEntry={!showConfirmPassword}
                     autoCapitalize="none"
@@ -254,7 +260,7 @@ export default function CreateProfileStep3() {
               </View>
 
               <AppButton
-                title={isCreating ? "Creando perfil..." : "Crear cuenta"}
+                title={isCreating ? t('create_profile_button_loading') : t('create_profile_button')}
                 onPress={handleContinue}
                 disabled={!email.trim() || !password.trim() || !confirmPassword.trim() || isCreating}
                 style={styles.button}

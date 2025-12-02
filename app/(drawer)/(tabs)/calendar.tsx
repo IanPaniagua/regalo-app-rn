@@ -18,7 +18,7 @@ const DAY_WIDTH_PERCENT = 14.28; // 100% / 7 días ≈ 14.28%
 
 export default function CalendarTabScreen() {
   const { allEntries, getUsersByDate, addManualEntry } = useBirthdays();
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
   const { theme, themeMode } = useAppTheme();
 
   // Get translated days and months
@@ -109,7 +109,7 @@ export default function CalendarTabScreen() {
 
   const handleAddManualBirthday = async () => {
     if (!manualName.trim()) {
-      Alert.alert('Error', 'Por favor ingresa un nombre');
+      Alert.alert(t('calendar_manual_error_title'), t('calendar_manual_error_name_required'));
       return;
     }
 
@@ -121,11 +121,14 @@ export default function CalendarTabScreen() {
       setManualName('');
       setManualBirthdate(new Date());
       setShowAddManualModal(false);
-      
-      Alert.alert('Éxito', `Cumpleaños de ${manualName} añadido correctamente`);
+
+      Alert.alert(
+        t('calendar_manual_success_title'),
+        t('calendar_manual_success_message').replace('{{name}}', manualName)
+      );
     } catch (error) {
       console.error('Error adding manual birthday:', error);
-      Alert.alert('Error', 'No se pudo añadir el cumpleaños');
+      Alert.alert(t('calendar_manual_error_title'), t('calendar_manual_error_generic'));
     } finally {
       setIsAddingManual(false);
     }
@@ -219,7 +222,7 @@ export default function CalendarTabScreen() {
               style={[styles.addButton, { backgroundColor: colors.primary }]}
               onPress={() => setShowAddMenu(!showAddMenu)}
             >
-              <AppText style={styles.addButtonText}>Add</AppText>
+              <AppText style={styles.addButtonText}>{t('calendar_add_button')}</AppText>
               <Ionicons name="add" size={20} color="#000" />
             </Pressable>
             
@@ -235,7 +238,9 @@ export default function CalendarTabScreen() {
                   }}
                 >
                   <Ionicons name="person-add" size={20} color={colors.primary} />
-                  <AppText style={[styles.menuItemText, { color: theme.text }]}>Create Connection</AppText>
+                  <AppText style={[styles.menuItemText, { color: theme.text }]}>
+                    {t('calendar_add_menu_create_connection')}
+                  </AppText>
                 </Pressable>
                 
                 <Pressable 
@@ -246,7 +251,9 @@ export default function CalendarTabScreen() {
                   }}
                 >
                   <Ionicons name="calendar" size={20} color={colors.primary} />
-                  <AppText style={[styles.menuItemText, { color: theme.text }]}>Add Manually</AppText>
+                  <AppText style={[styles.menuItemText, { color: theme.text }]}>
+                    {t('calendar_add_menu_add_manually')}
+                  </AppText>
                 </Pressable>
               </View>
             )}
@@ -430,7 +437,7 @@ export default function CalendarTabScreen() {
           <Pressable style={[styles.modalContent, { backgroundColor: theme.modalBg }]} onPress={(e) => e.stopPropagation()}>
             <View style={[styles.modalHeader, { borderBottomColor: theme.border }]}>
               <AppText style={[styles.modalTitle, { color: theme.text }]}>
-                Añadir cumpleaños
+                {t('calendar_manual_modal_title')}
               </AppText>
               <Pressable onPress={() => setShowAddManualModal(false)}>
                 <Ionicons name="close" size={24} color={theme.text} />
@@ -439,10 +446,12 @@ export default function CalendarTabScreen() {
 
             <View style={styles.addManualForm}>
               <View style={styles.formGroup}>
-                <AppText style={[styles.formLabel, { color: theme.text }]}>Nombre</AppText>
+                <AppText style={[styles.formLabel, { color: theme.text }]}>
+                  {t('calendar_manual_name_label')}
+                </AppText>
                 <TextInput
                   style={[styles.input, { backgroundColor: theme.inputBg, color: theme.text, borderColor: theme.border }]}
-                  placeholder="Ej: María"
+                  placeholder={t('calendar_manual_name_placeholder')}
                   placeholderTextColor={theme.textMuted}
                   value={manualName}
                   onChangeText={setManualName}
@@ -451,7 +460,9 @@ export default function CalendarTabScreen() {
               </View>
 
               <View style={styles.formGroup}>
-                <AppText style={[styles.formLabel, { color: theme.text }]}>Fecha de nacimiento</AppText>
+                <AppText style={[styles.formLabel, { color: theme.text }]}>
+                  {t('calendar_manual_date_label')}
+                </AppText>
                 <Pressable
                   style={[styles.dateButton, { backgroundColor: theme.inputBg, borderColor: theme.border }]}
                   onPress={() => {
@@ -461,7 +472,10 @@ export default function CalendarTabScreen() {
                 >
                   <Ionicons name="calendar-outline" size={20} color={colors.primary} />
                   <AppText style={[styles.dateButtonText, { color: theme.text }]}>
-                    {manualBirthdate.toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' })}
+                    {manualBirthdate.toLocaleDateString(
+                      lang === 'es' ? 'es-ES' : lang === 'de' ? 'de-DE' : 'en-US',
+                      { day: '2-digit', month: 'long', year: 'numeric' }
+                    )}
                   </AppText>
                 </Pressable>
               </View>
@@ -490,7 +504,7 @@ export default function CalendarTabScreen() {
                         style={[styles.doneButton, { backgroundColor: colors.primary }]}
                         onPress={() => setShowDatePicker(false)}
                       >
-                        <AppText style={styles.doneButtonText}>Listo</AppText>
+                        <AppText style={styles.doneButtonText}>{t('calendar_profile_close_button')}</AppText>
                       </Pressable>
                     </View>
                   )}
@@ -498,7 +512,7 @@ export default function CalendarTabScreen() {
               )}
 
               <AppButton
-                title={isAddingManual ? "Añadiendo..." : "Añadir cumpleaños"}
+                title={isAddingManual ? t('calendar_manual_submit_button') : t('calendar_manual_submit_button')}
                 onPress={handleAddManualBirthday}
                 disabled={isAddingManual || !manualName.trim()}
                 style={styles.submitButton}
