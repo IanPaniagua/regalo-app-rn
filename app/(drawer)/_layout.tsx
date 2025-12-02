@@ -12,6 +12,9 @@ export default function DrawerLayout() {
   const { user } = useUser();
   const { t } = useLanguage();
   const { theme } = useAppTheme();
+  
+  console.log('🔍 DEBUG - User avatar:', user?.avatar);
+  console.log('🔍 DEBUG - User name:', user?.name);
 
   return (
     <Drawer
@@ -29,7 +32,7 @@ export default function DrawerLayout() {
         headerRight: () => (
           user ? (
             <View style={styles.userContainer}>
-              <AppText style={styles.userName}>{user.name}</AppText>
+              <AppText style={styles.userAvatar}>{user.avatar}</AppText>
             </View>
           ) : null
         ),
@@ -112,14 +115,9 @@ export default function DrawerLayout() {
 const styles = StyleSheet.create({
   userContainer: {
     marginRight: 16,
-    paddingVertical: 4,
-    paddingHorizontal: 12,
-    backgroundColor: colors.primary,
-    borderRadius: 16,
   },
-  userName: {
-    fontSize: 14,
-    fontWeight: '600',
+  userAvatar: {
+    fontSize: 20,
     color: '#1A1A1A',
   },
 });
