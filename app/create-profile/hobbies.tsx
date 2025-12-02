@@ -95,7 +95,7 @@ export default function CreateProfileStep2() {
         >
           <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
             <View style={styles.content}>
-              <AppTitle style={styles.title}>¿Cuáles son tus hobbies?</AppTitle>
+              <AppTitle style={styles.title}>{t('create_profile_hobbies_title')}</AppTitle>
 
               <View style={styles.hobbiesGrid}>
                 {HOBBY_KEYS.map((hobbyKey) => {
@@ -131,7 +131,9 @@ export default function CreateProfileStep2() {
                   ]}
                   onPress={() => setShowCustomInput(!showCustomInput)}
                 >
-                  <AppText style={[styles.hobbyText, { color: theme.text }]}>Otro</AppText>
+                  <AppText style={[styles.hobbyText, { color: theme.text }]}>
+                    {t('profile_hobbies_other')}
+                  </AppText>
                 </Pressable>
               </View>
 
@@ -144,19 +146,21 @@ export default function CreateProfileStep2() {
                     ]}
                     value={customHobby}
                     onChangeText={setCustomHobby}
-                    placeholder="Escribe tu hobby"
+                    placeholder={t('profile_hobbies_custom_placeholder')}
                     placeholderTextColor={theme.textMuted}
                     onSubmitEditing={addCustomHobby}
                   />
                   <Pressable style={styles.addButton} onPress={addCustomHobby}>
-                    <AppText style={styles.addButtonText}>Añadir</AppText>
+                    <AppText style={styles.addButtonText}>{t('profile_hobbies_add')}</AppText>
                   </Pressable>
                 </View>
               )}
 
               {selectedHobbies.length > 0 && (
                 <View style={styles.selectedContainer}>
-                  <AppText style={[styles.selectedLabel, { color: theme.text }]}>Seleccionados:</AppText>
+                  <AppText style={[styles.selectedLabel, { color: theme.text }]}>
+                    {t('create_profile_hobbies_selected_label')}
+                  </AppText>
                   <View style={styles.selectedList}>
                     {selectedHobbies.map((hobby, index) => (
                       <View key={index} style={styles.selectedChip}>
@@ -185,7 +189,7 @@ export default function CreateProfileStep2() {
                     skipPressed && styles.skipTextPressed,
                   ]}
                 >
-                  Saltar
+                  {t('create_profile_gift_preferences_skip')}
                 </AppText>
               </Pressable>
             </View>

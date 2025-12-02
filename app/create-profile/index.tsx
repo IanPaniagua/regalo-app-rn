@@ -26,7 +26,7 @@ import { useLanguage } from '@/src/context/LanguageContext';
 export default function CreateProfileStep1() {
   const router = useRouter();
   const { theme } = useAppTheme();
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
   const { tempUser, setTempUser } = useUser();
   const [name, setName] = useState(tempUser?.name || '');
   const [birthdate, setBirthdate] = useState(
@@ -36,7 +36,7 @@ export default function CreateProfileStep1() {
 
   const handleContinue = () => {
     if (!name.trim()) {
-      Alert.alert('Error', 'Por favor ingresa tu nombre');
+      Alert.alert(t('create_profile_error_title'), t('profile_error_empty_name'));
       return;
     }
 
@@ -51,7 +51,8 @@ export default function CreateProfileStep1() {
   };
 
   const formatDate = (date: Date) => {
-    return date.toLocaleDateString('es-ES', {
+    const locale = lang === 'es' ? 'es-ES' : lang === 'de' ? 'de-DE' : 'en-US';
+    return date.toLocaleDateString(locale, {
       day: '2-digit',
       month: '2-digit',
       year: 'numeric',
@@ -71,15 +72,17 @@ export default function CreateProfileStep1() {
         >
           <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
             <View style={styles.content}>
-              <AppTitle style={styles.title}>Vamos a crear tu perfil</AppTitle>
+              <AppTitle style={styles.title}>{t('create_profile_intro_title')}</AppTitle>
 
               <View style={styles.inputGroup}>
-                <AppText style={[styles.label, { color: theme.textSecondary }]}>Nombre</AppText>
+                <AppText style={[styles.label, { color: theme.textSecondary }]}>
+                  {t('profile_name')}
+                </AppText>
                 <TextInput
                   style={[styles.input, { backgroundColor: theme.inputBg, color: theme.text, borderColor: theme.border }]}
                   value={name}
                   onChangeText={setName}
-                  placeholder="Tu nombre"
+                  placeholder={t('profile_name_placeholder')}
                   placeholderTextColor="#666"
                   returnKeyType="done"
                   onSubmitEditing={Keyboard.dismiss}
@@ -87,7 +90,9 @@ export default function CreateProfileStep1() {
               </View>
 
               <View style={styles.inputGroup}>
-                <AppText style={[styles.label, { color: theme.textSecondary }]}>Fecha de nacimiento</AppText>
+                <AppText style={[styles.label, { color: theme.textSecondary }]}>
+                  {t('profile_birthdate')}
+                </AppText>
                 <Pressable
                   style={[styles.dateButton, { backgroundColor: theme.inputBg, borderColor: theme.border }]}
                   onPress={() => {
@@ -125,7 +130,7 @@ export default function CreateProfileStep1() {
                 >
                   <Pressable onPress={() => setShowDatePicker(false)}>
                     <AppText style={[styles.modalButton, { color: theme.text }]}>
-                      Cancelar
+                      {t('common_cancel')}
                     </AppText>
                   </Pressable>
                   <Pressable onPress={() => setShowDatePicker(false)}>
@@ -136,7 +141,7 @@ export default function CreateProfileStep1() {
                         { color: colors.primary },
                       ]}
                     >
-                      Listo
+                      {t('common_done')}
                     </AppText>
                   </Pressable>
                 </View>
