@@ -1,28 +1,28 @@
+import { AppContainer } from '@/src/components/ui/AppContainer';
+import { AppText } from '@/src/components/ui/AppText';
+import { AppTitle } from '@/src/components/ui/AppTitle';
+import { useBirthdays } from '@/src/context/BirthdaysContext';
+import { useLanguage } from '@/src/context/LanguageContext';
+import { useUser } from '@/src/context/UserContext';
+import { db } from '@/src/database';
+import { authService } from '@/src/services/auth.service';
+import { colors } from '@/src/theme';
+import { useAppTheme } from '@/src/theme/ThemeProvider';
+import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import {
-  View,
-  StyleSheet,
-  TextInput,
-  Pressable,
-  Alert,
-  KeyboardAvoidingView,
-  ScrollView,
-  TouchableWithoutFeedback,
-  Keyboard,
-  Platform,
+    Alert,
+    Keyboard,
+    KeyboardAvoidingView,
+    Platform,
+    Pressable,
+    ScrollView,
+    StyleSheet,
+    TextInput,
+    TouchableWithoutFeedback,
+    View,
 } from 'react-native';
-import { useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
-import { AppContainer } from '@/src/components/ui/AppContainer';
-import { AppTitle } from '@/src/components/ui/AppTitle';
-import { AppText } from '@/src/components/ui/AppText';
-import { useLanguage } from '@/src/context/LanguageContext';
-import { colors, fonts } from '@/src/theme';
-import { useAppTheme } from '@/src/theme/ThemeProvider';
-import { useUser } from '@/src/context/UserContext';
-import { useBirthdays } from '@/src/context/BirthdaysContext';
-import { authService } from '@/src/services/auth.service';
-import { db } from '@/src/database';
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -116,7 +116,7 @@ export default function LoginScreen() {
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+          {Platform.OS === 'web' ? (
             <View style={styles.content}>
               <AppTitle style={styles.title}>{t('login_title')}</AppTitle>
               
@@ -198,7 +198,91 @@ export default function LoginScreen() {
                 <AppText style={styles.backButtonText}>{t('login_back')}</AppText>
               </Pressable>
             </View>
-          </TouchableWithoutFeedback>
+          ) : (
+            <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+              <View style={styles.content}>
+                <AppTitle style={styles.title}>{t('login_title')}</AppTitle>
+                
+                <AppText style={[styles.subtitle, { color: theme.textSecondary }]}>
+                  {t('login_subtitle')}
+                </AppText>
+
+                <View style={styles.inputContainer}>
+                  <View style={styles.labelRow}>
+                    <Ionicons name="mail-outline" size={18} color={colors.primary} />
+                    <AppText style={[styles.label, { color: theme.textSecondary }]}>{t('login_email_label')}</AppText>
+                  </View>
+                  <TextInput
+                    style={[styles.input, { backgroundColor: theme.inputBg, color: theme.text, borderColor: theme.border }]}
+                    value={email}
+                    onChangeText={setEmail}
+                    placeholder={t('login_email_placeholder')}
+                    placeholderTextColor="#666"
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    returnKeyType="next"
+                    onSubmitEditing={() => Keyboard.dismiss()}
+                  />
+                </View>
+
+                <View style={styles.inputContainer}>
+                  <View style={styles.labelRow}>
+                    <Ionicons name="lock-closed-outline" size={18} color={colors.primary} />
+                    <AppText style={[styles.label, { color: theme.textSecondary }]}>{t('login_password_label')}</AppText>
+                  </View>
+                  <View style={styles.passwordContainer}>
+                    <TextInput
+                      style={[styles.passwordInput, { backgroundColor: theme.inputBg, color: theme.text, borderColor: theme.border }]}
+                      value={password}
+                      onChangeText={setPassword}
+                      placeholder={t('login_password_placeholder')}
+                      placeholderTextColor="#666"
+                      secureTextEntry={!showPassword}
+                      autoCapitalize="none"
+                      autoCorrect={false}
+                      returnKeyType="done"
+                      onSubmitEditing={handleLogin}
+                    />
+                    <Pressable
+                      onPress={() => setShowPassword(!showPassword)}
+                      style={styles.eyeIcon}
+                    >
+                      <Ionicons
+                        name={showPassword ? "eye-off-outline" : "eye-outline"}
+                        size={22}
+                        color="#999"
+                      />
+                    </Pressable>
+                  </View>
+                </View>
+
+                <Pressable
+                  style={[styles.button, (!email.trim() || !password.trim() || isLoading) && styles.buttonDisabled]}
+                  onPress={handleLogin}
+                  disabled={!email.trim() || !password.trim() || isLoading}
+                >
+                  <AppText style={styles.buttonText}>
+                    {isLoading ? t('login_button_loading') : t('login_button')}
+                  </AppText>
+                </Pressable>
+
+                <Pressable
+                  style={styles.forgotPassword}
+                  onPress={handleForgotPassword}
+                >
+                  <AppText style={styles.forgotPasswordText}>{t('login_forgot_password')}</AppText>
+                </Pressable>
+
+                <Pressable
+                  style={styles.backButton}
+                  onPress={() => router.back()}
+                >
+                  <AppText style={styles.backButtonText}>{t('login_back')}</AppText>
+                </Pressable>
+              </View>
+            </TouchableWithoutFeedback>
+          )}
         </ScrollView>
       </KeyboardAvoidingView>
     </AppContainer>

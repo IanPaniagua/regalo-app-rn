@@ -1,12 +1,12 @@
-import { createContext, useContext, useState, useEffect, useRef, ReactNode } from 'react';
-import * as Notifications from 'expo-notifications';
-import * as Device from 'expo-device';
-import { Platform } from 'react-native';
-import Constants from 'expo-constants';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { db } from '@/src/database';
-import { useUser } from './UserContext';
 import { BirthdayNotificationModal } from '@/src/components/BirthdayNotificationModal';
+import { db } from '@/src/database';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import Constants from 'expo-constants';
+import * as Device from 'expo-device';
+import * as Notifications from 'expo-notifications';
+import { createContext, ReactNode, useContext, useEffect, useRef, useState } from 'react';
+import { Platform } from 'react-native';
+import { useUser } from './UserContext';
 
 // Configurar cómo se manejan las notificaciones cuando la app está en foreground
 Notifications.setNotificationHandler({
@@ -40,8 +40,8 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
   const [birthdayModalVisible, setBirthdayModalVisible] = useState(false);
   const [birthdayUserId, setBirthdayUserId] = useState<string | undefined>();
   
-  const notificationListener = useRef<Notifications.Subscription>();
-  const responseListener = useRef<Notifications.Subscription>();
+  const notificationListener = useRef<Notifications.Subscription | undefined>(undefined);
+  const responseListener = useRef<Notifications.Subscription | undefined>(undefined);
 
   const NOTIFICATIONS_ENABLED_KEY = '@regalo_app_notifications_enabled';
 
@@ -59,8 +59,13 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
     })();
   }, []);
 
-  // Registrar token cuando el usuario inicia sesión
+  // Registrar token cuando el usuario inicia sesión (solo en mobile)
   useEffect(() => {
+    if (Platform.OS === 'web') {
+      console.log('ℹ️ Push notifications not supported on web');
+      return;
+    }
+    
     if (user && notificationsEnabled && !fcmToken) {
       // Pequeño delay para asegurar que Firebase esté completamente inicializado
       const timer = setTimeout(() => {

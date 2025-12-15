@@ -1,28 +1,28 @@
-import { useState } from 'react';
-import {
-  View,
-  StyleSheet,
-  TextInput,
-  Alert,
-  KeyboardAvoidingView,
-  ScrollView,
-  TouchableWithoutFeedback,
-  Keyboard,
-  Platform,
-  Pressable,
-} from 'react-native';
-import { useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
-import { AppContainer } from '@/src/components/ui/AppContainer';
-import { AppTitle } from '@/src/components/ui/AppTitle';
-import { AppText } from '@/src/components/ui/AppText';
 import { AppButton } from '@/src/components/ui/AppButton';
+import { AppContainer } from '@/src/components/ui/AppContainer';
+import { AppText } from '@/src/components/ui/AppText';
+import { AppTitle } from '@/src/components/ui/AppTitle';
+import { useBirthdays } from '@/src/context/BirthdaysContext';
 import { useLanguage } from '@/src/context/LanguageContext';
+import { useUser } from '@/src/context/UserContext';
+import { authService } from '@/src/services/auth.service';
 import { colors, fonts } from '@/src/theme';
 import { useAppTheme } from '@/src/theme/ThemeProvider';
-import { useUser } from '@/src/context/UserContext';
-import { useBirthdays } from '@/src/context/BirthdaysContext';
-import { authService } from '@/src/services/auth.service';
+import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
+import { useState } from 'react';
+import {
+    Alert,
+    Keyboard,
+    KeyboardAvoidingView,
+    Platform,
+    Pressable,
+    ScrollView,
+    StyleSheet,
+    TextInput,
+    TouchableWithoutFeedback,
+    View,
+} from 'react-native';
 
 export default function CreateProfileStep3() {
   const router = useRouter();
@@ -110,6 +110,7 @@ export default function CreateProfileStep3() {
         avatar: tempUser.avatar!,
         birthdate: tempUser.birthdate!,
         hobbies: tempUser.hobbies!,
+        giftPreferences: tempUser.giftPreferences || [],
         email: email,
       });
 
@@ -121,19 +122,25 @@ export default function CreateProfileStep3() {
         dbUserId,
       });
 
-      Alert.alert(
-        t('create_profile_created_title'),
-        t('create_profile_created_message'),
-        [
-          {
-            text: t('common_ok'),
-            onPress: () => {
-              // @ts-ignore
-              router.replace('/(drawer)/(tabs)/calendar');
+      // En web, Alert.alert no funciona bien, navegar directamente
+      if (Platform.OS === 'web') {
+        // @ts-ignore
+        router.replace('/(drawer)/(tabs)/calendar');
+      } else {
+        Alert.alert(
+          t('create_profile_created_title'),
+          t('create_profile_created_message'),
+          [
+            {
+              text: t('common_ok'),
+              onPress: () => {
+                // @ts-ignore
+                router.replace('/(drawer)/(tabs)/calendar');
+              },
             },
-          },
-        ]
-      );
+          ]
+        );
+      }
     } catch (error: any) {
       console.error('❌ Error creating profile:', error);
       Alert.alert(
@@ -156,7 +163,7 @@ export default function CreateProfileStep3() {
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+          {Platform.OS === 'web' ? (
             <View style={styles.content}>
               <AppTitle style={styles.title}>{t('create_profile_email_title')}</AppTitle>
 
@@ -266,7 +273,119 @@ export default function CreateProfileStep3() {
                 style={styles.button}
               />
             </View>
-          </TouchableWithoutFeedback>
+          ) : (
+            <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+              <View style={styles.content}>
+                <AppTitle style={styles.title}>{t('create_profile_email_title')}</AppTitle>
+
+                <AppText style={[styles.subtitle, { color: theme.textSecondary }]}> 
+                  {t('create_profile_email_subtitle')}
+                </AppText>
+
+                <View style={styles.inputContainer}>
+                  <View style={styles.labelRow}>
+                    <Ionicons name="mail-outline" size={18} color={colors.primary} />
+                    <AppText style={[styles.label, { color: theme.text }]}>
+                      {t('create_profile_email_label')}
+                    </AppText>
+                  </View>
+                  <TextInput
+                    style={[
+                      styles.input,
+                      { backgroundColor: theme.inputBg, borderColor: theme.border, color: theme.text },
+                    ]}
+                    value={email}
+                    onChangeText={setEmail}
+                    placeholder={t('create_profile_email_placeholder')}
+                    placeholderTextColor={theme.textMuted}
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    returnKeyType="next"
+                    onSubmitEditing={() => Keyboard.dismiss()}
+                  />
+                </View>
+
+                <View style={styles.inputContainer}>
+                  <View style={styles.labelRow}>
+                    <Ionicons name="lock-closed-outline" size={18} color={colors.primary} />
+                    <AppText style={[styles.label, { color: theme.text }]}>
+                      {t('create_profile_password_label')}
+                    </AppText>
+                  </View>
+                  <View style={styles.passwordContainer}>
+                    <TextInput
+                      style={[
+                        styles.passwordInput,
+                        { backgroundColor: theme.inputBg, borderColor: theme.border, color: theme.text },
+                      ]}
+                      value={password}
+                      onChangeText={setPassword}
+                      placeholder={t('create_profile_password_placeholder')}
+                      placeholderTextColor={theme.textMuted}
+                      secureTextEntry={!showPassword}
+                      autoCapitalize="none"
+                      autoCorrect={false}
+                      returnKeyType="next"
+                    />
+                    <Pressable
+                      onPress={() => setShowPassword(!showPassword)}
+                      style={styles.eyeIcon}
+                    >
+                      <Ionicons
+                        name={showPassword ? "eye-off-outline" : "eye-outline"}
+                        size={22}
+                        color={theme.textMuted}
+                      />
+                    </Pressable>
+                  </View>
+                </View>
+
+                <View style={styles.inputContainer}>
+                  <View style={styles.labelRow}>
+                    <Ionicons name="lock-closed-outline" size={18} color={colors.primary} />
+                    <AppText style={[styles.label, { color: theme.text }]}>
+                      {t('create_profile_confirm_password_label')}
+                    </AppText>
+                  </View>
+                  <View style={styles.passwordContainer}>
+                    <TextInput
+                      style={[
+                        styles.passwordInput,
+                        { backgroundColor: theme.inputBg, borderColor: theme.border, color: theme.text },
+                      ]}
+                      value={confirmPassword}
+                      onChangeText={setConfirmPassword}
+                      placeholder={t('create_profile_confirm_password_placeholder')}
+                      placeholderTextColor={theme.textMuted}
+                      secureTextEntry={!showConfirmPassword}
+                      autoCapitalize="none"
+                      autoCorrect={false}
+                      returnKeyType="done"
+                      onSubmitEditing={handleContinue}
+                    />
+                    <Pressable
+                      onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+                      style={styles.eyeIcon}
+                    >
+                      <Ionicons
+                        name={showConfirmPassword ? "eye-off-outline" : "eye-outline"}
+                        size={22}
+                        color={theme.textMuted}
+                      />
+                    </Pressable>
+                  </View>
+                </View>
+
+                <AppButton
+                  title={isCreating ? t('create_profile_button_loading') : t('create_profile_button')}
+                  onPress={handleContinue}
+                  disabled={!email.trim() || !password.trim() || !confirmPassword.trim() || isCreating}
+                  style={styles.button}
+                />
+              </View>
+            </TouchableWithoutFeedback>
+          )}
         </ScrollView>
       </KeyboardAvoidingView>
     </AppContainer>

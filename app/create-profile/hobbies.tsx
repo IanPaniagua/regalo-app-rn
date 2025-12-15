@@ -1,24 +1,24 @@
-import { useState } from 'react';
-import { 
-  View, 
-  StyleSheet, 
-  TextInput, 
-  Pressable, 
-  ScrollView, 
-  KeyboardAvoidingView,
-  Platform,
-  TouchableWithoutFeedback,
-  Keyboard
-} from 'react-native';
-import { useRouter } from 'expo-router';
-import { AppContainer } from '@/src/components/ui/AppContainer';
-import { AppTitle } from '@/src/components/ui/AppTitle';
-import { AppText } from '@/src/components/ui/AppText';
 import { AppButton } from '@/src/components/ui/AppButton';
+import { AppContainer } from '@/src/components/ui/AppContainer';
+import { AppText } from '@/src/components/ui/AppText';
+import { AppTitle } from '@/src/components/ui/AppTitle';
+import { useLanguage } from '@/src/context/LanguageContext';
+import { useUser } from '@/src/context/UserContext';
 import { colors, fonts } from '@/src/theme';
 import { useAppTheme } from '@/src/theme/ThemeProvider';
-import { useUser } from '@/src/context/UserContext';
-import { useLanguage } from '@/src/context/LanguageContext';
+import { useRouter } from 'expo-router';
+import { useState } from 'react';
+import {
+    Keyboard,
+    KeyboardAvoidingView,
+    Platform,
+    Pressable,
+    ScrollView,
+    StyleSheet,
+    TextInput,
+    TouchableWithoutFeedback,
+    View
+} from 'react-native';
 
 const HOBBY_KEYS = [
   'hobby_sports',
@@ -93,7 +93,7 @@ export default function CreateProfileStep2() {
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+          {Platform.OS === 'web' ? (
             <View style={styles.content}>
               <AppTitle style={styles.title}>{t('create_profile_hobbies_title')}</AppTitle>
 
@@ -193,7 +193,109 @@ export default function CreateProfileStep2() {
                 </AppText>
               </Pressable>
             </View>
-          </TouchableWithoutFeedback>
+          ) : (
+            <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+              <View style={styles.content}>
+                <AppTitle style={styles.title}>{t('create_profile_hobbies_title')}</AppTitle>
+
+                <View style={styles.hobbiesGrid}>
+                  {HOBBY_KEYS.map((hobbyKey) => {
+                    const hobbyLabel = t(hobbyKey);
+                    return (
+                      <Pressable
+                        key={hobbyKey}
+                        style={[
+                          styles.hobbyChip,
+                          { backgroundColor: theme.inputBg, borderColor: theme.border },
+                          selectedHobbies.includes(hobbyLabel) && styles.hobbyChipSelected,
+                        ]}
+                        onPress={() => toggleHobby(hobbyLabel)}
+                      >
+                        <AppText
+                          style={[
+                            styles.hobbyText,
+                            { color: theme.text },
+                            selectedHobbies.includes(hobbyLabel) && styles.hobbyTextSelected,
+                          ]}
+                        >
+                          {hobbyLabel}
+                        </AppText>
+                      </Pressable>
+                    );
+                  })}
+
+                  <Pressable
+                    style={[
+                      styles.hobbyChip,
+                      { backgroundColor: theme.inputBg, borderColor: theme.border },
+                      styles.hobbyChipOther,
+                    ]}
+                    onPress={() => setShowCustomInput(!showCustomInput)}
+                  >
+                    <AppText style={[styles.hobbyText, { color: theme.text }]}>
+                      {t('profile_hobbies_other')}
+                    </AppText>
+                  </Pressable>
+                </View>
+
+                {showCustomInput && (
+                  <View style={styles.customInputContainer}>
+                    <TextInput
+                      style={[
+                        styles.input,
+                        { backgroundColor: theme.inputBg, borderColor: theme.border, color: theme.text },
+                      ]}
+                      value={customHobby}
+                      onChangeText={setCustomHobby}
+                      placeholder={t('profile_hobbies_custom_placeholder')}
+                      placeholderTextColor={theme.textMuted}
+                      onSubmitEditing={addCustomHobby}
+                    />
+                    <Pressable style={styles.addButton} onPress={addCustomHobby}>
+                      <AppText style={styles.addButtonText}>{t('profile_hobbies_add')}</AppText>
+                    </Pressable>
+                  </View>
+                )}
+
+                {selectedHobbies.length > 0 && (
+                  <View style={styles.selectedContainer}>
+                    <AppText style={[styles.selectedLabel, { color: theme.text }]}>
+                      {t('create_profile_hobbies_selected_label')}
+                    </AppText>
+                    <View style={styles.selectedList}>
+                      {selectedHobbies.map((hobby, index) => (
+                        <View key={index} style={styles.selectedChip}>
+                          <AppText style={styles.selectedText}>{hobby}</AppText>
+                        </View>
+                      ))}
+                    </View>
+                  </View>
+                )}
+
+                <AppButton
+                  title={t('create_profile_username_continue')}
+                  onPress={handleContinue}
+                  style={styles.button}
+                />
+
+                <Pressable
+                  onPress={handleSkip}
+                  onPressIn={() => setSkipPressed(true)}
+                  onPressOut={() => setSkipPressed(false)}
+                >
+                  <AppText
+                    style={[
+                      styles.skipText,
+                      { color: theme.textMuted },
+                      skipPressed && styles.skipTextPressed,
+                    ]}
+                  >
+                    {t('create_profile_gift_preferences_skip')}
+                  </AppText>
+                </Pressable>
+              </View>
+            </TouchableWithoutFeedback>
+          )}
         </ScrollView>
       </KeyboardAvoidingView>
     </AppContainer>

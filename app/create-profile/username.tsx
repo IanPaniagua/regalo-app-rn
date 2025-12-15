@@ -1,27 +1,26 @@
-import { useState, useEffect } from 'react';
-import {
-  View,
-  StyleSheet,
-  TextInput,
-  Pressable,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  TouchableWithoutFeedback,
-  Keyboard,
-  ActivityIndicator
-} from 'react-native';
-import { useRouter } from 'expo-router';
-import { AppContainer } from '@/src/components/ui/AppContainer';
-import { AppTitle } from '@/src/components/ui/AppTitle';
-import { AppText } from '@/src/components/ui/AppText';
 import { AppButton } from '@/src/components/ui/AppButton';
+import { AppContainer } from '@/src/components/ui/AppContainer';
+import { AppText } from '@/src/components/ui/AppText';
+import { AppTitle } from '@/src/components/ui/AppTitle';
+import { useLanguage } from '@/src/context/LanguageContext';
+import { useUser } from '@/src/context/UserContext';
+import { db } from '@/src/database';
 import { colors, fonts } from '@/src/theme';
 import { useAppTheme } from '@/src/theme/ThemeProvider';
-import { useUser } from '@/src/context/UserContext';
-import { useLanguage } from '@/src/context/LanguageContext';
 import { Ionicons } from '@expo/vector-icons';
-import { db } from '@/src/database';
+import { useRouter } from 'expo-router';
+import { useEffect, useState } from 'react';
+import {
+    ActivityIndicator,
+    Keyboard,
+    KeyboardAvoidingView,
+    Platform,
+    ScrollView,
+    StyleSheet,
+    TextInput,
+    TouchableWithoutFeedback,
+    View
+} from 'react-native';
 
 export default function CreateProfileUsername() {
   const router = useRouter();
@@ -130,7 +129,7 @@ export default function CreateProfileUsername() {
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+          {Platform.OS === 'web' ? (
             <View style={styles.content}>
               <AppTitle style={styles.title}>{t('create_profile_username_title')}</AppTitle>
 
@@ -174,7 +173,53 @@ export default function CreateProfileUsername() {
                 style={styles.button}
               />
             </View>
-          </TouchableWithoutFeedback>
+          ) : (
+            <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+              <View style={styles.content}>
+                <AppTitle style={styles.title}>{t('create_profile_username_title')}</AppTitle>
+
+                <AppText style={[styles.subtitle, { color: theme.textMuted }]}>
+                  {t('create_profile_username_subtitle')}
+                </AppText>
+
+                <View style={styles.inputContainer}>
+                  <View style={[styles.inputWrapper, { backgroundColor: theme.inputBg, borderColor: theme.border }]}>
+                    <AppText style={[styles.prefix, { color: theme.text }]}>
+                      {t('create_profile_username_prefix')}
+                    </AppText>
+                    <TextInput
+                      style={[styles.input, { color: theme.text }]}
+                      value={username}
+                      onChangeText={setUsername}
+                      placeholder={t('create_profile_username_placeholder')}
+                      placeholderTextColor={theme.textMuted}
+                      autoCapitalize="none"
+                      autoCorrect={false}
+                      autoComplete="off"
+                    />
+                    <View style={styles.statusIcon}>
+                      {getStatusIcon()}
+                    </View>
+                  </View>
+
+                  {(username.length > 0 || error) && (
+                    <View style={styles.statusContainer}>
+                      <AppText style={[styles.statusText, { color: getStatusColor() }]}>
+                        {getStatusText()}
+                      </AppText>
+                    </View>
+                  )}
+                </View>
+
+                <AppButton
+                  title={t('create_profile_username_continue')}
+                  onPress={handleContinue}
+                  disabled={!isAvailable || isChecking}
+                  style={styles.button}
+                />
+              </View>
+            </TouchableWithoutFeedback>
+          )}
         </ScrollView>
       </KeyboardAvoidingView>
     </AppContainer>

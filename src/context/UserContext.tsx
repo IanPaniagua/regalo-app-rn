@@ -1,6 +1,6 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { db } from '@/src/database';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { createContext, ReactNode, useContext, useEffect, useState } from 'react';
 
 // Datos completos del usuario (con email confirmado)
 interface UserData {
@@ -68,79 +68,94 @@ export function UserProvider({ children }: { children: ReactNode }) {
   const loadUser = async () => {
     try {
       const { authService } = await import('@/src/services/auth.service');
+      const { getAuth, onAuthStateChanged } = await import('firebase/auth');
       
-      // Primero verificar si hay sesión activa en Firebase Auth
-      let currentUser = authService.getCurrentUser();
+      // Esperar a que Firebase Auth restaure la sesión (importante para web)
+      const auth = getAuth();
       
-      // Si no hay sesión, intentar auto-login con credenciales guardadas
-      if (!currentUser) {
-        const storedCredentials = await AsyncStorage.getItem(AUTH_CREDENTIALS_KEY);
-        if (storedCredentials) {
-          try {
-            const { email, password } = JSON.parse(storedCredentials);
-            console.log('🔄 Attempting auto-login...');
-            await authService.signIn(email, password);
-            currentUser = authService.getCurrentUser();
-            console.log('✅ Auto-login successful');
-          } catch (error) {
-            console.error('❌ Auto-login failed:', error);
-            // Limpiar credenciales inválidas
-            await AsyncStorage.removeItem(AUTH_CREDENTIALS_KEY);
-            await AsyncStorage.removeItem(USER_STORAGE_KEY);
-            setUser(null);
-            setIsLoading(false);
-            return;
-          }
-        } else {
-          console.log('ℹ️ No stored credentials, user needs to login');
-          setUser(null);
-          setIsLoading(false);
-          return;
-        }
-      }
-      
-      // Si hay sesión (activa o restaurada), cargar datos del usuario desde Firebase
-      if (currentUser) {
-        try {
-          // Recargar usuario desde Firebase para tener datos actualizados
-          const dbUser = await db.getAdapter().getUser(currentUser.uid);
-          if (dbUser) {
-            const userData: UserData = {
-              ...dbUser,
-              avatar: dbUser.avatar || '🎉',
-              username: dbUser.username || undefined,
-              giftPreferences: dbUser.giftPreferences || [],
-            };
-            setUser(userData);
-            await saveUser(userData);
-            console.log('✅ User loaded from Firebase:', userData.email);
+      await new Promise<void>((resolve) => {
+        const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+          unsubscribe(); // Solo necesitamos el primer evento
+          
+          let currentUser = firebaseUser;
+          
+          // Si no hay sesión restaurada, intentar auto-login con credenciales guardadas
+          if (!currentUser) {
+            const storedCredentials = await AsyncStorage.getItem(AUTH_CREDENTIALS_KEY);
+            if (storedCredentials) {
+              try {
+                const { email, password } = JSON.parse(storedCredentials);
+                console.log('🔄 Attempting auto-login...');
+                await authService.signIn(email, password);
+                currentUser = authService.getCurrentUser();
+                console.log('✅ Auto-login successful');
+              } catch (error) {
+                console.error('❌ Auto-login failed:', error);
+                // Limpiar credenciales inválidas
+                await AsyncStorage.removeItem(AUTH_CREDENTIALS_KEY);
+                await AsyncStorage.removeItem(USER_STORAGE_KEY);
+                setUser(null);
+                setIsLoading(false);
+                resolve();
+                return;
+              }
+            } else {
+              console.log('ℹ️ No stored credentials, user needs to login');
+              setUser(null);
+              setIsLoading(false);
+              resolve();
+              return;
+            }
           } else {
-            // Si no existe en Firebase, intentar desde storage como fallback
-            const storedUser = await AsyncStorage.getItem(USER_STORAGE_KEY);
-            if (storedUser) {
-              const parsedUser = JSON.parse(storedUser);
-              // Convertir fechas de string a Date
-              if (parsedUser.birthdate) {
-                parsedUser.birthdate = new Date(parsedUser.birthdate);
+            console.log('✅ Firebase Auth session restored:', firebaseUser?.uid);
+          }
+      
+          // Si hay sesión (activa o restaurada), cargar datos del usuario desde Firebase
+          if (currentUser) {
+            try {
+              // Recargar usuario desde Firebase para tener datos actualizados
+              const dbUser = await db.getAdapter().getUser(currentUser.uid);
+              if (dbUser) {
+                const userData: UserData = {
+                  ...dbUser,
+                  avatar: dbUser.avatar || '🎉',
+                  username: dbUser.username || undefined,
+                  giftPreferences: dbUser.giftPreferences || [],
+                };
+                setUser(userData);
+                await saveUser(userData);
+                console.log('✅ User loaded from Firebase:', userData.email);
+              } else {
+                // Si no existe en Firebase, intentar desde storage como fallback
+                const storedUser = await AsyncStorage.getItem(USER_STORAGE_KEY);
+                if (storedUser) {
+                  const parsedUser = JSON.parse(storedUser);
+                  // Convertir fechas de string a Date
+                  if (parsedUser.birthdate) {
+                    parsedUser.birthdate = new Date(parsedUser.birthdate);
+                  }
+                  if (parsedUser.hideAgeLastChangeDate) {
+                    parsedUser.hideAgeLastChangeDate = new Date(parsedUser.hideAgeLastChangeDate);
+                  }
+                  if (parsedUser.nameLastChangeDate) {
+                    parsedUser.nameLastChangeDate = new Date(parsedUser.nameLastChangeDate);
+                  }
+                  
+                  setUser(parsedUser);
+                  console.log('✅ User loaded from storage (fallback):', parsedUser.email);
+                }
               }
-              if (parsedUser.hideAgeLastChangeDate) {
-                parsedUser.hideAgeLastChangeDate = new Date(parsedUser.hideAgeLastChangeDate);
-              }
-              if (parsedUser.nameLastChangeDate) {
-                parsedUser.nameLastChangeDate = new Date(parsedUser.nameLastChangeDate);
-              }
-              
-              setUser(parsedUser);
-              console.log('✅ User loaded from storage (fallback):', parsedUser.email);
+            } catch (error) {
+              console.error('❌ Error loading user from Firebase:', error);
             }
           }
-        } catch (error) {
-          console.error('❌ Error loading user from Firebase:', error);
-        }
-      }
+          
+          setIsLoading(false);
+          resolve();
+        });
+      });
     } catch (error) {
-      console.error('❌ Error loading user from storage:', error);
-    } finally {
+      console.error('❌ Error loading user:', error);
       setIsLoading(false);
     }
   };

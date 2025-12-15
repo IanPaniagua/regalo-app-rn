@@ -1,27 +1,27 @@
-import { useState } from 'react';
-import { 
-  View, 
-  StyleSheet, 
-  TextInput, 
-  Pressable, 
-  Platform, 
-  Modal, 
-  KeyboardAvoidingView,
-  ScrollView,
-  TouchableWithoutFeedback,
-  Keyboard,
-  Alert
-} from 'react-native';
-import { useRouter } from 'expo-router';
-import DateTimePicker from '@react-native-community/datetimepicker';
-import { AppContainer } from '@/src/components/ui/AppContainer';
-import { AppTitle } from '@/src/components/ui/AppTitle';
-import { AppText } from '@/src/components/ui/AppText';
 import { AppButton } from '@/src/components/ui/AppButton';
+import { AppContainer } from '@/src/components/ui/AppContainer';
+import { AppText } from '@/src/components/ui/AppText';
+import { AppTitle } from '@/src/components/ui/AppTitle';
+import { useLanguage } from '@/src/context/LanguageContext';
+import { useUser } from '@/src/context/UserContext';
 import { colors, fonts } from '@/src/theme';
 import { useAppTheme } from '@/src/theme/ThemeProvider';
-import { useUser } from '@/src/context/UserContext';
-import { useLanguage } from '@/src/context/LanguageContext';
+import DateTimePicker from '@react-native-community/datetimepicker';
+import { useRouter } from 'expo-router';
+import { useState } from 'react';
+import {
+    Alert,
+    Keyboard,
+    KeyboardAvoidingView,
+    Modal,
+    Platform,
+    Pressable,
+    ScrollView,
+    StyleSheet,
+    TextInput,
+    TouchableWithoutFeedback,
+    View
+} from 'react-native';
 
 export default function CreateProfileStep1() {
   const router = useRouter();
@@ -70,7 +70,7 @@ export default function CreateProfileStep1() {
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+          {Platform.OS === 'web' ? (
             <View style={styles.content}>
               <AppTitle style={styles.title}>{t('create_profile_intro_title')}</AppTitle>
 
@@ -85,7 +85,6 @@ export default function CreateProfileStep1() {
                   placeholder={t('profile_name_placeholder')}
                   placeholderTextColor="#666"
                   returnKeyType="done"
-                  onSubmitEditing={Keyboard.dismiss}
                 />
               </View>
 
@@ -93,15 +92,31 @@ export default function CreateProfileStep1() {
                 <AppText style={[styles.label, { color: theme.textSecondary }]}>
                   {t('profile_birthdate')}
                 </AppText>
-                <Pressable
-                  style={[styles.dateButton, { backgroundColor: theme.inputBg, borderColor: theme.border }]}
-                  onPress={() => {
-                    Keyboard.dismiss();
-                    setShowDatePicker(true);
+                <input
+                  type="date"
+                  value={birthdate.toISOString().split('T')[0]}
+                  onChange={(e) => {
+                    if (e.target.value) {
+                      const selectedDate = new Date(e.target.value + 'T12:00:00');
+                      if (!isNaN(selectedDate.getTime())) {
+                        setBirthdate(selectedDate);
+                      }
+                    }
                   }}
-                >
-                  <AppText>{formatDate(birthdate)}</AppText>
-                </Pressable>
+                  max={new Date().toISOString().split('T')[0]}
+                  style={{
+                    width: '100%',
+                    padding: 16,
+                    fontSize: 16,
+                    borderRadius: 12,
+                    borderWidth: 1,
+                    borderStyle: 'solid',
+                    borderColor: theme.border,
+                    backgroundColor: theme.inputBg,
+                    color: theme.text,
+                    fontFamily: fonts.text,
+                  }}
+                />
               </View>
 
               <AppButton
@@ -110,7 +125,49 @@ export default function CreateProfileStep1() {
                 style={styles.button}
               />
             </View>
-          </TouchableWithoutFeedback>
+          ) : (
+            <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+              <View style={styles.content}>
+                <AppTitle style={styles.title}>{t('create_profile_intro_title')}</AppTitle>
+
+                <View style={styles.inputGroup}>
+                  <AppText style={[styles.label, { color: theme.textSecondary }]}>
+                    {t('profile_name')}
+                  </AppText>
+                  <TextInput
+                    style={[styles.input, { backgroundColor: theme.inputBg, color: theme.text, borderColor: theme.border }]}
+                    value={name}
+                    onChangeText={setName}
+                    placeholder={t('profile_name_placeholder')}
+                    placeholderTextColor="#666"
+                    returnKeyType="done"
+                    onSubmitEditing={Keyboard.dismiss}
+                  />
+                </View>
+
+                <View style={styles.inputGroup}>
+                  <AppText style={[styles.label, { color: theme.textSecondary }]}>
+                    {t('profile_birthdate')}
+                  </AppText>
+                  <Pressable
+                    style={[styles.dateButton, { backgroundColor: theme.inputBg, borderColor: theme.border }]}
+                    onPress={() => {
+                      Keyboard.dismiss();
+                      setShowDatePicker(true);
+                    }}
+                  >
+                    <AppText>{formatDate(birthdate)}</AppText>
+                  </Pressable>
+                </View>
+
+                <AppButton
+                  title={t('create_profile_username_continue')}
+                  onPress={handleContinue}
+                  style={styles.button}
+                />
+              </View>
+            </TouchableWithoutFeedback>
+          )}
 
         {/* Modal para iOS con DatePicker */}
         {Platform.OS === 'ios' && showDatePicker && (

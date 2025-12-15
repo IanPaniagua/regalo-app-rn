@@ -1,24 +1,24 @@
-import { useState } from 'react';
-import { 
-  View, 
-  StyleSheet, 
-  TextInput, 
-  Pressable, 
-  ScrollView, 
-  KeyboardAvoidingView,
-  Platform,
-  TouchableWithoutFeedback,
-  Keyboard
-} from 'react-native';
-import { useRouter } from 'expo-router';
-import { AppContainer } from '@/src/components/ui/AppContainer';
-import { AppTitle } from '@/src/components/ui/AppTitle';
-import { AppText } from '@/src/components/ui/AppText';
 import { AppButton } from '@/src/components/ui/AppButton';
+import { AppContainer } from '@/src/components/ui/AppContainer';
+import { AppText } from '@/src/components/ui/AppText';
+import { AppTitle } from '@/src/components/ui/AppTitle';
+import { useLanguage } from '@/src/context/LanguageContext';
+import { useUser } from '@/src/context/UserContext';
 import { colors, fonts } from '@/src/theme';
 import { useAppTheme } from '@/src/theme/ThemeProvider';
-import { useUser } from '@/src/context/UserContext';
-import { useLanguage } from '@/src/context/LanguageContext';
+import { useRouter } from 'expo-router';
+import { useState } from 'react';
+import {
+    Keyboard,
+    KeyboardAvoidingView,
+    Platform,
+    Pressable,
+    ScrollView,
+    StyleSheet,
+    TextInput,
+    TouchableWithoutFeedback,
+    View
+} from 'react-native';
 
 const GIFT_PREFERENCE_KEYS = [
   'gift_clothes',
@@ -93,7 +93,7 @@ export default function CreateProfileGiftPreferences() {
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+          {Platform.OS === 'web' ? (
             <View style={styles.content}>
               <AppTitle style={styles.title}>{t('create_profile_gift_preferences_title')}</AppTitle>
 
@@ -191,7 +191,107 @@ export default function CreateProfileGiftPreferences() {
                 </AppText>
               </Pressable>
             </View>
-          </TouchableWithoutFeedback>
+          ) : (
+            <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+              <View style={styles.content}>
+                <AppTitle style={styles.title}>{t('create_profile_gift_preferences_title')}</AppTitle>
+
+                <View style={styles.preferencesGrid}>
+                  {GIFT_PREFERENCE_KEYS.map((prefKey) => {
+                    const prefLabel = t(prefKey);
+                    return (
+                      <Pressable
+                        key={prefKey}
+                        style={[
+                          styles.preferenceChip,
+                          { backgroundColor: theme.inputBg, borderColor: theme.border },
+                          selectedPreferences.includes(prefLabel) && styles.preferenceChipSelected,
+                        ]}
+                        onPress={() => togglePreference(prefLabel)}
+                      >
+                        <AppText
+                          style={[
+                            styles.preferenceText,
+                            { color: theme.text },
+                            selectedPreferences.includes(prefLabel) && styles.preferenceTextSelected,
+                          ]}
+                        >
+                          {prefLabel}
+                        </AppText>
+                      </Pressable>
+                    );
+                  })}
+
+                  <Pressable
+                    style={[
+                      styles.preferenceChip,
+                      { backgroundColor: theme.inputBg, borderColor: theme.border },
+                      styles.preferenceChipOther,
+                    ]}
+                    onPress={() => setShowCustomInput(!showCustomInput)}
+                  >
+                    <AppText style={[styles.preferenceText, { color: theme.text }]}>
+                      {t('profile_gift_preferences_other')}
+                    </AppText>
+                  </Pressable>
+                </View>
+
+                {showCustomInput && (
+                  <View style={styles.customInputContainer}>
+                    <TextInput
+                      style={[
+                        styles.input,
+                        { backgroundColor: theme.inputBg, borderColor: theme.border, color: theme.text },
+                      ]}
+                      value={customPreference}
+                      onChangeText={setCustomPreference}
+                      placeholder={t('profile_gift_preferences_custom_placeholder')}
+                      placeholderTextColor={theme.textMuted}
+                      onSubmitEditing={addCustomPreference}
+                    />
+                    <Pressable style={styles.addButton} onPress={addCustomPreference}>
+                      <AppText style={styles.addButtonText}>{t('profile_gift_preferences_add')}</AppText>
+                    </Pressable>
+                  </View>
+                )}
+
+                {selectedPreferences.length > 0 && (
+                  <View style={styles.selectedContainer}>
+                    <AppText style={[styles.selectedLabel, { color: theme.text }]}>Seleccionados:</AppText>
+                    <View style={styles.selectedList}>
+                      {selectedPreferences.map((preference, index) => (
+                        <View key={index} style={styles.selectedChip}>
+                          <AppText style={styles.selectedText}>{preference}</AppText>
+                        </View>
+                      ))}
+                    </View>
+                  </View>
+                )}
+
+                <AppButton
+                  title={t('create_profile_username_continue')}
+                  onPress={handleContinue}
+                  style={styles.button}
+                />
+
+                <Pressable
+                  onPress={handleSkip}
+                  onPressIn={() => setSkipPressed(true)}
+                  onPressOut={() => setSkipPressed(false)}
+                >
+                  <AppText
+                    style={[
+                      styles.skipText,
+                      { color: theme.textMuted },
+                      skipPressed && styles.skipTextPressed,
+                    ]}
+                  >
+                    {t('create_profile_gift_preferences_skip')}
+                  </AppText>
+                </Pressable>
+              </View>
+            </TouchableWithoutFeedback>
+          )}
         </ScrollView>
       </KeyboardAvoidingView>
     </AppContainer>
