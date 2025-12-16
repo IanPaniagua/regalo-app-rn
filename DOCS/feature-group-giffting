@@ -1,0 +1,131 @@
+# RegaloApp – Group Gifting MVP
+
+El objetivo es completar cada actividad paso a paso, pero antes debemos crear estrategia de desarrollo.
+
+## Backbone (Main Activities)
+- [ ] Group Creation (Setup)
+- [ ] Invitation & Access (Onboarding)
+- [ ] Coordination & Chat (Communication)
+- [ ] Payment Management (Core Value)
+- [ ] Notifications (Engagement)
+
+---
+
+## Release 1 – MVP (Validation)
+**Goal:** Enable a group to organize, chat, and track payments manually but accurately.  
+
+
+### Activity 1: Group Creation
+
+#### [US 1.1] Create Group
+- [ ] Story: As a Group Creator, I want to create a new gift group with a name and total price.
+  - [ ] AC 1: User can input Gift Name (max 50 chars)
+  - [ ] AC 2: User can input Total Price (numeric, positive)
+  - [ ] AC 3: Group is created with Creator as Admin and status "Active"
+
+---
+
+### Activity 2: Invitation & Access
+
+#### [US 2.1] Invite Users
+- [ ] Story: As a Creator, I want to invite users by username.
+  - [ ] AC 1: Search field for usernames
+  - [ ] AC 2: Invited users appear in a "Pending" list
+  - [ ] AC 3: Cannot invite the same user twice
+
+#### [US 2.2] Accept / Reject Invitation
+- [ ] Story: As an Invitee, I want to view gift details before accepting.
+  - [ ] AC 1: Invitation screen shows who invited, gift name, total price
+  - [ ] AC 2: "Accept" adds user to group and chat
+  - [ ] AC 3: "Reject" removes invite; user does not join
+
+---
+
+### Activity 3: Coordination & Chat
+
+#### [US 3.1] Group Chat
+- [ ] Story: As a Member, I want to send and receive messages.
+  - [ ] AC 1: Messages appear in chronological order
+  - [ ] AC 2: Sender name and timestamp visible
+  - [ ] AC 3: Real-time updates (no refresh needed)
+
+---
+
+### Activity 4: Payment Management
+
+#### [US 4.1] Automatic Price per Person Calculation
+- [ ] Story: As a Member, I want to see exactly how much I pay automatically.
+  - [ ] AC 1: System displays "Price per person"
+  - [ ] AC 2: Formula = Total Price / (1 Creator + Accepted Members)
+  - [ ] AC 3: Updates immediately when a member joins or is removed
+
+#### [US 4.2] Manual Payment Tracking
+- [ ] Story: As a Creator, I want to mark members as Paid.
+  - [ ] AC 1: Checkbox/toggle next to each member
+  - [ ] AC 2: Only Creator can change status
+  - [ ] AC 3: Status changes visible immediately to all members
+
+---
+
+## Release 2 – Flexibility & Smart Adjustments
+**Goal:** Handle real-world changes (price updates, members leaving)
+
+### Activity 1: Group Creation (Edit Mode)
+
+#### [US 1.2] Edit Gift Details
+- [ ] Story: As a Creator, I want to edit gift name or total price.
+  - [ ] AC 1: Edit button visible only to Creator
+  - [ ] AC 2: Changing price recalculates price per person
+  - [ ] AC 3: System message in chat: "Laura updated the price to 150€"
+
+### Activity 2: Invitation & Access (Management)
+
+#### [US 2.3] Remove Member
+- [ ] Story: As a Creator, I want to remove a member who backed out.
+  - [ ] AC 1: Remove option visible only to Creator
+  - [ ] AC 2: Removed user loses access to chat
+  - [ ] AC 3: Price per person updates automatically
+
+### Activity 4: Payment Management (Visuals)
+
+#### [US 4.3] Payment Progress Bar
+- [ ] Story: As a Member, I want a visual progress bar for payments.
+  - [ ] AC 1: Shows % Paid Members / Total Members
+  - [ ] AC 2: Turns green when 100% is reached
+
+---
+
+## Release 3 – Automation & Closure
+**Goal:** Reduce friction and close the loop
+
+### Activity 4: Payment Management (Facilitation)
+
+#### [US 4.4] Payment Link Sharing
+- [ ] Story: As a Creator, I want to add a payment link for easy payment.
+  - [ ] AC 1: Optional Payment Link field in settings
+  - [ ] AC 2: Clickable and visible to all members
+  - [ ] AC 3: System validates URL format
+
+### Activity 5: Closure & History
+
+#### [US 5.1] Close Group
+- [ ] Story: As a Creator, I want to close the group after birthday.
+  - [ ] AC 1: "Close Group" available only when 100% Paid
+  - [ ] AC 2: Group moves to History tab
+  - [ ] AC 3: Chat becomes read-only
+
+#### [US 5.2] Gift History
+- [ ] Story: As a User, I want to see past gifts.
+  - [ ] AC 1: Past Gifts section/tab
+  - [ ] AC 2: Shows Gift Name, Date, Recipient, Final Price
+
+---
+
+## Summary
+- MVP: Core flow + automatic calculation  
+- Release 2: Flexibility & error handling  
+- Release 3: Quality of life (payment links + history)
+
+
+Siempre hay que tener en cuenta el Definition of Done (DoD) del proyecto para cada release y user story, incluyendo los criterios de aceptación y la calidad del código.
+el DoD esta en @DoD.txt
