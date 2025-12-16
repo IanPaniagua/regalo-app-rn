@@ -1,0 +1,36 @@
+Definition of Done (DoD) - RegaloApp Project
+For any User Story or Feature to be considered "Done", it must meet the following criteria:
+
+1. Functional Completeness
+
+[ ] All Acceptance Criteria (AC) defined in the User Story Map are met.
+
+[ ] The feature works on the "Happy Path" without crashing.
+
+[ ] The Automatic Calculation logic (Price/Person) is accurate and verified.
+
+2. Code Quality & Review
+
+[ ] Code is committed to the main repository.
+
+[ ] Peer Review: Code has been reviewed by at least one other team member.
+
+[ ] No hardcoded strings (text is extractable for translation).
+
+3. Testing
+
+[ ] Unit Tests for critical logic (e.g., math calculations) are written and passed.
+
+[ ] Manual Testing performed on a device/emulator.
+
+[ ] No critical bugs (Priority 1) remain open.
+
+4. Design & UX
+
+[ ] UI matches the agreed design (Dark Mode/Gold theme).
+
+[ ] User feedback (loading states, success messages) is implemented.
+
+5. Data Privacy
+
+[ ] Firestore Security Rules prevent users from seeing groups they are not invited to.
