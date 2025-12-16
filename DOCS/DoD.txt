@@ -13,8 +13,6 @@ For any User Story or Feature to be considered "Done", it must meet the followin
 
 [ ] Code is committed to the main repository.
 
-[ ] Peer Review: Code has been reviewed by at least one other team member.
-
 [ ] No hardcoded strings (text is extractable for translation).
 
 3. Testing
