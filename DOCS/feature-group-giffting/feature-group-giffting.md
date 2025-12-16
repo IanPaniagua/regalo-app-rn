@@ -14,7 +14,7 @@ The goal is to complete each activity step by step, but first we define a develo
 
 ---
 
-## Release 1 – MVP (Validation) ✅ **COMPLETADO**
+## Release 1 – MVP (Validation) ✅ **COMPLETED**
 **Goal:** Enable a group to organize, chat, and track payments manually but accurately.  
 
 
@@ -80,24 +80,26 @@ The goal is to complete each activity step by step, but first we define a develo
 
 ---
 
-## Release 2 – Flexibility & Smart Adjustments ✅ **COMPLETADO**
+## Release 2 – Flexibility & Smart Adjustments ⚠️ **PARTIALLY COMPLETED**
 **Goal:** Handle real-world changes (price updates, members leaving)
 
 ### Activity 1: Group Creation (Edit Mode)
 
-#### [US 1.2] Edit Gift Details ✅
-- [x] Story: As a Creator, I want to edit gift name or total price.
-  - [x] AC 1: Edit button visible only to Creator
-  - [x] AC 2: Changing price recalculates price per person
-  - [x] AC 3: System message in chat: "Laura updated the price to 150€"
+#### [US 1.2] Edit Gift Details ❌
+- [ ] Story: As a Creator, I want to edit gift name or total price.
+  - [ ] AC 1: Edit button visible only to Creator
+  - [ ] AC 2: Changing price recalculates price per person
+  - [ ] AC 3: System message in chat: "Laura updated the price to 150€"
+  - **Status:** Backend function `updateGroupDetails` exists in GroupsContext, but NO edit screen UI implemented
 
 ### Activity 2: Invitation & Access (Management)
 
-#### [US 2.3] Remove Member ✅
-- [x] Story: As a Creator, I want to remove a member who backed out.
-  - [x] AC 1: Remove option visible only to Creator
-  - [x] AC 2: Removed user loses access to chat
-  - [x] AC 3: Price per person updates automatically
+#### [US 2.3] Remove Member ❌
+- [ ] Story: As a Creator, I want to remove a member who backed out.
+  - [ ] AC 1: Remove option visible only to Creator
+  - [ ] AC 2: Removed user loses access to chat
+  - [ ] AC 3: Price per person updates automatically
+  - **Status:** Backend function `removeMember` exists in GroupsContext, but NO UI button in group detail screen
 
 ### Activity 4: Payment Management (Visuals)
 
@@ -108,16 +110,17 @@ The goal is to complete each activity step by step, but first we define a develo
 
 ---
 
-## Release 3 – Automation & Closure ✅ **COMPLETADO**
+## Release 3 – Automation & Closure ⚠️ **PARTIALLY COMPLETED**
 **Goal:** Reduce friction and close the loop
 
 ### Activity 4: Payment Management (Facilitation)
 
-#### [US 4.4] Payment Link Sharing ✅
-- [x] Story: As a Creator, I want to add a payment link for easy payment.
-  - [x] AC 1: Optional Payment Link field in settings
-  - [x] AC 2: Clickable and visible to all members
-  - [x] AC 3: System validates URL format
+#### [US 4.4] Payment Link Sharing ❌
+- [ ] Story: As a Creator, I want to add a payment link for easy payment.
+  - [ ] AC 1: Optional Payment Link field in settings
+  - [ ] AC 2: Clickable and visible to all members
+  - [ ] AC 3: System validates URL format
+  - **Status:** Backend field `paymentLink` exists in GiftGroup model and `updateGroupDetails` can save it, but NO UI to add/display it
 
 ### Activity 5: Closure & History
 
@@ -138,10 +141,27 @@ The goal is to complete each activity step by step, but first we define a develo
 ---
 
 ## Summary
-- ✅ MVP: Core flow + automatic calculation  
-- ✅ Release 2: Flexibility & error handling  
-- ✅ Release 3: Quality of life (payment links + history)
+- ✅ **MVP (R1):** Core flow + automatic calculation - **FULLY IMPLEMENTED**
+- ⚠️ **Release 2:** Payment progress bar implemented, but edit/remove member only have backend (no UI)
+- ⚠️ **Release 3:** Close group + history implemented, but payment link only has backend (no UI)
 - ✅ **Extras:** Multilingual support + Enhanced UX features
+
+### What's Working
+- ✅ Create groups with all fields
+- ✅ Invite members with deadline validation
+- ✅ Accept/reject invitations
+- ✅ Real-time chat with system messages
+- ✅ Automatic price calculation (estimated/final)
+- ✅ Manual payment tracking
+- ✅ Payment progress bar
+- ✅ Close groups
+- ✅ View history
+- ✅ Multilingual (ES/EN/DE)
+
+### What's Missing UI:
+- ❌ Edit group details screen
+- ❌ Remove member button
+- ❌ Payment link input/display
 
 ---
 
@@ -149,10 +169,10 @@ The goal is to complete each activity step by step, but first we define a develo
 
 During development, several additional features were implemented that were not originally planned:
 
-### 1. **Full Multilingual System**
-- Support for 3 languages: Spanish, English, German
-- All group-related screens translated
-- Variable interpolation in translations
+### 1. **Close Groups & History** (from Release 3)
+- Implemented early due to available development time
+- Groups can be closed and moved to history
+- Read-only chat in closed groups
 - Dynamic change based on user preference
 
 ### 2. **Gift Description**

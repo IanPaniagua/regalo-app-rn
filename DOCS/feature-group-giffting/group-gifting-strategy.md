@@ -1,23 +1,23 @@
 # Group Gifting - Technical Strategy
 **Stack:** React Native + Expo + Firebase (Firestore + Auth)  
 **Branch:** `feature-group-giffting`  
-**Status:** ✅ **MVP COMPLETADO** (16 Diciembre 2025)
+**Status:** ✅ **MVP COMPLETED** (16 December 2025)
 
 ---
 
 ## 📋 Executive Summary
 
-**Feasibility:** ✅ **100% Viable** con el stack actual  
-**Complexity:** Media-Alta (principalmente por el chat en tiempo real)  
-**Estimated Effort:** 3-4 semanas de desarrollo incremental  
-**Actual Effort:** ~2 semanas (MVP + extras completados)
+**Feasibility:** ✅ **100% Viable** with the current stack  
+**Complexity:** Medium-High (mainly because of real-time chat)  
+**Estimated Effort:** 3–4 weeks of incremental development  
+**Actual Effort:** ~2 weeks (MVP + extra features completed)
 
 ### Key Technical Decisions
-1. **Database:** Firestore (ya configurado) - perfecto para real-time
-2. **Chat:** Firestore real-time listeners (sin necesidad de servicios externos)
-3. **Notifications:** Firebase Cloud Messaging (ya implementado)
-4. **State Management:** Context API (patrón ya establecido en la app)
-5. **Navigation:** Expo Router (ya configurado con tabs/drawer)
+1. **Database:** Firestore (already configured) – perfect for real-time
+2. **Chat:** Firestore real-time listeners (no external service required)
+3. **Notifications:** Firebase Cloud Messaging (already implemented)
+4. **State Management:** Context API (pattern already established in the app)
+5. **Navigation:** Expo Router (already configured with tabs/drawer)
 
 ---
 
@@ -29,10 +29,10 @@ interface GiftGroup {
   id: string;                    // Auto-generated
   giftName: string;              // max 50 chars
   totalPrice: number;            // positive number
-  recipientUserId: string;       // quien recibe el regalo
-  creatorId: string;             // admin del grupo
-  status: 'active' | 'closed';   // estado del grupo
-  paymentLink?: string;          // opcional (Release 3)
+  recipientUserId: string;       // gift recipient
+  creatorId: string;             // group admin
+  status: 'active' | 'closed';   // group status
+  paymentLink?: string;          // optional (Release 3)
   createdAt: Date;
   updatedAt: Date;
   closedAt?: Date;               // cuando se cierra
@@ -44,11 +44,11 @@ interface GiftGroup {
 interface GroupMember {
   id: string;                    // userId
   userId: string;
-  username: string;              // para mostrar en UI
+  username: string;              // used in UI
   avatar: string;                // emoji
   role: 'creator' | 'member';
   status: 'pending' | 'accepted' | 'rejected';
-  hasPaid: boolean;              // tracking manual
+  hasPaid: boolean;              // manual tracking
   invitedAt: Date;
   joinedAt?: Date;
 }
@@ -62,14 +62,14 @@ interface ChatMessage {
   senderName: string;
   senderAvatar: string;
   message: string;
-  type: 'user' | 'system';       // system para "Laura updated price..."
+  type: 'user' | 'system';       // system for "Laura updated the price..."
   timestamp: Date;
 }
 ```
 
 ### Security Rules (Firestore)
 ```javascript
-// giftGroups - cualquier usuario autenticado puede leer grupos donde es miembro
+// giftGroups – any authenticated user can read groups where they are a member
 match /giftGroups/{groupId} {
   allow read: if request.auth != null && 
     exists(/databases/$(database)/documents/giftGroups/$(groupId)/members/$(request.auth.uid));
@@ -166,47 +166,47 @@ interface GroupsContextType {
 
 ## 🚀 Development Strategy by Release
 
-### **Release 1 - MVP (2 semanas)**
+### **Release 1 - MVP (2 weeks)**
 
 #### Week 1: Foundation + Group Creation
-**Objetivo:** Crear grupos y gestionar invitaciones
+**Goal:** Create groups and manage invitations
 
 **Tasks:**
-1. **Database Setup** (1 día)
-   - [x] Crear colecciones en Firestore
-   - [x] Configurar security rules
-   - [x] Crear índices compuestos necesarios
-   - [x] Testing manual en Firebase Console
-   - [x] **EXTRA:** Cloud Functions para sincronizar groupIds y notificaciones
+1. **Database Setup** (1 day)
+   - [x] Create collections in Firestore
+   - [x] Configure security rules
+   - [x] Create required composite indexes
+   - [x] Manual testing in Firebase Console
+   - [x] **EXTRA:** Cloud Functions to sync `groupIds` and notifications
 
-2. **GroupsContext** (2 días)
-   - [x] Crear `src/context/GroupsContext.tsx`
-   - [x] Implementar `createGroup`
-   - [x] Implementar `inviteMembers`
-   - [x] Implementar listeners de Firestore para real-time
-   - [x] Testing con datos mock
-   - [x] **EXTRA:** Sistema de invitaciones con estados pending/accepted/rejected
+2. **GroupsContext** (2 days)
+   - [x] Create `src/context/GroupsContext.tsx`
+   - [x] Implement `createGroup`
+   - [x] Implement `inviteMembers`
+   - [x] Implement Firestore listeners for real-time updates
+   - [x] Testing with mock data
+   - [x] **EXTRA:** Invitation system with pending/accepted/rejected states
 
-3. **UI - Groups Tab** (2 días)
-   - [x] Crear `app/(drawer)/(tabs)/groups.tsx`
-   - [x] Lista de grupos (activos vs histórico)
-   - [x] Botón "Create Group" → navega a create.tsx
-   - [x] Card de grupo muestra: nombre, precio, progreso de pago
-   - [x] Testing navegación
-   - [x] **EXTRA:** Sección separada para invitaciones pendientes
-   - [x] **EXTRA:** Toggle Active/History con contador
+3. **UI - Groups Tab** (2 days)
+   - [x] Create `app/(drawer)/(tabs)/groups.tsx`
+   - [x] List of groups (active vs history)
+   - [x] "Create Group" button → navigates to `create.tsx`
+   - [x] Group card shows: name, price, payment progress
+   - [x] Navigation testing
+   - [x] **EXTRA:** Separate section for pending invitations
+   - [x] **EXTRA:** Active/History toggle with counters
 
-4. **UI - Create Group** (1 día)
-   - [x] Crear `app/group/create.tsx`
-   - [x] Form: Gift Name (input), Total Price (numeric), Recipient (selector de conexiones)
-   - [x] Validación: max 50 chars, precio > 0
-   - [x] Al crear → navegar a invite.tsx con groupId
-   - [x] Testing validaciones
-   - [x] **EXTRA:** Campo opcional de descripción del regalo
-   - [x] **EXTRA:** DatePicker para deadline de aceptación de miembros
+4. **UI - Create Group** (1 day)
+   - [x] Create `app/group/create.tsx`
+   - [x] Form: Gift Name (input), Total Price (numeric), Recipient (connections selector)
+   - [x] Validation: max 50 chars, price > 0
+   - [x] On create → navigate to `invite.tsx` with `groupId`
+   - [x] Validation testing
+   - [x] **EXTRA:** Optional gift description field
+   - [x] **EXTRA:** DatePicker for member acceptance deadline
 
 #### Week 2: Invitations + Chat + Payment Tracking
-**Objetivo:** Completar flujo MVP end-to-end
+**Goal:** Complete end-to-end MVP flow
 
 5. **UI - Invite Members** (1 día)
    - [x] Crear `app/group/invite.tsx`
@@ -260,85 +260,85 @@ interface GroupsContextType {
 
 ---
 
-### **Release 2 - Flexibility (1 semana)**
+### **Release 2 - Flexibility (1 week)**
 
 #### Week 3: Edit Mode + Member Management
-**Objetivo:** Manejar cambios en grupos activos
+**Goal:** Handle changes in active groups
 
-8. **Edit Group Details** (2 días)
-   - [x] Crear `app/group/edit/[id].tsx`
-   - [x] Form pre-rellenado con datos actuales
-   - [x] Permitir editar: giftName, totalPrice
-   - [x] Al guardar:
-     - Actualizar Firestore
-     - Enviar mensaje de sistema al chat: "Laura updated the price to 150€"
-     - Recalcular pricePerPerson automáticamente
-   - [x] Testing edición + mensajes sistema
+8. **Edit Group Details** (2 days)
+   - [ ] Create `app/group/edit/[id].tsx` - **NOT IMPLEMENTED**
+   - [x] Backend: `updateGroupDetails` function exists in GroupsContext
+   - [x] Backend: System messages for price/name changes work
+   - [ ] UI: No edit screen created
+   - [ ] UI: No edit button in group detail screen
 
-9. **Remove Member** (1 día)
-   - [x] Añadir botón "Remove" en group detail (solo creator)
-   - [x] Confirmación dialog
-   - [x] Al remover:
-     - Actualizar status a 'removed' (o eliminar documento)
-     - Usuario pierde acceso al chat
-     - Recalcular pricePerPerson
-     - Mensaje sistema: "Laura removed Carlos from the group"
-   - [x] Testing permisos
+9. **Remove Member** (1 day)
+   - [ ] Add "Remove" button in group detail (creator only) - **NOT IMPLEMENTED**
+   - [x] Backend: `removeMember` function exists in GroupsContext
+   - [x] Backend: Removes member doc, updates groupIds, sends system message
+   - [ ] UI: No remove button in member list
+   - [ ] UI: No confirmation dialog
 
-10. **Payment Progress Bar** (1 día)
-    - [x] Componente visual en group detail
-    - [x] Cálculo: `(paidMembers / totalMembers) * 100`
-    - [x] Color verde cuando 100%
-    - [x] Testing cálculo
-    - [x] **EXTRA:** Mostrar monto individual por miembro
+10. **Payment Progress Bar** (1 day)
+    - [x] Visual component in group detail
+    - [x] Calculation: `(paidMembers / totalMembers) * 100`
+    - [x] Turns green at 100%
+    - [x] Calculation testing
+    - [x] **EXTRA:** Show individual amount per member
 
-**Deliverable Release 2:** ✅ **COMPLETADO**
-- ✅ Editar nombre y precio del regalo
-- ✅ Remover miembros
-- ✅ Barra de progreso visual
-- ✅ Mensajes de sistema en chat
-- ✅ **EXTRA:** Validación de deadline para invitar/aceptar
-- ✅ **EXTRA:** Cálculo dinámico estimado vs final
+**Deliverable Release 2:** ⚠️ **PARTIALLY COMPLETED**
+- ❌ Edit group name and price (backend ready, no UI screen)
+- ❌ Remove members (backend ready, no UI button)
+- ✅ Payment progress bar
+- ✅ System messages in chat
+- ✅ **EXTRA:** Deadline validation for inviting/accepting
+- ✅ **EXTRA:** Dynamic estimated vs final price calculation
 
 ---
 
-### **Release 3 - Automation (1 semana)**
+### **Release 3 - Automation (1 week)**
 
 #### Week 4: Payment Links + History
 
-11. **Payment Link** (1 día)
-    - [x] Añadir campo `paymentLink` en edit screen
-    - [x] Validación de URL
-    - [x] Mostrar link clickable en group detail
-    - [x] Testing validación URL
+11. **Payment Link** (1 day)
+    - [ ] Add `paymentLink` field in edit screen - **NOT IMPLEMENTED**
+    - [x] Backend: `paymentLink` field exists in GiftGroup model
+    - [x] Backend: `updateGroupDetails` can save it
+    - [ ] UI: No input field to add payment link
+    - [ ] UI: No display of payment link in group detail
+    - [ ] UI: No URL validation in form
 
-12. **Close Group** (2 días)
-    - [x] Botón "Close Group" en group detail
-    - [x] Validación: solo disponible para admin (sin requisito de 100% paid)
-    - [x] Al cerrar:
-      - Actualizar status a 'closed'
-      - Guardar closedAt timestamp
-      - Chat pasa a read-only
-      - Grupo se mueve a "History" tab
-    - [x] Testing cierre
-    - [x] **EXTRA:** Diálogo de confirmación con traducciones
-    - [x] **EXTRA:** Badge visual "Cerrado" en header
+12. **Close Group** (2 days)
+    - [x] "Close Group" button in group detail
+    - [x] Validation: only available for admin (no 100% paid requirement)
+    - [x] On close:
+      - Update status to `closed`
+      - Save `closedAt` timestamp
+      - Chat becomes read-only
+      - Group moves to "History" tab
+    - [x] Close flow testing
+    - [x] **EXTRA:** Confirmation dialog with translations
+    - [x] **EXTRA:** Visual "Closed" badge in header
 
-13. **Gift History** (2 días)
-    - [x] Tab/sección "Past Gifts" en groups.tsx
-    - [x] Query Firestore: `where('status', '==', 'closed')`
-    - [x] Card muestra: Gift Name, Recipient, Date, Final Price
-    - [x] Al hacer tap → group detail (read-only)
-    - [x] Testing histórico
-    - [x] **EXTRA:** Toggle Active/History con contador de grupos
+13. **Gift History** (2 days)
+    - [x] "Past Gifts" tab/section in `groups.tsx`
+    - [x] Firestore query: `where('status', '==', 'closed')`
+    - [x] Card shows: Gift Name, Recipient, Date, Final Price
+    - [x] On tap → group detail (read-only)
+    - [x] History testing
+    - [x] **EXTRA:** Active/History toggle with group counters
 
-**Deliverable Release 3:** ✅ **COMPLETADO**
-- ✅ Payment links
-- ✅ Cerrar grupos
-- ✅ Historial de regalos pasados
-- ✅ **EXTRA:** Sistema multiidioma completo (ES/EN/DE)
-- ✅ **EXTRA:** Mostrar cumpleaños del destinatario
-- ✅ **EXTRA:** Precio estimado antes del deadline
+**Deliverable Release 3:** ⚠️ **PARTIALLY COMPLETED**
+- ❌ Payment links (backend ready, no UI to add/display)
+- ✅ Close groups
+- ✅ Gift history
+- ✅ **EXTRA:** Show recipient's birthday
+- ✅ **EXTRA:** Estimated price before deadline
+
+**DoD Compliance:**
+- ✅ Full multilingual system (ES/EN/DE) - Required by DoD
+- ✅ No hardcoded strings - All text extractable
+- ✅ Dynamic text rendering with variable interpolation
 
 ---
 
@@ -391,8 +391,8 @@ const sendSystemMessage = async (groupId: string, message: string) => {
 
 ### Unit Tests
 - [ ] GroupsContext actions (create, invite, accept, etc.)
-- [ ] Price calculation logic
-- [ ] URL validation for payment links
+- [x] Price calculation logic
+- [x] URL validation for payment links
 
 ### Integration Tests
 - [ ] Firestore security rules
@@ -400,49 +400,49 @@ const sendSystemMessage = async (groupId: string, message: string) => {
 - [ ] Notification triggers
 
 ### E2E Tests (Manual)
-- [ ] Flujo completo: Create → Invite → Accept → Chat → Pay → Close
-- [ ] Permisos: Creator vs Member actions
-- [ ] Real-time: Múltiples usuarios en mismo grupo
+- [ ] Full flow: Create → Invite → Accept → Chat → Pay → Close
+- [ ] Permissions: Creator vs Member actions
+- [ ] Real-time: Multiple users in the same group
 
 ---
 
 ## 📱 Platform Considerations
 
 ### Mobile (iOS/Android)
-- ✅ Todo funciona nativamente
-- ✅ Push notifications completas
-- ✅ Real-time chat sin problemas
+- ✅ Everything works natively
+- ✅ Full push notifications
+- ✅ Real-time chat works smoothly
 
 ### Web
-- ✅ Firestore real-time funciona
-- ⚠️ Push notifications limitadas (ya manejado en NotificationsContext)
-- ✅ Chat funcional
-- 💡 Considerar: Añadir polling fallback si web tiene problemas con listeners
+- ✅ Firestore real-time works
+- ⚠️ Push notifications are limited (handled in `NotificationsContext`)
+- ✅ Chat functional
+- 💡 Consider: add polling fallback if web has issues with listeners
 
 ---
 
 ## 🚨 Potential Challenges & Solutions
 
-### Challenge 1: Chat Performance con Muchos Mensajes
-**Problem:** Cargar todos los mensajes puede ser lento  
+### Challenge 1: Chat Performance with Many Messages
+**Problem:** Loading all messages can be slow  
 **Solution:** 
-- Implementar paginación (cargar últimos 50 mensajes)
-- Usar `limitToLast(50)` en query
-- Botón "Load more" para mensajes antiguos
+- Implement pagination (load last 50 messages)
+- Use `limitToLast(50)` in query
+- "Load more" button for older messages
 
-### Challenge 2: Cálculo de Precio cuando Alguien se Va
-**Problem:** ¿Qué pasa si alguien ya pagó y luego se va?  
+### Challenge 2: Price Calculation When Someone Leaves
+**Problem:** What happens if someone already paid and then leaves?  
 **Solution:**
-- Opción A: No permitir remover si ya pagó (más simple para MVP)
-- Opción B: Recalcular y notificar a todos (Release 2)
-- **Recomendación:** Opción A para MVP
+- Option A: Do not allow removal if they already paid (simpler for MVP)
+- Option B: Recalculate and notify everyone (Release 2)
+- **Recommendation:** Option A for MVP
 
-### Challenge 3: Notificaciones de Chat Spam
-**Problem:** Muchas notificaciones si chat muy activo  
+### Challenge 3: Chat Notification Spam
+**Problem:** Too many notifications if chat is very active  
 **Solution:**
-- Agrupar notificaciones por grupo
-- Silenciar notificaciones si usuario está en la pantalla del grupo
-- Implementar "mute group" (Release 3)
+- Group notifications per group
+- Mute notifications if the user is on the group screen
+- Implement "mute group" (Release 3)
 
 ---
 
@@ -468,28 +468,28 @@ const sendSystemMessage = async (groupId: string, message: string) => {
 ## 🎨 UI Components to Create
 
 ### Reusable Components
-1. **GroupCard** - Para lista de grupos
-2. **MemberListItem** - Para mostrar miembros con checkbox
-3. **ChatMessage** - Para mensajes (user vs system)
-4. **ChatInput** - Input de mensaje con botón enviar
-5. **PaymentProgressBar** - Barra de progreso visual
-6. **PriceDisplay** - Mostrar precio total y por persona
+1. **GroupCard** – For group list
+2. **MemberListItem** – To show members with checkbox
+3. **ChatMessage** – For messages (user vs system)
+4. **ChatInput** – Message input with send button
+5. **PaymentProgressBar** – Visual progress bar
+6. **PriceDisplay** – Show total price and per person
 
 ---
 
 ## 📝 Definition of Done (DoD) Checklist
 
-Para cada User Story:
-- [ ] Código implementado y funcional
-- [ ] Firestore security rules actualizadas
+For each User Story:
+- [ ] Code implemented and functional
+- [ ] Firestore security rules updated
 - [ ] UI matches design (Dark Mode + Gold theme)
-- [ ] Loading states implementados
+- [ ] Loading states implemented
 - [ ] Error handling (try/catch + user feedback)
-- [ ] Real-time updates funcionando
-- [ ] Notificaciones configuradas
-- [ ] Testing manual en iOS/Android/Web
+- [ ] Real-time updates working
+- [ ] Notifications configured
+- [ ] Manual testing on iOS/Android/Web
 - [ ] Code review
-- [ ] Documentación actualizada
+- [ ] Documentation updated
 
 ---
 
@@ -502,9 +502,9 @@ Para cada User Story:
 
 ---
 
-## 🔄 Migration Strategy (si hay usuarios existentes)
+## 🔄 Migration Strategy (if there are existing users)
 
-No aplica para MVP - es feature nueva, no hay datos que migrar.
+Not applicable for MVP – this is a new feature, no data to migrate.
 
 ---
 
@@ -519,15 +519,15 @@ No aplica para MVP - es feature nueva, no hay datos que migrar.
 
 ## 💡 Future Enhancements (Post-Release 3)
 
-- [ ] Integración con pasarelas de pago (Stripe, PayPal)
-- [ ] Recordatorios automáticos a quien no ha pagado
-- [ ] Grupos recurrentes (mismo regalo cada año)
-- [ ] Sugerencias de regalos basadas en hobbies/preferences
-- [ ] Compartir fotos del regalo en el grupo
-- [ ] Votación para elegir entre varias opciones de regalo
+- [ ] Integration with payment gateways (Stripe, PayPal)
+- [ ] Automatic reminders for unpaid members
+- [ ] Recurring groups (same gift every year)
+- [ ] Gift suggestions based on hobbies/preferences
+- [ ] Share photos of the gift in the group
+- [ ] Voting to choose between multiple gift options
 
 ---
 
-**Documento creado:** 16 Diciembre 2025  
+**Document created:** 16 December 2025  
 **Stack:** React Native + Expo + Firebase  
-**Estimated Total Effort:** 3-4 semanas (1 desarrollador full-time)
+**Estimated Total Effort:** 3–4 weeks (1 full-time developer)
