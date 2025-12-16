@@ -31,6 +31,8 @@ For any User Story or Feature to be considered "Done", it must meet the followin
 
 [ ] User feedback (loading states, success messages) is implemented.
 
+[ ] Cross-Platform: The feature functions correctly and looks consistent on both iOS and Android devices.
+
 5. Data Privacy
 
 [ ] Firestore Security Rules prevent users from seeing groups they are not invited to.
