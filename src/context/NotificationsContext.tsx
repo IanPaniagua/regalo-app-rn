@@ -1,12 +1,12 @@
-import { createContext, useContext, useState, useEffect, useRef, ReactNode } from 'react';
-import * as Notifications from 'expo-notifications';
-import * as Device from 'expo-device';
-import { Platform } from 'react-native';
-import Constants from 'expo-constants';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { db } from '@/src/database';
-import { useUser } from './UserContext';
 import { BirthdayNotificationModal } from '@/src/components/BirthdayNotificationModal';
+import { db } from '@/src/database';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import Constants from 'expo-constants';
+import * as Device from 'expo-device';
+import * as Notifications from 'expo-notifications';
+import { createContext, ReactNode, useContext, useEffect, useRef, useState } from 'react';
+import { Platform } from 'react-native';
+import { useUser } from './UserContext';
 
 // Configurar cómo se manejan las notificaciones cuando la app está en foreground
 Notifications.setNotificationHandler({
@@ -27,6 +27,9 @@ interface NotificationsContextType {
   notificationsEnabled: boolean;
   setNotificationsEnabled: (enabled: boolean) => Promise<void>;
   showBirthdayModal: (userId?: string) => void;
+  groupNotificationCount: number;
+  clearGroupNotifications: () => void;
+  scheduleLocalNotification: (title: string, body: string, data?: any) => Promise<void>;
 }
 
 const NotificationsContext = createContext<NotificationsContextType | undefined>(undefined);
@@ -39,6 +42,7 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
   const [notificationsEnabled, setNotificationsEnabledState] = useState(true);
   const [birthdayModalVisible, setBirthdayModalVisible] = useState(false);
   const [birthdayUserId, setBirthdayUserId] = useState<string | undefined>();
+  const [groupNotificationCount, setGroupNotificationCount] = useState(0);
   
   const notificationListener = useRef<Notifications.Subscription>();
   const responseListener = useRef<Notifications.Subscription>();
@@ -250,12 +254,40 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
     } else if (data.type === 'monthly_summary') {
       // Mostrar modal con todos los cumpleaños del mes
       showBirthdayModal();
+    } else if (data.type === 'group_invitation' || data.type === 'group_message' || data.type === 'group_payment') {
+      // Incrementar contador de notificaciones de grupos
+      setGroupNotificationCount(prev => prev + 1);
+      
+      // TODO: Navegar a la pantalla del grupo si se proporciona groupId
+      // if (data.groupId) {
+      //   router.push(`/group/${data.groupId}`);
+      // }
     }
   }
 
   function showBirthdayModal(userId?: string) {
     setBirthdayUserId(userId);
     setBirthdayModalVisible(true);
+  }
+
+  function clearGroupNotifications() {
+    setGroupNotificationCount(0);
+  }
+
+  async function scheduleLocalNotification(title: string, body: string, data?: any): Promise<void> {
+    try {
+      await Notifications.scheduleNotificationAsync({
+        content: {
+          title,
+          body,
+          data: data || {},
+          sound: true,
+        },
+        trigger: null, // Show immediately
+      });
+    } catch (error) {
+      console.error('❌ Error scheduling local notification:', error);
+    }
   }
 
   return (
@@ -268,6 +300,9 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
         notificationsEnabled,
         setNotificationsEnabled,
         showBirthdayModal,
+        groupNotificationCount,
+        clearGroupNotifications,
+        scheduleLocalNotification,
       }}
     >
       {children}

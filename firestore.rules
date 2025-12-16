@@ -76,5 +76,80 @@ service cloud.firestore {
       allow delete: if request.auth != null && 
                        resource.data.fromUserId == request.auth.uid;
     }
+    
+    // Gift Groups (Group Gifting Feature)
+    match /giftGroups/{groupId} {
+      // Helper function: check if user is a member of the group
+      function isMember() {
+        return request.auth != null && 
+               exists(/databases/$(database)/documents/giftGroups/$(groupId)/members/$(request.auth.uid));
+      }
+      
+      // Helper function: check if user is the creator
+      function isCreator() {
+        return request.auth != null && 
+               resource.data.creatorId == request.auth.uid;
+      }
+      
+      // Helper function: check if user is an accepted member
+      function isAcceptedMember() {
+        return request.auth != null && 
+               exists(/databases/$(database)/documents/giftGroups/$(groupId)/members/$(request.auth.uid)) &&
+               get(/databases/$(database)/documents/giftGroups/$(groupId)/members/$(request.auth.uid)).data.status == 'accepted';
+      }
+      
+      // ✅ Get: members can read group details, or creator can read during creation
+      allow get: if isMember() || isCreator();
+      
+      // ✅ List: allow authenticated users to query their own groups
+      allow list: if request.auth != null;
+      
+      // ✅ Create: any authenticated user can create a group
+      allow create: if request.auth != null && 
+                       request.resource.data.creatorId == request.auth.uid;
+      
+      // ✅ Update: only creator can update group details
+      allow update: if isCreator();
+      
+      // ✅ Delete: only creator can delete (though we'll use status instead)
+      allow delete: if isCreator();
+      
+      // Members subcollection
+      match /members/{memberId} {
+        // ✅ Read: any member can see all members in their group
+        // ✅ Also allow users to query their own memberships (for collectionGroup queries)
+        allow read: if isMember() || 
+                       (request.auth != null && resource.data.userId == request.auth.uid);
+        
+        // ✅ List: allow authenticated users to query their own memberships across all groups
+        allow list: if request.auth != null;
+        
+        // ✅ Create: only creator can invite members
+        allow create: if request.auth != null && 
+                         get(/databases/$(database)/documents/giftGroups/$(groupId)).data.creatorId == request.auth.uid;
+        
+        // ✅ Update: creator can update any member, or user can update their own status (accept/reject)
+        allow update: if (request.auth != null && 
+                          get(/databases/$(database)/documents/giftGroups/$(groupId)).data.creatorId == request.auth.uid) ||
+                         (request.auth != null && memberId == request.auth.uid);
+        
+        // ✅ Delete: only creator can remove members
+        allow delete: if request.auth != null && 
+                         get(/databases/$(database)/documents/giftGroups/$(groupId)).data.creatorId == request.auth.uid;
+      }
+      
+      // Messages subcollection
+      match /messages/{messageId} {
+        // ✅ Read: any member can read messages
+        allow read: if isMember();
+        
+        // ✅ Create: accepted members can send user messages, or any member can send system messages
+        allow create: if (isAcceptedMember() && request.resource.data.senderId == request.auth.uid) ||
+                         (isMember() && request.resource.data.type == 'system' && request.resource.data.senderId == 'system');
+        
+        // ✅ Update/Delete: not allowed (messages are immutable)
+        allow update, delete: if false;
+      }
+    }
   }
 }

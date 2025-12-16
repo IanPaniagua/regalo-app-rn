@@ -16,6 +16,7 @@ export interface User {
   fcmToken?: string; // Token de Firebase Cloud Messaging para notificaciones push
   fcmTokenUpdatedAt?: Date; // Fecha de última actualización del token
   preferredLanguage?: 'es' | 'en' | 'de'; // Idioma preferido del usuario para notificaciones
+  groupIds?: string[]; // IDs de grupos donde el usuario es miembro
   manualBirthdays?: Array<{
     id: string;
     name: string;

@@ -1,21 +1,22 @@
-import { useEffect, useState } from 'react';
 import { DarkTheme, DefaultTheme, ThemeProvider as NavigationThemeProvider } from '@react-navigation/native';
 import { Stack } from 'expo-router';
-import { View, ActivityIndicator, Text } from 'react-native';
-import 'react-native-reanimated';
+import { useEffect, useState } from 'react';
+import { ActivityIndicator, Text, View } from 'react-native';
 import 'react-native-gesture-handler';
+import 'react-native-reanimated';
 
-import { ThemeProvider } from '@/src/theme/ThemeProvider';
-import { UserProvider } from '@/src/context/UserContext';
+import { useColorScheme } from '@/hooks/use-color-scheme';
+import { AppStatusBar } from '@/src/components/ui/AppStatusBar';
 import { BirthdaysProvider } from '@/src/context/BirthdaysContext';
 import { ConnectionsProvider } from '@/src/context/ConnectionsContext';
-import { NotificationsProvider } from '@/src/context/NotificationsContext';
+import { GroupsProvider } from '@/src/context/GroupsContext';
 import { LanguageProvider } from '@/src/context/LanguageContext';
-import { useColorScheme } from '@/hooks/use-color-scheme';
+import { NotificationsProvider } from '@/src/context/NotificationsContext';
+import { UserProvider } from '@/src/context/UserContext';
 import { db } from '@/src/database';
 import { DATABASE_TYPE } from '@/src/database/database.config';
 import { colors } from '@/src/theme';
-import { AppStatusBar } from '@/src/components/ui/AppStatusBar';
+import { ThemeProvider } from '@/src/theme/ThemeProvider';
 
 export const unstable_settings = {
   initialRouteName: '(drawer)',
@@ -84,17 +85,19 @@ export default function RootLayout() {
             <NotificationsProvider>
               <ConnectionsProvider>
                 <BirthdaysProvider>
-                  <ThemeProvider>
-                    <Stack screenOptions={{ headerShown: false }}>
-                      <Stack.Screen name="index" />
-                      <Stack.Screen name="welcome" />
-                      <Stack.Screen name="login" />
-                      <Stack.Screen name="create-profile" />
-                      <Stack.Screen name="(drawer)" />
-                      <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
-                    </Stack>
-                    <AppStatusBar />
-                  </ThemeProvider>
+                  <GroupsProvider>
+                    <ThemeProvider>
+                      <Stack screenOptions={{ headerShown: false }}>
+                        <Stack.Screen name="index" />
+                        <Stack.Screen name="welcome" />
+                        <Stack.Screen name="login" />
+                        <Stack.Screen name="create-profile" />
+                        <Stack.Screen name="(drawer)" />
+                        <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
+                      </Stack>
+                      <AppStatusBar />
+                    </ThemeProvider>
+                  </GroupsProvider>
                 </BirthdaysProvider>
               </ConnectionsProvider>
             </NotificationsProvider>

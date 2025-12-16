@@ -1,5 +1,5 @@
-import * as functions from 'firebase-functions';
 import * as admin from 'firebase-admin';
+import * as functions from 'firebase-functions';
 
 admin.initializeApp();
 
@@ -661,6 +661,303 @@ export const onConnectionCreated = functions
       
     } catch (error) {
       console.error('❌ Error sending friend request notification:', error);
+      return null;
+    }
+  });
+
+// ==================== GROUP GIFTING CLOUD FUNCTIONS ====================
+
+/**
+ * When a member is added to a group, add the groupId to their user document
+ * This allows them to see the group in their list
+ */
+export const onGroupMemberAdded = functions.firestore
+  .document('giftGroups/{groupId}/members/{memberId}')
+  .onCreate(async (snap, context) => {
+    try {
+      const memberData = snap.data();
+      const { groupId } = context.params;
+      const userId = memberData.userId;
+      
+      console.log(`📝 Adding groupId ${groupId} to user ${userId}`);
+      
+      // Get user document
+      const userRef = db.collection('users').doc(userId);
+      const userDoc = await userRef.get();
+      
+      if (!userDoc.exists) {
+        console.error(`❌ User ${userId} not found`);
+        return null;
+      }
+      
+      const userData = userDoc.data();
+      const currentGroupIds = userData?.groupIds || [];
+      
+      // Add groupId if not already present
+      if (!currentGroupIds.includes(groupId)) {
+        await userRef.update({
+          groupIds: admin.firestore.FieldValue.arrayUnion(groupId)
+        });
+        console.log(`✅ Added groupId ${groupId} to user ${userId}`);
+      }
+      
+      // Send push notification if user has fcmToken
+      const fcmToken = userData?.fcmToken;
+      if (fcmToken && memberData.status === 'pending') {
+        // Get group details
+        const groupDoc = await db.collection('giftGroups').doc(groupId).get();
+        const groupData = groupDoc.data();
+        
+        // Get inviter details (creator)
+        const creatorDoc = await db.collection('users').doc(groupData?.creatorId).get();
+        const creatorName = creatorDoc.data()?.name || 'Someone';
+        
+        const message = {
+          to: fcmToken,
+          sound: 'default',
+          title: 'Group Invitation',
+          body: `${creatorName} invited you to join a group gift`,
+          data: {
+            type: 'group_invitation',
+            groupId: groupId,
+            inviterId: groupData?.creatorId
+          }
+        };
+        
+        const response = await fetch(EXPO_PUSH_API, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(message),
+        }).then(res => res.json()) as any;
+        
+        if (response.data?.[0]?.status === 'ok') {
+          console.log(`✅ Sent group invitation notification to ${userId}`);
+        } else {
+          console.error(`❌ Failed to send notification:`, response.data?.[0]);
+        }
+      }
+      
+      return null;
+    } catch (error) {
+      console.error('❌ Error in onGroupMemberAdded:', error);
+      return null;
+    }
+  });
+
+/**
+ * When a member accepts an invitation, send notification to group creator
+ */
+export const onGroupMemberAccepted = functions.firestore
+  .document('giftGroups/{groupId}/members/{memberId}')
+  .onUpdate(async (change, context) => {
+    try {
+      const beforeData = change.before.data();
+      const afterData = change.after.data();
+      const { groupId } = context.params;
+      
+      // Check if status changed from pending to accepted
+      if (beforeData.status === 'pending' && afterData.status === 'accepted') {
+        console.log(`🎉 User ${afterData.userId} accepted invitation to group ${groupId}`);
+        
+        // Get group details
+        const groupDoc = await db.collection('giftGroups').doc(groupId).get();
+        const groupData = groupDoc.data();
+        
+        if (!groupData) return null;
+        
+        // Get creator details
+        const creatorDoc = await db.collection('users').doc(groupData.creatorId).get();
+        const creatorData = creatorDoc.data();
+        
+        if (!creatorData?.fcmToken) return null;
+        
+        // Get member details
+        const memberDoc = await db.collection('users').doc(afterData.userId).get();
+        const memberName = memberDoc.data()?.name || 'Someone';
+        
+        const message = {
+          to: creatorData.fcmToken,
+          sound: 'default',
+          title: 'Invitation Accepted',
+          body: `${memberName} joined your group: ${groupData.giftName}`,
+          data: {
+            type: 'group_invitation',
+            groupId: groupId,
+            userId: afterData.userId
+          }
+        };
+        
+        const response = await fetch(EXPO_PUSH_API, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(message),
+        }).then(res => res.json()) as any;
+        
+        if (response.data?.[0]?.status === 'ok') {
+          console.log(`✅ Sent acceptance notification to creator ${groupData.creatorId}`);
+        }
+      }
+      
+      return null;
+    } catch (error) {
+      console.error('❌ Error in onGroupMemberAccepted:', error);
+      return null;
+    }
+  });
+
+/**
+ * When a member is removed from a group, remove the groupId from their user document
+ */
+export const onGroupMemberRemoved = functions.firestore
+  .document('giftGroups/{groupId}/members/{memberId}')
+  .onDelete(async (snap, context) => {
+    try {
+      const memberData = snap.data();
+      const { groupId } = context.params;
+      const userId = memberData.userId;
+      
+      console.log(`🗑️ Removing groupId ${groupId} from user ${userId}`);
+      
+      // Remove groupId from user document
+      const userRef = db.collection('users').doc(userId);
+      await userRef.update({
+        groupIds: admin.firestore.FieldValue.arrayRemove(groupId)
+      });
+      
+      console.log(`✅ Removed groupId ${groupId} from user ${userId}`);
+      return null;
+    } catch (error) {
+      console.error('❌ Error in onGroupMemberRemoved:', error);
+      return null;
+    }
+  });
+
+/**
+ * When a new message is sent in a group, notify all members
+ */
+export const onGroupMessageSent = functions.firestore
+  .document('giftGroups/{groupId}/messages/{messageId}')
+  .onCreate(async (snap, context) => {
+    try {
+      const messageData = snap.data();
+      const { groupId } = context.params;
+      
+      // Don't send notifications for system messages
+      if (messageData.type === 'system') {
+        return null;
+      }
+      
+      console.log(`💬 New message in group ${groupId} from ${messageData.senderId}`);
+      
+      // Get all group members
+      const membersSnapshot = await db.collection(`giftGroups/${groupId}/members`).get();
+      const members = membersSnapshot.docs.map(doc => doc.data());
+      
+      // Get group details
+      const groupDoc = await db.collection('giftGroups').doc(groupId).get();
+      const groupData = groupDoc.data();
+      
+      // Send notification to all members except the sender
+      const notifications = members
+        .filter(member => member.userId !== messageData.senderId && member.status === 'accepted')
+        .map(async (member) => {
+          const userDoc = await db.collection('users').doc(member.userId).get();
+          const userData = userDoc.data();
+          
+          if (!userData?.fcmToken) return null;
+          
+          const message = {
+            to: userData.fcmToken,
+            sound: 'default',
+            title: `${groupData?.giftName || 'Group'}`,
+            body: `${messageData.senderName}: ${messageData.message}`,
+            data: {
+              type: 'group_message',
+              groupId: groupId,
+              senderId: messageData.senderId
+            }
+          };
+          
+          const response = await fetch(EXPO_PUSH_API, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(message),
+          }).then(res => res.json()) as any;
+          
+          if (response.data?.[0]?.status === 'ok') {
+            console.log(`✅ Sent message notification to ${member.userId}`);
+          }
+          
+          return null;
+        });
+      
+      await Promise.all(notifications);
+      return null;
+    } catch (error) {
+      console.error('❌ Error in onGroupMessageSent:', error);
+      return null;
+    }
+  });
+
+/**
+ * When a member's payment status is updated, notify them
+ */
+export const onMemberPaymentUpdated = functions.firestore
+  .document('giftGroups/{groupId}/members/{memberId}')
+  .onUpdate(async (change, context) => {
+    try {
+      const beforeData = change.before.data();
+      const afterData = change.after.data();
+      const { groupId } = context.params;
+      
+      // Check if hasPaid changed from false to true
+      if (!beforeData.hasPaid && afterData.hasPaid) {
+        console.log(`💰 User ${afterData.userId} marked as paid in group ${groupId}`);
+        
+        // Get user details
+        const userDoc = await db.collection('users').doc(afterData.userId).get();
+        const userData = userDoc.data();
+        
+        if (!userData?.fcmToken) return null;
+        
+        // Get group details
+        const groupDoc = await db.collection('giftGroups').doc(groupId).get();
+        const groupData = groupDoc.data();
+        
+        const message = {
+          to: userData.fcmToken,
+          sound: 'default',
+          title: 'Payment Confirmed',
+          body: `You've been marked as paid in ${groupData?.giftName || 'the group'}`,
+          data: {
+            type: 'group_payment',
+            groupId: groupId,
+            userId: afterData.userId
+          }
+        };
+        
+        const response = await fetch(EXPO_PUSH_API, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(message),
+        }).then(res => res.json()) as any;
+        
+        if (response.data?.[0]?.status === 'ok') {
+          console.log(`✅ Sent payment notification to ${afterData.userId}`);
+        }
+      }
+      
+      return null;
+    } catch (error) {
+      console.error('❌ Error in onMemberPaymentUpdated:', error);
       return null;
     }
   });

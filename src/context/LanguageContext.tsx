@@ -1,8 +1,8 @@
-import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { View, ActivityIndicator } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { db } from '@/src/database';
 import { useUser } from '@/src/context/UserContext';
+import { db } from '@/src/database';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import React, { createContext, ReactNode, useContext, useEffect, useState } from 'react';
+import { ActivityIndicator, View } from 'react-native';
 
 export type Lang = 'es' | 'en' | 'de';
 
@@ -317,6 +317,35 @@ const translations = {
     account_logout_error: 'No se pudo cerrar sesión',
     account_warning: 'La eliminación de cuenta es permanente y no se puede deshacer',
     account_processing: 'Procesando...',
+    
+    // Group Detail
+    group_back: 'Volver',
+    group_for: 'Para',
+    group_birthday: 'Cumpleaños',
+    group_about_gift: 'Sobre este regalo',
+    group_deadline_label: 'Fecha límite de aceptación',
+    group_deadline_dont_pay: '(No pagues antes)',
+    group_deadline_passed: 'Fecha límite pasada - No se pueden unir nuevos miembros',
+    group_deadline_active: 'Nuevos miembros pueden unirse hasta esta fecha',
+    group_total_price: 'Precio Total',
+    group_per_person: 'Por Persona',
+    group_per_person_estimated: 'Por Persona (Estimado)',
+    group_payment_progress: 'Progreso de Pago',
+    group_payment_status: '{{paid}}/{{total}} pagado',
+    group_members_title: 'Miembros ({{count}})',
+    group_member_pending: 'Pendiente...',
+    group_member_paid: 'Pagado ✓',
+    group_member_not_paid: 'No pagado',
+    group_member_admin: '(Admin)',
+    group_chat_title: 'Chat del Grupo',
+    group_chat_placeholder: 'Escribe un mensaje...',
+    group_chat_send: 'Enviar',
+    group_close_button: 'Cerrar Grupo',
+    group_close_confirm_title: '¿Cerrar grupo?',
+    group_close_confirm_message: '¿Estás seguro de que quieres cerrar este grupo? Esta acción no se puede deshacer.',
+    group_close_confirm_cancel: 'Cancelar',
+    group_close_confirm_button: 'Cerrar',
+    group_closed_badge: 'Cerrado',
   },
   en: {
     // Commons
@@ -626,6 +655,35 @@ const translations = {
     account_logout_error: 'Could not logout',
     account_warning: 'Account deletion is permanent and cannot be undone',
     account_processing: 'Processing...',
+    
+    // Group Detail
+    group_back: 'Back',
+    group_for: 'For',
+    group_birthday: 'Birthday',
+    group_about_gift: 'About this gift',
+    group_deadline_label: 'Member Acceptance Deadline',
+    group_deadline_dont_pay: '(Don\'t pay before)',
+    group_deadline_passed: 'Deadline passed - No new members can join',
+    group_deadline_active: 'New members can join until this date',
+    group_total_price: 'Total Price',
+    group_per_person: 'Per Person',
+    group_per_person_estimated: 'Per Person (Estimated)',
+    group_payment_progress: 'Payment Progress',
+    group_payment_status: '{{paid}}/{{total}} paid',
+    group_members_title: 'Members ({{count}})',
+    group_member_pending: 'Pending...',
+    group_member_paid: 'Paid ✓',
+    group_member_not_paid: 'Not paid',
+    group_member_admin: '(Admin)',
+    group_chat_title: 'Group Chat',
+    group_chat_placeholder: 'Type a message...',
+    group_chat_send: 'Send',
+    group_close_button: 'Close Group',
+    group_close_confirm_title: 'Close group?',
+    group_close_confirm_message: 'Are you sure you want to close this group? This action cannot be undone.',
+    group_close_confirm_cancel: 'Cancel',
+    group_close_confirm_button: 'Close',
+    group_closed_badge: 'Closed',
   },
   de: {
     // Commons
@@ -935,6 +993,35 @@ const translations = {
     account_logout_error: 'Abmeldung fehlgeschlagen',
     account_warning: 'Die Kontolöschung ist dauerhaft und kann nicht rückgängig gemacht werden',
     account_processing: 'Verarbeitung...',
+    
+    // Group Detail
+    group_back: 'Zurück',
+    group_for: 'Für',
+    group_birthday: 'Geburtstag',
+    group_about_gift: 'Über dieses Geschenk',
+    group_deadline_label: 'Frist für Mitgliederakzeptanz',
+    group_deadline_dont_pay: '(Nicht vorher bezahlen)',
+    group_deadline_passed: 'Frist abgelaufen - Keine neuen Mitglieder können beitreten',
+    group_deadline_active: 'Neue Mitglieder können bis zu diesem Datum beitreten',
+    group_total_price: 'Gesamtpreis',
+    group_per_person: 'Pro Person',
+    group_per_person_estimated: 'Pro Person (Geschätzt)',
+    group_payment_progress: 'Zahlungsfortschritt',
+    group_payment_status: '{{paid}}/{{total}} bezahlt',
+    group_members_title: 'Mitglieder ({{count}})',
+    group_member_pending: 'Ausstehend...',
+    group_member_paid: 'Bezahlt ✓',
+    group_member_not_paid: 'Nicht bezahlt',
+    group_member_admin: '(Admin)',
+    group_chat_title: 'Gruppen-Chat',
+    group_chat_placeholder: 'Nachricht eingeben...',
+    group_chat_send: 'Senden',
+    group_close_button: 'Gruppe schließen',
+    group_close_confirm_title: 'Gruppe schließen?',
+    group_close_confirm_message: 'Bist du sicher, dass du diese Gruppe schließen möchtest? Diese Aktion kann nicht rückgängig gemacht werden.',
+    group_close_confirm_cancel: 'Abbrechen',
+    group_close_confirm_button: 'Schließen',
+    group_closed_badge: 'Geschlossen',
   },
 } as const;
 
@@ -942,7 +1029,7 @@ export type TranslationKey = keyof typeof translations['es'];
 
 interface LanguageContextValue {
   lang: Lang;
-  t: (key: TranslationKey) => string;
+  t: (key: TranslationKey, vars?: Record<string, string>) => string;
   setLanguage: (lang: Lang) => Promise<void>;
 }
 
@@ -1060,9 +1147,18 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  // Simple translation function - no need for useCallback since lang never changes after load
-  const t = (key: TranslationKey): string => {
-    return translations[lang][key] ?? translations.en[key];
+  // Translation function with variable interpolation support
+  const t = (key: TranslationKey, vars?: Record<string, string>): string => {
+    let text: string = translations[lang][key] ?? translations.en[key];
+    
+    // Replace variables like {{paid}} with actual values
+    if (vars) {
+      Object.keys(vars).forEach((varKey) => {
+        text = text.replace(new RegExp(`{{${varKey}}}`, 'g'), vars[varKey]);
+      });
+    }
+    
+    return text;
   };
 
   // Show a brief loading indicator while loading language (only on first app launch)
