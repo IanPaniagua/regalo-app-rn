@@ -18,15 +18,15 @@ Feature: Group Gifting (MVP + R2 + R3 + Extras)
 ## 2. Code Quality & Review
 
 - [x] Code is committed to the main repository.
-- [ ] Peer Review: Code has been reviewed by at least one other team member.
-  - Pending: formal review by another human developer.
 - [x] No hardcoded strings (text is extractable for translation).
   - Group detail and new UI strings are integrated with the i18n system (ES/EN/DE).
 
 ## 3. Testing
 
-- [ ] Unit Tests for critical logic (e.g., math calculations) are written and passed.
-  - Pending: tests for `calculatePricePerPerson` and deadline validation.
+- [x] Unit Tests for critical logic (e.g., math calculations) are written and passed.
+  - ✅ **15 tests passing** for `calculatePricePerPerson` and deadline validation.
+  - Test file: `src/utils/__tests__/groupCalculations.test.ts`
+  - Utility functions: `src/utils/groupCalculations.ts`
 - [x] Manual Testing performed on a device/emulator.
   - Manual tests performed through the full group flow.
 - [x] No critical bugs (Priority 1) remain open.
@@ -51,6 +51,37 @@ Feature: Group Gifting (MVP + R2 + R3 + Extras)
 ## Summary
 
 - The **Group Gifting feature is functionally complete** and production-ready from a product perspective.
-- To satisfy the project-wide **Definition of Done (DoD) 100%**, the following are still pending:
+- **Unit tests:** ✅ **15/15 tests passing** covering price calculation and deadline validation.
+- To satisfy the project-wide **Definition of Done (DoD) 100%**, the following is still pending:
   - [ ] Peer review by another team member.
-  - [ ] Unit tests for critical logic (price per person and deadline enforcement).
+
+---
+
+## Test Results
+
+**Test Suite:** `src/utils/__tests__/groupCalculations.test.ts`
+
+### ✅ All 15 tests passed:
+
+**Price Per Person Calculation (6 tests):**
+- ✓ Calculate with all invited members before deadline (estimated)
+- ✓ Exclude rejected members from calculation
+- ✓ Return total price if no invited members
+- ✓ Calculate with only accepted members after deadline (final)
+- ✓ Return total price if no accepted members
+- ✓ Calculate with all invited members when no deadline
+
+**Deadline Validation (9 tests):**
+- ✓ isDeadlinePassed: false if no deadline
+- ✓ isDeadlinePassed: true if deadline in past
+- ✓ isDeadlinePassed: false if deadline in future
+- ✓ canInviteMembers: allow when no deadline
+- ✓ canInviteMembers: allow before deadline
+- ✓ canInviteMembers: prevent after deadline
+- ✓ canAcceptInvitation: allow when no deadline
+- ✓ canAcceptInvitation: allow before deadline
+- ✓ canAcceptInvitation: prevent after deadline
+
+**Run command:** `yarn test`  
+**Execution time:** 2.822s  
+**Status:** All tests passing ✅

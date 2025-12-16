@@ -1,7 +1,21 @@
 import { useUser } from '@/src/context/UserContext';
 import { getFirebaseApp } from '@/src/database/firebase';
 import { db } from '@/src/database/index';
-import { addDoc, collection, deleteDoc, doc, getDoc, getFirestore, onSnapshot, orderBy, query, setDoc, Timestamp, Unsubscribe, updateDoc } from 'firebase/firestore';
+import {
+    addDoc,
+    collection,
+    deleteDoc,
+    doc,
+    getDoc,
+    getFirestore,
+    onSnapshot,
+    orderBy,
+    query,
+    setDoc,
+    Timestamp,
+    Unsubscribe,
+    updateDoc
+} from 'firebase/firestore';
 import { createContext, ReactNode, useCallback, useContext, useEffect, useState } from 'react';
 import { useNotifications } from './NotificationsContext';
 
@@ -696,22 +710,9 @@ export function GroupsProvider({ children }: { children: ReactNode }) {
   
   // ==================== Helper Functions ====================
   
-  // Helper function to calculate price per person
+  // Helper function to calculate price per person (uses tested utility)
   const calculatePricePerPerson = (group: GiftGroup, members: GroupMember[]): number => {
-    // If deadline has passed, calculate with only accepted members (final price)
-    const deadlinePassed = group.memberDeadline ? new Date() > group.memberDeadline : false;
-
-    if (deadlinePassed) {
-      const acceptedMembers = members.filter(m => m.status === 'accepted');
-      if (acceptedMembers.length === 0) return group.totalPrice;
-      return group.totalPrice / acceptedMembers.length;
-    }
-
-    // Before deadline, calculate with all invited members (estimated price)
-    // This includes pending and accepted members
-    const invitedMembers = members.filter(m => m.status === 'pending' || m.status === 'accepted');
-    if (invitedMembers.length === 0) return group.totalPrice;
-    return group.totalPrice / invitedMembers.length;
+    return calcPrice(group, members);
   };
   
   const getPaymentProgress = (members: GroupMember[]): { paid: number; total: number; percentage: number } => {
