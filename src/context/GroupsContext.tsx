@@ -1,6 +1,6 @@
 import { useUser } from '@/src/context/UserContext';
-import { getFirebaseApp } from '@/src/database/firebase';
 import { db } from '@/src/database/index';
+import { getFirebaseApp } from '@/src/services/firebase';
 import { addDoc, collection, deleteDoc, doc, getDoc, getFirestore, onSnapshot, orderBy, query, setDoc, Timestamp, Unsubscribe, updateDoc } from 'firebase/firestore';
 import { createContext, ReactNode, useCallback, useContext, useEffect, useState } from 'react';
 import { useNotifications } from './NotificationsContext';

@@ -128,11 +128,11 @@ Document ID: (auto-generated)
 
 ## 5. Verification Checklist
 
-- [ ] Security rules deployed successfully
-- [ ] Indexes created (or will be created on first query)
-- [ ] Test group created in Firebase Console
-- [ ] Test member added to group
-- [ ] Test message added to group
+- [x] Security rules deployed successfully
+- [x] Indexes created (or will be created on first query)
+- [x] Test group created in Firebase Console
+- [x] Test member added to group
+- [x] Test message added to group
 - [ ] Rules Playground tests passed
 
 ---
