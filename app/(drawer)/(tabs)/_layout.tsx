@@ -1,16 +1,18 @@
-import { Tabs, useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
-import { View, Text, StyleSheet } from 'react-native';
-import { useState, useEffect } from 'react';
+import { InAppNotification } from '@/src/components/InAppNotification';
 import { useConnections } from '@/src/context/ConnectionsContext';
 import { useLanguage } from '@/src/context/LanguageContext';
-import { InAppNotification } from '@/src/components/InAppNotification';
+import { useNotifications } from '@/src/context/NotificationsContext';
 import { colors } from '@/src/theme';
 import { useAppTheme } from '@/src/theme/ThemeProvider';
+import { Ionicons } from '@expo/vector-icons';
+import { Tabs, useRouter } from 'expo-router';
+import { useEffect, useState } from 'react';
+import { StyleSheet, View } from 'react-native';
 
 export default function TabLayout() {
   const router = useRouter();
   const { notificationCount, pendingInvitations } = useConnections();
+  const { groupNotificationCount } = useNotifications();
   const { t } = useLanguage();
   const { theme } = useAppTheme();
   const [showNotification, setShowNotification] = useState(false);
@@ -70,6 +72,17 @@ export default function TabLayout() {
           title: 'Profile',
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="person-outline" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="groups"
+        options={{
+          title: 'Groups',
+          tabBarBadge: groupNotificationCount > 0 ? groupNotificationCount : undefined,
+          tabBarBadgeStyle: styles.badge,
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="gift-outline" size={size} color={color} />
           ),
         }}
       />

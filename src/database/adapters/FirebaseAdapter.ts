@@ -1,31 +1,30 @@
-import { initializeApp, FirebaseApp, getApps, getApp } from 'firebase/app';
+import { FirebaseApp, getApp, getApps, initializeApp } from 'firebase/app';
 import {
-  getFirestore,
-  Firestore,
-  collection,
-  doc,
-  getDoc,
-  getDocs,
-  setDoc,
-  updateDoc,
-  deleteDoc,
-  query,
-  where,
-  limit,
-  Timestamp,
-  enableIndexedDbPersistence,
-  documentId,
-} from 'firebase/firestore';
-import {
-  getAuth,
-  Auth,
-  signInWithEmailAndPassword,
-  createUserWithEmailAndPassword,
-  onAuthStateChanged,
-  User as FirebaseUser,
+    User as FirebaseUser,
+    createUserWithEmailAndPassword,
+    getAuth,
+    onAuthStateChanged,
+    signInWithEmailAndPassword
 } from 'firebase/auth';
-import { DatabaseAdapter, User, BirthdayEvent, Connection, ConnectionInvitation } from '../types';
+import {
+    Firestore,
+    Timestamp,
+    collection,
+    deleteDoc,
+    doc,
+    documentId,
+    enableIndexedDbPersistence,
+    getDoc,
+    getDocs,
+    getFirestore,
+    limit,
+    query,
+    setDoc,
+    updateDoc,
+    where,
+} from 'firebase/firestore';
 import { firebaseConfig } from '../config';
+import { BirthdayEvent, Connection, ConnectionInvitation, DatabaseAdapter, User } from '../types';
 
 export class FirebaseAdapter implements DatabaseAdapter {
   private app: FirebaseApp | null = null;
@@ -206,6 +205,7 @@ export class FirebaseAdapter implements DatabaseAdapter {
       fcmToken: data.fcmToken,
       fcmTokenUpdatedAt: data.fcmTokenUpdatedAt ? this.timestampToDate(data.fcmTokenUpdatedAt) : undefined,
       preferredLanguage: data.preferredLanguage,
+      groupIds: data.groupIds || [],
       manualBirthdays: data.manualBirthdays ? data.manualBirthdays.map((entry: any) => ({
         ...entry,
         birthdate: entry.birthdate ? this.timestampToDate(entry.birthdate) : new Date(entry.birthdate),

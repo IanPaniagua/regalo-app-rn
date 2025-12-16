@@ -1,6 +1,6 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { db } from '@/src/database';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { createContext, ReactNode, useContext, useEffect, useState } from 'react';
 
 // Datos completos del usuario (con email confirmado)
 interface UserData {
@@ -21,6 +21,7 @@ interface UserData {
   fcmToken?: string; // Token de Firebase Cloud Messaging para notificaciones push
   fcmTokenUpdatedAt?: Date; // Fecha de última actualización del token
   preferredLanguage?: 'es' | 'en' | 'de'; // Idioma preferido del usuario
+  groupIds?: string[]; // IDs de grupos donde el usuario es miembro
 }
 
 // Datos temporales durante el funnel (sin email)

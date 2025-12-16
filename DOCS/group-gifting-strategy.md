@@ -1,6 +1,7 @@
 # Group Gifting - Technical Strategy
 **Stack:** React Native + Expo + Firebase (Firestore + Auth)  
-**Branch:** `feature-group-giffting`
+**Branch:** `feature-group-giffting`  
+**Status:** ✅ **MVP COMPLETADO** (16 Diciembre 2025)
 
 ---
 
@@ -8,7 +9,8 @@
 
 **Feasibility:** ✅ **100% Viable** con el stack actual  
 **Complexity:** Media-Alta (principalmente por el chat en tiempo real)  
-**Estimated Effort:** 3-4 semanas de desarrollo incremental
+**Estimated Effort:** 3-4 semanas de desarrollo incremental  
+**Actual Effort:** ~2 semanas (MVP + extras completados)
 
 ### Key Technical Decisions
 1. **Database:** Firestore (ya configurado) - perfecto para real-time
@@ -171,75 +173,90 @@ interface GroupsContextType {
 
 **Tasks:**
 1. **Database Setup** (1 día)
-   - [ ] Crear colecciones en Firestore
-   - [ ] Configurar security rules
-   - [ ] Crear índices compuestos necesarios
-   - [ ] Testing manual en Firebase Console
+   - [x] Crear colecciones en Firestore
+   - [x] Configurar security rules
+   - [x] Crear índices compuestos necesarios
+   - [x] Testing manual en Firebase Console
+   - [x] **EXTRA:** Cloud Functions para sincronizar groupIds y notificaciones
 
 2. **GroupsContext** (2 días)
-   - [ ] Crear `src/context/GroupsContext.tsx`
-   - [ ] Implementar `createGroup`
-   - [ ] Implementar `inviteMembers`
-   - [ ] Implementar listeners de Firestore para real-time
-   - [ ] Testing con datos mock
+   - [x] Crear `src/context/GroupsContext.tsx`
+   - [x] Implementar `createGroup`
+   - [x] Implementar `inviteMembers`
+   - [x] Implementar listeners de Firestore para real-time
+   - [x] Testing con datos mock
+   - [x] **EXTRA:** Sistema de invitaciones con estados pending/accepted/rejected
 
 3. **UI - Groups Tab** (2 días)
-   - [ ] Crear `app/(drawer)/(tabs)/groups.tsx`
-   - [ ] Lista de grupos (activos vs histórico)
-   - [ ] Botón "Create Group" → navega a create.tsx
-   - [ ] Card de grupo muestra: nombre, precio, progreso de pago
-   - [ ] Testing navegación
+   - [x] Crear `app/(drawer)/(tabs)/groups.tsx`
+   - [x] Lista de grupos (activos vs histórico)
+   - [x] Botón "Create Group" → navega a create.tsx
+   - [x] Card de grupo muestra: nombre, precio, progreso de pago
+   - [x] Testing navegación
+   - [x] **EXTRA:** Sección separada para invitaciones pendientes
+   - [x] **EXTRA:** Toggle Active/History con contador
 
 4. **UI - Create Group** (1 día)
-   - [ ] Crear `app/group/create.tsx`
-   - [ ] Form: Gift Name (input), Total Price (numeric), Recipient (selector de conexiones)
-   - [ ] Validación: max 50 chars, precio > 0
-   - [ ] Al crear → navegar a invite.tsx con groupId
-   - [ ] Testing validaciones
+   - [x] Crear `app/group/create.tsx`
+   - [x] Form: Gift Name (input), Total Price (numeric), Recipient (selector de conexiones)
+   - [x] Validación: max 50 chars, precio > 0
+   - [x] Al crear → navegar a invite.tsx con groupId
+   - [x] Testing validaciones
+   - [x] **EXTRA:** Campo opcional de descripción del regalo
+   - [x] **EXTRA:** DatePicker para deadline de aceptación de miembros
 
 #### Week 2: Invitations + Chat + Payment Tracking
 **Objetivo:** Completar flujo MVP end-to-end
 
 5. **UI - Invite Members** (1 día)
-   - [ ] Crear `app/group/invite.tsx`
-   - [ ] Reutilizar lógica de `connect.tsx` para buscar usuarios
-   - [ ] Lista de invitados (pending)
-   - [ ] Botón "Done" → navegar a group detail
-   - [ ] Testing invitaciones
+   - [x] Crear `app/group/invite.tsx`
+   - [x] Reutilizar lógica de `connect.tsx` para buscar usuarios
+   - [x] Lista de invitados (pending)
+   - [x] Botón "Done" → navegar a group detail
+   - [x] Testing invitaciones
 
 6. **UI - Group Detail** (3 días)
-   - [ ] Crear `app/group/[id].tsx`
-   - [ ] **Header:** Gift name, total price, price per person (calculado)
-   - [ ] **Members Section:**
+   - [x] Crear `app/group/[id].tsx`
+   - [x] **Header:** Gift name, total price, price per person (calculado)
+   - [x] **Members Section:**
      - Lista de miembros con avatar, nombre, estado (pending/accepted)
      - Checkbox "Paid" (solo visible para creator)
      - Cálculo automático: `pricePerPerson = totalPrice / acceptedMembers.length`
-   - [ ] **Chat Section:**
+   - [x] **Chat Section:**
      - Input de mensaje (bottom)
      - Lista de mensajes (scroll invertido, más reciente abajo)
      - Real-time updates con `onSnapshot`
      - Sender name + timestamp
-   - [ ] **Actions (creator only):**
+   - [x] **Actions (creator only):**
      - Edit button (navega a edit screen - Release 2)
      - Remove member (Release 2)
-   - [ ] Testing real-time chat
+   - [x] Testing real-time chat
+   - [x] **EXTRA:** Mostrar cumpleaños del destinatario en header
+   - [x] **EXTRA:** Badge "Cerrado" para grupos cerrados
+   - [x] **EXTRA:** Precio estimado vs final según deadline
+   - [x] **EXTRA:** Nota "(No pagues antes)" junto al deadline
+   - [x] **EXTRA:** Soporte multiidioma completo (ES/EN/DE)
 
 7. **Notifications Integration** (1 día)
-   - [ ] Extender `NotificationsContext` para grupos
-   - [ ] Push notification cuando:
+   - [x] Extender `NotificationsContext` para grupos
+   - [x] Push notification cuando:
      - Recibes invitación
      - Alguien acepta tu invitación
      - Nuevo mensaje en grupo
-   - [ ] Badge count en Groups tab
-   - [ ] Testing notificaciones
+   - [x] Badge count en Groups tab
+   - [x] Testing notificaciones
+   - [x] **EXTRA:** Cloud Functions para notificaciones remotas
 
-**Deliverable Release 1:**
+**Deliverable Release 1:** ✅ **COMPLETADO**
 - ✅ Crear grupo con nombre y precio
 - ✅ Invitar usuarios por username
 - ✅ Aceptar/rechazar invitaciones
 - ✅ Chat en tiempo real
 - ✅ Tracking manual de pagos (creator marca como paid)
 - ✅ Cálculo automático de precio por persona
+- ✅ **EXTRA:** Descripción opcional del regalo
+- ✅ **EXTRA:** Deadline para aceptar miembros
+- ✅ **EXTRA:** Sistema de invitaciones con UI dedicada
 
 ---
 
@@ -249,36 +266,39 @@ interface GroupsContextType {
 **Objetivo:** Manejar cambios en grupos activos
 
 8. **Edit Group Details** (2 días)
-   - [ ] Crear `app/group/edit/[id].tsx`
-   - [ ] Form pre-rellenado con datos actuales
-   - [ ] Permitir editar: giftName, totalPrice
-   - [ ] Al guardar:
+   - [x] Crear `app/group/edit/[id].tsx`
+   - [x] Form pre-rellenado con datos actuales
+   - [x] Permitir editar: giftName, totalPrice
+   - [x] Al guardar:
      - Actualizar Firestore
      - Enviar mensaje de sistema al chat: "Laura updated the price to 150€"
      - Recalcular pricePerPerson automáticamente
-   - [ ] Testing edición + mensajes sistema
+   - [x] Testing edición + mensajes sistema
 
 9. **Remove Member** (1 día)
-   - [ ] Añadir botón "Remove" en group detail (solo creator)
-   - [ ] Confirmación dialog
-   - [ ] Al remover:
+   - [x] Añadir botón "Remove" en group detail (solo creator)
+   - [x] Confirmación dialog
+   - [x] Al remover:
      - Actualizar status a 'removed' (o eliminar documento)
      - Usuario pierde acceso al chat
      - Recalcular pricePerPerson
      - Mensaje sistema: "Laura removed Carlos from the group"
-   - [ ] Testing permisos
+   - [x] Testing permisos
 
 10. **Payment Progress Bar** (1 día)
-    - [ ] Componente visual en group detail
-    - [ ] Cálculo: `(paidMembers / totalMembers) * 100`
-    - [ ] Color verde cuando 100%
-    - [ ] Testing cálculo
+    - [x] Componente visual en group detail
+    - [x] Cálculo: `(paidMembers / totalMembers) * 100`
+    - [x] Color verde cuando 100%
+    - [x] Testing cálculo
+    - [x] **EXTRA:** Mostrar monto individual por miembro
 
-**Deliverable Release 2:**
+**Deliverable Release 2:** ✅ **COMPLETADO**
 - ✅ Editar nombre y precio del regalo
 - ✅ Remover miembros
 - ✅ Barra de progreso visual
 - ✅ Mensajes de sistema en chat
+- ✅ **EXTRA:** Validación de deadline para invitar/aceptar
+- ✅ **EXTRA:** Cálculo dinámico estimado vs final
 
 ---
 
@@ -287,32 +307,38 @@ interface GroupsContextType {
 #### Week 4: Payment Links + History
 
 11. **Payment Link** (1 día)
-    - [ ] Añadir campo `paymentLink` en edit screen
-    - [ ] Validación de URL
-    - [ ] Mostrar link clickable en group detail
-    - [ ] Testing validación URL
+    - [x] Añadir campo `paymentLink` en edit screen
+    - [x] Validación de URL
+    - [x] Mostrar link clickable en group detail
+    - [x] Testing validación URL
 
 12. **Close Group** (2 días)
-    - [ ] Botón "Close Group" en group detail
-    - [ ] Validación: solo disponible si 100% paid
-    - [ ] Al cerrar:
+    - [x] Botón "Close Group" en group detail
+    - [x] Validación: solo disponible para admin (sin requisito de 100% paid)
+    - [x] Al cerrar:
       - Actualizar status a 'closed'
       - Guardar closedAt timestamp
       - Chat pasa a read-only
       - Grupo se mueve a "History" tab
-    - [ ] Testing cierre
+    - [x] Testing cierre
+    - [x] **EXTRA:** Diálogo de confirmación con traducciones
+    - [x] **EXTRA:** Badge visual "Cerrado" en header
 
 13. **Gift History** (2 días)
-    - [ ] Tab/sección "Past Gifts" en groups.tsx
-    - [ ] Query Firestore: `where('status', '==', 'closed')`
-    - [ ] Card muestra: Gift Name, Recipient, Date, Final Price
-    - [ ] Al hacer tap → group detail (read-only)
-    - [ ] Testing histórico
+    - [x] Tab/sección "Past Gifts" en groups.tsx
+    - [x] Query Firestore: `where('status', '==', 'closed')`
+    - [x] Card muestra: Gift Name, Recipient, Date, Final Price
+    - [x] Al hacer tap → group detail (read-only)
+    - [x] Testing histórico
+    - [x] **EXTRA:** Toggle Active/History con contador de grupos
 
-**Deliverable Release 3:**
+**Deliverable Release 3:** ✅ **COMPLETADO**
 - ✅ Payment links
 - ✅ Cerrar grupos
 - ✅ Historial de regalos pasados
+- ✅ **EXTRA:** Sistema multiidioma completo (ES/EN/DE)
+- ✅ **EXTRA:** Mostrar cumpleaños del destinatario
+- ✅ **EXTRA:** Precio estimado antes del deadline
 
 ---
 
