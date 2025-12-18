@@ -346,6 +346,8 @@ const translations = {
     group_close_confirm_cancel: 'Cancelar',
     group_close_confirm_button: 'Cerrar',
     group_closed_badge: 'Cerrado',
+    group_details_tab: 'Detalles',
+    group_members_tab: 'Miembros',
   },
   en: {
     // Commons
@@ -684,6 +686,8 @@ const translations = {
     group_close_confirm_cancel: 'Cancel',
     group_close_confirm_button: 'Close',
     group_closed_badge: 'Closed',
+    group_details_tab: 'Details',
+    group_members_tab: 'Members',
   },
   de: {
     // Commons
@@ -1022,6 +1026,8 @@ const translations = {
     group_close_confirm_cancel: 'Abbrechen',
     group_close_confirm_button: 'Schließen',
     group_closed_badge: 'Geschlossen',
+    group_details_tab: 'Details',
+    group_members_tab: 'Mitglieder',
   },
 } as const;
 

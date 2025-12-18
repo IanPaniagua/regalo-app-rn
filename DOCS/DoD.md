@@ -31,6 +31,10 @@ For any User Story or Feature to be considered "Done", it must meet the followin
 
 [ ] Cross-Platform: The feature functions correctly and looks consistent on both iOS and Android devices.
 
-5. Data Privacy
+5. Analytics & Measurement (Mandatory)
+[ ]Every new User Story, Feature, or MVP must be measurable.
+
+
+6. Data Privacy
 
 [ ] Firestore Security Rules prevent users from seeing groups they are not invited to.
