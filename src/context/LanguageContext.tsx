@@ -1171,7 +1171,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   if (isLoading) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#1C1C1C' }}>
-        <ActivityIndicator size="large" color="#D4AF37" />
+        <ActivityIndicator size="large" color="#4A90E2" />
       </View>
     );
   }

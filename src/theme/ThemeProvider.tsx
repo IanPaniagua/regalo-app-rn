@@ -1,9 +1,9 @@
-import { PropsWithChildren, createContext, useContext, useState, useEffect } from 'react';
-import { ActivityIndicator, View } from 'react-native';
-import { useFonts } from 'expo-font';
 import { Inter_400Regular } from '@expo-google-fonts/inter';
 import { PlayfairDisplay_700Bold } from '@expo-google-fonts/playfair-display';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useFonts } from 'expo-font';
+import { PropsWithChildren, createContext, useContext, useEffect, useState } from 'react';
+import { ActivityIndicator, View } from 'react-native';
 import { getTheme, type Theme, type ThemeMode } from './colors';
 
 const THEME_STORAGE_KEY = '@regalo_app_theme';
@@ -72,7 +72,7 @@ export function ThemeProvider({ children }: PropsWithChildren) {
   if (!fontsLoaded || !isThemeLoaded) {
     return (
       <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: '#1C1C1C' }}>
-        <ActivityIndicator color="#D4AF37" />
+        <ActivityIndicator color="#4A90E2" />
       </View>
     );
   }
