@@ -1,7 +1,6 @@
 import { db } from '@/src/database';
 import {
     Auth,
-    browserLocalPersistence,
     createUserWithEmailAndPassword,
     User as FirebaseUser,
     getAuth,
@@ -9,7 +8,7 @@ import {
     sendPasswordResetEmail,
     signInWithEmailAndPassword,
     signOut,
-    updateProfile,
+    updateProfile
 } from 'firebase/auth';
 import { analytics } from './analytics.service';
 import { getFirebaseApp } from './firebase';
