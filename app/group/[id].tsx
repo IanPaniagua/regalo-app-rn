@@ -30,6 +30,7 @@ export default function GroupDetailScreen() {
   } = useGroups();
 
   const [messageText, setMessageText] = useState('');
+  const [activeTab, setActiveTab] = useState<'chat' | 'details' | 'members'>('chat');
   const flatListRef = useRef<FlatList>(null);
 
   useEffect(() => {
@@ -140,97 +141,228 @@ export default function GroupDetailScreen() {
           <AppText style={[styles.headerSubtitle, { color: theme.textSecondary }]}>
             {t('group_for')} {activeGroup.recipientName} {activeGroup.recipientAvatar}
           </AppText>
-          {activeGroup.recipientBirthdate && (
-            <AppText style={[styles.headerBirthday, { color: theme.textMuted }]}>
-              {t('group_birthday')}: {activeGroup.recipientBirthdate.toLocaleDateString('en-US', { month: 'long', day: 'numeric' })}
+        </View>
+
+        {/* Tabs */}
+        <View style={[styles.tabs, { backgroundColor: theme.surface, borderRadius: 12, padding: 4, marginTop: 12 }]}>
+          <Pressable
+            style={[
+              styles.tab,
+              activeTab === 'chat' && styles.tabActive,
+              activeTab === 'chat' && { backgroundColor: theme.cardBg, borderRadius: 8 }
+            ]}
+            onPress={() => setActiveTab('chat')}
+          >
+            <AppText style={[
+              styles.tabText,
+              { color: theme.textSecondary },
+              activeTab === 'chat' && { color: theme.primary, fontWeight: '600' }
+            ]}>
+              💬 Chat
             </AppText>
-          )}
+          </Pressable>
+          <Pressable
+            style={[
+              styles.tab,
+              activeTab === 'details' && styles.tabActive,
+              activeTab === 'details' && { backgroundColor: theme.cardBg, borderRadius: 8 }
+            ]}
+            onPress={() => setActiveTab('details')}
+          >
+            <AppText style={[
+              styles.tabText,
+              { color: theme.textSecondary },
+              activeTab === 'details' && { color: theme.primary, fontWeight: '600' }
+            ]}>
+              📋 {t('group_details_tab') || 'Detalles'}
+            </AppText>
+          </Pressable>
+          <Pressable
+            style={[
+              styles.tab,
+              activeTab === 'members' && styles.tabActive,
+              activeTab === 'members' && { backgroundColor: theme.cardBg, borderRadius: 8 }
+            ]}
+            onPress={() => setActiveTab('members')}
+          >
+            <AppText style={[
+              styles.tabText,
+              { color: theme.textSecondary },
+              activeTab === 'members' && { color: theme.primary, fontWeight: '600' }
+            ]}>
+              👥 {t('group_members_tab') || 'Miembros'} ({acceptedMembers.length})
+            </AppText>
+          </Pressable>
         </View>
       </View>
 
-      <ScrollView style={styles.content}>
-        {/* Description */}
-        {activeGroup.description && (
-          <View style={[styles.descriptionCard, { backgroundColor: theme.cardBg, borderColor: theme.border }]}>
-            <AppText style={[styles.descriptionLabel, { color: theme.textSecondary }]}>
-              {t('group_about_gift')}
-            </AppText>
-            <AppText style={[styles.descriptionText, { color: theme.text }]}>
-              {activeGroup.description}
-            </AppText>
-          </View>
-        )}
-
-        {/* Member Deadline */}
-        {activeGroup.memberDeadline && (
-          <View style={[styles.deadlineCard, { backgroundColor: theme.cardBg, borderColor: theme.border }]}>
-            <AppText style={[styles.deadlineLabel, { color: theme.textSecondary }]}>
-              {t('group_deadline_label')} {t('group_deadline_dont_pay')}
-            </AppText>
-            <AppText style={[styles.deadlineDate, { color: theme.primary }]}>
-              {activeGroup.memberDeadline.toLocaleDateString('en-US', { 
-                year: 'numeric', 
-                month: 'long', 
-                day: 'numeric' 
-              })}
-            </AppText>
-            <AppText style={[styles.deadlineHelper, { color: theme.textMuted }]}>
-              {new Date() > activeGroup.memberDeadline 
-                ? t('group_deadline_passed')
-                : t('group_deadline_active')}
-            </AppText>
-          </View>
-        )}
-
-        {/* Price Info */}
-        <View style={[styles.priceCard, { backgroundColor: theme.cardBg, borderColor: theme.border }]}>
-          <View style={styles.priceRow}>
-            <View>
-              <AppText style={[styles.priceLabel, { color: theme.textSecondary }]}>
-                {t('group_total_price')}
-              </AppText>
-              <AppText style={[styles.priceValue, { color: theme.primary }]}>
-                {activeGroup.totalPrice}€
-              </AppText>
-            </View>
-            <View style={styles.pricePerPerson}>
-              <AppText style={[styles.priceLabel, { color: theme.textSecondary }]}>
-                {activeGroup.memberDeadline && new Date() <= activeGroup.memberDeadline 
-                  ? t('group_per_person_estimated')
-                  : t('group_per_person')}
-              </AppText>
-              <AppText style={[styles.priceValue, { color: theme.text }]}>
-                {pricePerPerson.toFixed(2)}€
-              </AppText>
-            </View>
+      {/* Chat Section - Always visible when chat tab is active */}
+      {activeTab === 'chat' && (
+        <>
+          <View style={styles.chatContent}>
+            <FlatList
+              ref={flatListRef}
+              data={groupMessages}
+              keyExtractor={(item) => item.id}
+              renderItem={({ item }) => (
+                <MessageBubble message={item} currentUserId={user?.id || ''} theme={theme} />
+              )}
+              contentContainerStyle={styles.messagesList}
+              style={styles.chatList}
+            />
           </View>
 
-          {/* Payment Progress */}
-          <View style={styles.progressContainer}>
-            <View style={styles.progressHeader}>
-              <AppText style={[styles.progressLabel, { color: theme.textSecondary }]}>
-                {t('group_payment_progress')}
+          {/* Message Input */}
+          <View style={[
+            styles.inputContainer, 
+            { 
+              backgroundColor: theme.surface, 
+              borderTopColor: theme.border,
+              paddingBottom: Math.max(insets.bottom, 12),
+            }
+          ]}>
+            <TextInput
+              style={[
+                styles.messageInput,
+                {
+                  backgroundColor: theme.inputBg,
+                  color: theme.text,
+                  borderColor: theme.border,
+                }
+              ]}
+              value={messageText}
+              onChangeText={setMessageText}
+              placeholder={t('group_chat_placeholder')}
+              placeholderTextColor={theme.textMuted}
+              multiline
+              maxLength={500}
+            />
+            <Pressable
+              onPress={handleSendMessage}
+              disabled={!messageText.trim()}
+              style={[
+                styles.sendButton,
+                {
+                  backgroundColor: messageText.trim() ? theme.primary : theme.border,
+                }
+              ]}
+            >
+              <AppText style={styles.sendButtonText}>{t('group_chat_send')}</AppText>
+            </Pressable>
+          </View>
+        </>
+      )}
+
+      {/* Details Tab Content */}
+      {activeTab === 'details' && (
+        <ScrollView style={styles.tabContent}>
+          {/* Description */}
+          {activeGroup.description && (
+            <View style={[styles.descriptionCard, { backgroundColor: theme.cardBg, borderColor: theme.border }]}>
+              <AppText style={[styles.descriptionLabel, { color: theme.textSecondary }]}>
+                {t('group_about_gift')}
               </AppText>
-              <AppText style={[styles.progressText, { color: theme.text }]}>
-                {t('group_payment_status', { paid: paymentProgress.paid.toString(), total: paymentProgress.total.toString() })}
+              <AppText style={[styles.descriptionText, { color: theme.text }]}>
+                {activeGroup.description}
               </AppText>
             </View>
-            <View style={[styles.progressBar, { backgroundColor: theme.border }]}>
-              <View
-                style={[
-                  styles.progressFill,
-                  {
-                    backgroundColor: paymentProgress.percentage === 100 ? '#4CAF50' : theme.primary,
-                    width: `${paymentProgress.percentage}%`,
-                  }
-                ]}
-              />
+          )}
+
+          {/* Member Deadline */}
+          {activeGroup.memberDeadline && (
+            <View style={[styles.deadlineCard, { backgroundColor: theme.cardBg, borderColor: theme.border }]}>
+              <AppText style={[styles.deadlineLabel, { color: theme.textSecondary }]}>
+                {t('group_deadline_label')} {t('group_deadline_dont_pay')}
+              </AppText>
+              <AppText style={[styles.deadlineDate, { color: theme.primary }]}>
+                {activeGroup.memberDeadline.toLocaleDateString('en-US', { 
+                  year: 'numeric', 
+                  month: 'long', 
+                  day: 'numeric' 
+                })}
+              </AppText>
+              <AppText style={[styles.deadlineHelper, { color: theme.textMuted }]}>
+                {new Date() > activeGroup.memberDeadline 
+                  ? t('group_deadline_passed')
+                  : t('group_deadline_active')}
+              </AppText>
+            </View>
+          )}
+
+          {/* Birthday */}
+          {activeGroup.recipientBirthdate && (
+            <View style={[styles.infoCard, { backgroundColor: theme.cardBg, borderColor: theme.border }]}>
+              <AppText style={[styles.infoLabel, { color: theme.textSecondary }]}>
+                {t('group_birthday')}
+              </AppText>
+              <AppText style={[styles.infoValue, { color: theme.text }]}>
+                {activeGroup.recipientBirthdate.toLocaleDateString('en-US', { month: 'long', day: 'numeric' })}
+              </AppText>
+            </View>
+          )}
+
+          {/* Price Info */}
+          <View style={[styles.priceCard, { backgroundColor: theme.cardBg, borderColor: theme.border }]}>
+            <View style={styles.priceRow}>
+              <View>
+                <AppText style={[styles.priceLabel, { color: theme.textSecondary }]}>
+                  {t('group_total_price')}
+                </AppText>
+                <AppText style={[styles.priceValue, { color: theme.primary }]}>
+                  {activeGroup.totalPrice}€
+                </AppText>
+              </View>
+              <View style={styles.pricePerPerson}>
+                <AppText style={[styles.priceLabel, { color: theme.textSecondary }]}>
+                  {activeGroup.memberDeadline && new Date() <= activeGroup.memberDeadline 
+                    ? t('group_per_person_estimated')
+                    : t('group_per_person')}
+                </AppText>
+                <AppText style={[styles.priceValue, { color: theme.text }]}>
+                  {pricePerPerson.toFixed(2)}€
+                </AppText>
+              </View>
+            </View>
+
+            {/* Payment Progress */}
+            <View style={styles.progressContainer}>
+              <View style={styles.progressHeader}>
+                <AppText style={[styles.progressLabel, { color: theme.textSecondary }]}>
+                  {t('group_payment_progress')}
+                </AppText>
+                <AppText style={[styles.progressText, { color: theme.text }]}>
+                  {t('group_payment_status', { paid: paymentProgress.paid.toString(), total: paymentProgress.total.toString() })}
+                </AppText>
+              </View>
+              <View style={[styles.progressBar, { backgroundColor: theme.border }]}>
+                <View
+                  style={[
+                    styles.progressFill,
+                    {
+                      backgroundColor: paymentProgress.percentage === 100 ? '#4CAF50' : theme.primary,
+                      width: `${paymentProgress.percentage}%`,
+                    }
+                  ]}
+                />
+              </View>
             </View>
           </View>
-        </View>
 
-        {/* Members List */}
-        <View style={styles.section}>
+          {/* Close Group Button (Admin only, Active groups only) */}
+          {isCreator && activeGroup.status === 'active' && (
+            <Pressable
+              onPress={handleCloseGroup}
+              style={[styles.closeButton, { backgroundColor: '#EF4444', borderColor: '#EF4444' }]}
+            >
+              <AppText style={styles.closeButtonText}>{t('group_close_button')}</AppText>
+            </Pressable>
+          )}
+        </ScrollView>
+      )}
+
+      {/* Members Tab Content */}
+      {activeTab === 'members' && (
+        <ScrollView style={styles.tabContent}>
           <AppText style={[styles.sectionTitle, { color: theme.text }]}>
             {t('group_members_title', { count: acceptedMembers.length.toString() })}
           </AppText>
@@ -277,78 +409,8 @@ export default function GroupDetailScreen() {
               )}
             </View>
           ))}
-        </View>
-
-        {/* Close Group Button (Admin only, Active groups only) */}
-        {isCreator && activeGroup.status === 'active' && (
-          <View style={styles.section}>
-            <Pressable
-              onPress={handleCloseGroup}
-              style={[styles.closeButton, { backgroundColor: '#EF4444', borderColor: '#EF4444' }]}
-            >
-              <AppText style={styles.closeButtonText}>{t('group_close_button')}</AppText>
-            </Pressable>
-          </View>
-        )}
-
-        {/* Chat Section */}
-        <View style={styles.section}>
-          <AppText style={[styles.sectionTitle, { color: theme.text, marginBottom: 12 }]}>
-            {t('group_chat_title')}
-          </AppText>
-          <View style={[styles.chatContainer, { backgroundColor: theme.cardBg, borderColor: theme.border }]}>
-            <FlatList
-              ref={flatListRef}
-              data={groupMessages}
-              keyExtractor={(item) => item.id}
-              renderItem={({ item }) => (
-                <MessageBubble message={item} currentUserId={user?.id || ''} theme={theme} />
-              )}
-              contentContainerStyle={styles.messagesList}
-              scrollEnabled={false}
-            />
-          </View>
-        </View>
-      </ScrollView>
-
-      {/* Message Input */}
-      <View style={[
-        styles.inputContainer, 
-        { 
-          backgroundColor: theme.surface, 
-          borderTopColor: theme.border,
-          paddingBottom: Math.max(insets.bottom, 12),
-        }
-      ]}>
-        <TextInput
-          style={[
-            styles.messageInput,
-            {
-              backgroundColor: theme.inputBg,
-              color: theme.text,
-              borderColor: theme.border,
-            }
-          ]}
-          value={messageText}
-          onChangeText={setMessageText}
-          placeholder={t('group_chat_placeholder')}
-          placeholderTextColor={theme.textMuted}
-          multiline
-          maxLength={500}
-        />
-        <Pressable
-          onPress={handleSendMessage}
-          disabled={!messageText.trim()}
-          style={[
-            styles.sendButton,
-            {
-              backgroundColor: messageText.trim() ? theme.primary : theme.border,
-            }
-          ]}
-        >
-          <AppText style={styles.sendButtonText}>{t('group_chat_send')}</AppText>
-        </Pressable>
-      </View>
+        </ScrollView>
+      )}
     </KeyboardAvoidingView>
   );
 }
@@ -467,6 +529,33 @@ const styles = StyleSheet.create({
     fontFamily: fonts.text,
     textAlign: 'center',
   },
+  tabs: {
+    flexDirection: 'row',
+    marginBottom: 0,
+  },
+  tab: {
+    flex: 1,
+    paddingVertical: 12,
+    alignItems: 'center',
+    position: 'relative',
+  },
+  tabActive: {
+  },
+  tabText: {
+    fontSize: 14,
+    fontFamily: fonts.text,
+  },
+  chatContent: {
+    flex: 1,
+    paddingHorizontal: 16,
+  },
+  chatList: {
+    flex: 1,
+  },
+  tabContent: {
+    flex: 1,
+    padding: 16,
+  },
   content: {
     flex: 1,
     padding: 16,
@@ -511,6 +600,24 @@ const styles = StyleSheet.create({
   deadlineHelper: {
     fontSize: 13,
     fontFamily: fonts.text,
+  },
+  infoCard: {
+    borderWidth: 1,
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 12,
+  },
+  infoLabel: {
+    fontSize: 12,
+    fontFamily: fonts.text,
+    fontWeight: '600',
+    marginBottom: 8,
+    textTransform: 'uppercase',
+  },
+  infoValue: {
+    fontSize: 15,
+    fontFamily: fonts.text,
+    lineHeight: 22,
   },
   priceCard: {
     borderWidth: 1,

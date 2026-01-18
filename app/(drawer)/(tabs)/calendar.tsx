@@ -1,17 +1,17 @@
-import { useState } from 'react';
-import { View, StyleSheet, ScrollView, Pressable, Dimensions, Modal, TextInput, Alert, Platform, Keyboard } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
-import DateTimePicker from '@react-native-community/datetimepicker';
-import { AppContainer } from '@/src/components/ui/AppContainer';
-import { AppTitle } from '@/src/components/ui/AppTitle';
-import { AppText } from '@/src/components/ui/AppText';
 import { AppButton } from '@/src/components/ui/AppButton';
+import { AppContainer } from '@/src/components/ui/AppContainer';
+import { AppText } from '@/src/components/ui/AppText';
+import { AppTitle } from '@/src/components/ui/AppTitle';
 import { UserProfileModal } from '@/src/components/UserProfileModal';
+import { BirthdayUser, CalendarEntry, useBirthdays } from '@/src/context/BirthdaysContext';
+import { useLanguage } from '@/src/context/LanguageContext';
 import { colors } from '@/src/theme';
 import { useAppTheme } from '@/src/theme/ThemeProvider';
-import { useBirthdays, BirthdayUser, CalendarEntry } from '@/src/context/BirthdaysContext';
-import { useLanguage } from '@/src/context/LanguageContext';
+import { Ionicons } from '@expo/vector-icons';
+import DateTimePicker from '@react-native-community/datetimepicker';
+import { useRouter } from 'expo-router';
+import { useState } from 'react';
+import { Alert, Keyboard, Modal, Platform, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 
 // Usar porcentaje en lugar de cálculos fijos para mejor compatibilidad cross-platform
 const DAY_WIDTH_PERCENT = 14.28; // 100% / 7 días ≈ 14.28%
@@ -38,6 +38,7 @@ export default function CalendarTabScreen() {
   // Estado para modal de añadir cumpleaños manual
   const [showAddManualModal, setShowAddManualModal] = useState(false);
   const [manualName, setManualName] = useState('');
+  const [manualEmail, setManualEmail] = useState('');
   const [manualBirthdate, setManualBirthdate] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [isAddingManual, setIsAddingManual] = useState(false);
@@ -115,10 +116,11 @@ export default function CalendarTabScreen() {
 
     try {
       setIsAddingManual(true);
-      await addManualEntry(manualName.trim(), manualBirthdate);
+      await addManualEntry(manualName.trim(), manualBirthdate, manualEmail.trim() || undefined);
       
       // Limpiar y cerrar
       setManualName('');
+      setManualEmail('');
       setManualBirthdate(new Date());
       setShowAddManualModal(false);
 
@@ -126,9 +128,10 @@ export default function CalendarTabScreen() {
         t('calendar_manual_success_title'),
         t('calendar_manual_success_message').replace('{{name}}', manualName)
       );
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error adding manual birthday:', error);
-      Alert.alert(t('calendar_manual_error_title'), t('calendar_manual_error_generic'));
+      const errorMessage = error?.message || t('calendar_manual_error_generic');
+      Alert.alert(t('calendar_manual_error_title'), errorMessage);
     } finally {
       setIsAddingManual(false);
     }
@@ -456,6 +459,22 @@ export default function CalendarTabScreen() {
                   value={manualName}
                   onChangeText={setManualName}
                   autoFocus
+                />
+              </View>
+
+              <View style={styles.formGroup}>
+                <AppText style={[styles.formLabel, { color: theme.text }]}>
+                  Email (opcional)
+                </AppText>
+                <TextInput
+                  style={[styles.input, { backgroundColor: theme.inputBg, color: theme.text, borderColor: theme.border }]}
+                  placeholder="email@ejemplo.com"
+                  placeholderTextColor={theme.textMuted}
+                  value={manualEmail}
+                  onChangeText={setManualEmail}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  autoCorrect={false}
                 />
               </View>
 

@@ -23,6 +23,9 @@ export interface User {
     birthdate: Date;
     avatar: string;
     isManual: true;
+    userId?: string;
+    email?: string;
+    phone?: string;
   }>; // Cumpleaños añadidos manualmente por el usuario
   createdAt?: Date;
   updatedAt?: Date;
