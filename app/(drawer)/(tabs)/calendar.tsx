@@ -130,6 +130,42 @@ export default function CalendarTabScreen() {
       );
     } catch (error: any) {
       console.error('Error adding manual birthday:', error);
+      
+      // Intentar parsear si es una sugerencia de conexión
+      try {
+        const suggestion = JSON.parse(error?.message);
+        if (suggestion.found && suggestion.user) {
+          // Usuario encontrado en la plataforma - mostrar opción de conectar
+          Alert.alert(
+            '¡Usuario encontrado!',
+            suggestion.message,
+            [
+              {
+                text: 'Añadir manualmente',
+                style: 'cancel',
+                onPress: async () => {
+                  // Forzar añadir manual (sin búsqueda)
+                  // Por ahora, simplemente mostrar mensaje
+                  Alert.alert('Info', 'Para añadir manualmente, ve a la pestaña Connect para enviar una solicitud de conexión.');
+                }
+              },
+              {
+                text: 'Ir a Connect',
+                onPress: () => {
+                  setManualName('');
+                  setManualEmail('');
+                  setShowAddManualModal(false);
+                  router.push('/(drawer)/(tabs)/connect' as any);
+                }
+              }
+            ]
+          );
+          return;
+        }
+      } catch (parseError) {
+        // No es JSON, es un error normal
+      }
+      
       const errorMessage = error?.message || t('calendar_manual_error_generic');
       Alert.alert(t('calendar_manual_error_title'), errorMessage);
     } finally {
@@ -192,7 +228,7 @@ export default function CalendarTabScreen() {
             <View style={styles.iconsContainer}>
               <View style={styles.avatarWithCounter}>
                 {/* Siempre mostrar el primer avatar */}
-                <View style={styles.iconWrapper}>
+                <View style={styles.birthdayIndicator}>
                   <AppText style={styles.iconEmoji}>{birthdays[0].avatar}</AppText>
                 </View>
                 

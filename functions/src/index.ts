@@ -153,15 +153,18 @@ export const sendDailyBirthdayReminders = functions
       
       console.log(`🎉 Users with birthday today: ${birthdayUsers.length}`);
       
-      if (birthdayUsers.length === 0) {
-        console.log('✅ No birthdays today');
-        return null;
+      // 3. Para cada usuario que cumple años, notificar a sus conexiones
+      if (birthdayUsers.length > 0) {
+        for (const birthdayUser of birthdayUsers) {
+          await notifyConnectionsAboutBirthday(birthdayUser);
+        }
+      } else {
+        console.log('ℹ️ No real user birthdays today');
       }
       
-      // 3. Para cada usuario que cumple años, notificar a sus conexiones
-      for (const birthdayUser of birthdayUsers) {
-        await notifyConnectionsAboutBirthday(birthdayUser);
-      }
+      // 4. Revisar cumpleaños manuales de cada usuario (siempre ejecutar)
+      console.log('🎂 Checking manual birthdays...');
+      await notifyManualBirthdays(users, todayMonth, todayDay);
       
       console.log('✅ Daily birthday reminders sent successfully');
       return null;
@@ -347,6 +350,87 @@ async function notifyConnectionsAboutBirthday(birthdayUser: any) {
     
   } catch (error) {
     console.error(`❌ Error notifying about ${birthdayUser.name}'s birthday:`, error);
+  }
+}
+
+/**
+ * Notifica a los usuarios sobre cumpleaños manuales que cumplen hoy
+ */
+async function notifyManualBirthdays(users: UserData[], todayMonth: number, todayDay: number) {
+  try {
+    let manualBirthdaysFound = 0;
+    let notificationsSent = 0;
+    
+    // Para cada usuario, revisar sus cumpleaños manuales
+    for (const user of users) {
+      if (!user.fcmToken || !user.fcmToken.startsWith('ExponentPushToken[')) continue;
+      
+      // Obtener cumpleaños manuales del usuario
+      const manualBirthdays = (user as any).manualBirthdays || [];
+      
+      if (manualBirthdays.length === 0) continue;
+      
+      // Filtrar cumpleaños manuales que NO están vinculados y que cumplen HOY
+      const todayManualBirthdays = manualBirthdays.filter((entry: any) => {
+        // Si está vinculado a un usuario real, ya se notificó en el paso anterior
+        if (entry.userId) return false;
+        
+        // Verificar si cumple años hoy
+        const birthdate = entry.birthdate.toDate ? entry.birthdate.toDate() : new Date(entry.birthdate);
+        const birthMonth = birthdate.getMonth();
+        const birthDay = birthdate.getDate();
+        
+        return birthMonth === todayMonth && birthDay === todayDay;
+      });
+      
+      if (todayManualBirthdays.length === 0) continue;
+      
+      manualBirthdaysFound += todayManualBirthdays.length;
+      
+      // Enviar notificación por cada cumpleaños manual
+      for (const manualEntry of todayManualBirthdays) {
+        const birthdate = manualEntry.birthdate.toDate ? manualEntry.birthdate.toDate() : new Date(manualEntry.birthdate);
+        const age = new Date().getFullYear() - birthdate.getFullYear();
+        
+        const lang: Lang = user.preferredLanguage || 'en';
+        const translations = notificationTranslations[lang];
+        
+        console.log(`🎂 Sending manual birthday notification to ${user.name} for ${manualEntry.name}`);
+        
+        const message: ExpoPushMessage = {
+          to: user.fcmToken!,
+          sound: 'default',
+          title: translations.birthday_title(manualEntry.name),
+          body: translations.birthday_body(age),
+          data: {
+            type: 'birthday',
+            manualEntryId: manualEntry.id,
+            userName: manualEntry.name,
+            age: age.toString(),
+            isManual: 'true',
+          },
+          priority: 'high',
+        };
+        
+        try {
+          const response = await sendExpoPushNotifications([message]);
+          
+          if (response.data[0].status === 'ok') {
+            console.log(`✅ Manual birthday notification sent to ${user.name}`);
+            notificationsSent++;
+          } else {
+            console.error(`❌ Failed to send notification:`, response.data[0].message);
+          }
+        } catch (error) {
+          console.error(`❌ Error sending manual birthday notification:`, error);
+        }
+      }
+    }
+    
+    console.log(`🎂 Manual birthdays processed: ${manualBirthdaysFound} found, ${notificationsSent} notifications sent`);
+    
+  } catch (error) {
+    console.error('❌ Error processing manual birthdays:', error);
   }
 }
 

@@ -30,6 +30,7 @@ interface BirthdaysContextType {
   refreshUsers: () => Promise<void>;
   findManualBirthdayCandidate: (newUser: User) => ManualBirthdayEntry | null;
   linkManualBirthdayToUser: (manualEntryId: string, userId: string) => Promise<void>;
+  searchUserByEmailOrName: (email?: string, name?: string) => Promise<User | null>;
   loading: boolean;
 }
 
@@ -261,6 +262,37 @@ export function BirthdaysProvider({ children }: { children: ReactNode }) {
     }
   }, [user?.id, manualEntries]);
 
+  // Buscar usuario existente en la plataforma por email o nombre
+  const searchUserByEmailOrName = useCallback(async (email?: string, name?: string): Promise<User | null> => {
+    try {
+      // Buscar por email si está disponible (más confiable)
+      if (email) {
+        const userByEmail = await db.getAdapter().getUserByEmail(email);
+        if (userByEmail && userByEmail.id !== user?.id) {
+          console.log('🔍 User found by email:', userByEmail.name);
+          return userByEmail;
+        }
+      }
+
+      // Si no se encuentra por email, buscar por nombre (menos confiable)
+      if (name) {
+        const allUsers = await db.getAdapter().getAllUsers();
+        const userByName = allUsers.find(u => 
+          u.name.toLowerCase().trim() === name.toLowerCase().trim() && u.id !== user?.id
+        );
+        if (userByName) {
+          console.log('🔍 User found by name:', userByName.name);
+          return userByName;
+        }
+      }
+
+      return null;
+    } catch (error) {
+      console.error('❌ Error searching for user:', error);
+      return null;
+    }
+  }, [user?.id]);
+
   // Añadir entrada manual de cumpleaños
   const addManualEntry = useCallback(async (name: string, birthdate: Date, email?: string) => {
     if (!user?.id) {
@@ -269,8 +301,8 @@ export function BirthdaysProvider({ children }: { children: ReactNode }) {
     }
 
     try {
-      // Validación: Verificar si ya existe un usuario conectado con esos datos
-      const existingUser = users.find(u => {
+      // 1. Verificar si ya existe un usuario conectado con esos datos
+      const existingConnectedUser = users.find(u => {
         if (email && u.email && email.toLowerCase() === u.email.toLowerCase()) {
           return true;
         }
@@ -284,8 +316,21 @@ export function BirthdaysProvider({ children }: { children: ReactNode }) {
         return nameMatch && dateMatch;
       });
 
-      if (existingUser) {
-        throw new Error(`Ya tienes conectado a ${existingUser.name} con esta fecha de cumpleaños`);
+      if (existingConnectedUser) {
+        throw new Error(`Ya tienes conectado a ${existingConnectedUser.name} con esta fecha de cumpleaños`);
+      }
+
+      // 2. Buscar si existe un usuario registrado en la plataforma
+      const existingPlatformUser = await searchUserByEmailOrName(email, name);
+      
+      if (existingPlatformUser) {
+        // Usuario existe en la plataforma - sugerir conexión
+        const suggestion = {
+          found: true,
+          user: existingPlatformUser,
+          message: `¡Encontramos a ${existingPlatformUser.name} en RegaloApp! ¿Quieres conectar con @${existingPlatformUser.username || 'usuario'} en lugar de añadirlo manualmente?`
+        };
+        throw new Error(JSON.stringify(suggestion));
       }
 
       const newEntry: ManualBirthdayEntry = {
@@ -356,9 +401,10 @@ export function BirthdaysProvider({ children }: { children: ReactNode }) {
       refreshUsers,
       findManualBirthdayCandidate,
       linkManualBirthdayToUser,
+      searchUserByEmailOrName,
       loading 
     }),
-    [users, manualEntries, allEntries, getUsersByDate, addUser, addManualEntry, deleteManualEntry, refreshUsers, findManualBirthdayCandidate, linkManualBirthdayToUser, loading]
+    [users, manualEntries, allEntries, getUsersByDate, addUser, addManualEntry, deleteManualEntry, refreshUsers, findManualBirthdayCandidate, linkManualBirthdayToUser, searchUserByEmailOrName, loading]
   );
 
   return (

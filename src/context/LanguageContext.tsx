@@ -1,6 +1,7 @@
 import { useUser } from '@/src/context/UserContext';
 import { db } from '@/src/database';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as Localization from 'expo-localization';
 import React, { createContext, ReactNode, useContext, useEffect, useState } from 'react';
 import { ActivityIndicator, View } from 'react-native';
 
@@ -1066,21 +1067,26 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
 
         if (stored === 'es' || stored === 'en' || stored === 'de') {
           setLang(stored);
+          console.log(`✅ Language loaded from storage: ${stored}`);
         } else {
           // Detect device locale only on first launch
           let deviceLocale: string | null = null;
           try {
-            const localizationModule = await import('expo-localization');
-            const localeValue = (localizationModule as any).locale || (localizationModule as any).default?.locale;
-            deviceLocale = typeof localeValue === 'string' ? localeValue : null;
+            // Get device locales using expo-localization
+            const locales = Localization.getLocales();
+            if (locales && locales.length > 0) {
+              deviceLocale = locales[0].languageCode || null;
+              console.log(`📱 Device locale detected: ${deviceLocale}`);
+            }
           } catch (error) {
-            console.warn('⚠️ expo-localization not available, falling back to en:', error);
+            console.warn('⚠️ Error detecting device locale, falling back to en:', error);
           }
           const detectedLang = resolveAppLanguage(deviceLocale);
           if (mounted) {
             setLang(detectedLang);
             // Save detected language
             await AsyncStorage.setItem(STORAGE_KEY, detectedLang);
+            console.log(`✅ Language auto-detected and saved: ${detectedLang}`);
           }
         }
       } catch (error) {
