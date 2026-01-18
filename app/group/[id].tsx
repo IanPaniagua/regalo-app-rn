@@ -1,5 +1,6 @@
 import { AppText } from '@/src/components/ui/AppText';
 import { AppTitle } from '@/src/components/ui/AppTitle';
+import { useConnections } from '@/src/context/ConnectionsContext';
 import { ChatMessage, useGroups } from '@/src/context/GroupsContext';
 import { useLanguage } from '@/src/context/LanguageContext';
 import { useUser } from '@/src/context/UserContext';
@@ -7,7 +8,7 @@ import { fonts } from '@/src/theme';
 import { useAppTheme } from '@/src/theme/ThemeProvider';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
-import { Alert, FlatList, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
+import { Alert, FlatList, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function GroupDetailScreen() {
@@ -15,6 +16,7 @@ export default function GroupDetailScreen() {
   const { t } = useLanguage();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { user } = useUser();
+  const { connectedUsers } = useConnections();
   const insets = useSafeAreaInsets();
   const {
     activeGroup,
@@ -25,12 +27,24 @@ export default function GroupDetailScreen() {
     sendMessage,
     markAsPaid,
     closeGroup,
+    deleteGroup,
+    inviteMembers,
+    removeMember,
+    updateGroupDetails,
     calculatePricePerPerson,
     getPaymentProgress,
   } = useGroups();
 
   const [messageText, setMessageText] = useState('');
   const [activeTab, setActiveTab] = useState<'chat' | 'details' | 'members'>('chat');
+  const [showAddMembersModal, setShowAddMembersModal] = useState(false);
+  const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
+  const [isAddingMembers, setIsAddingMembers] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editGiftName, setEditGiftName] = useState('');
+  const [editDescription, setEditDescription] = useState('');
+  const [editTotalPrice, setEditTotalPrice] = useState('');
+  const [isUpdating, setIsUpdating] = useState(false);
   const flatListRef = useRef<FlatList>(null);
 
   useEffect(() => {
@@ -96,6 +110,134 @@ export default function GroupDetailScreen() {
               router.back();
             } catch (error) {
               console.error('Error closing group:', error);
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  const handleAddMembers = async () => {
+    if (selectedUsers.length === 0) {
+      Alert.alert('No users selected', 'Please select at least one user to invite');
+      return;
+    }
+
+    try {
+      setIsAddingMembers(true);
+      await inviteMembers(id, selectedUsers);
+      setShowAddMembersModal(false);
+      setSelectedUsers([]);
+      Alert.alert('Success', `Invited ${selectedUsers.length} member(s) to the group`);
+    } catch (error: any) {
+      console.error('Error adding members:', error);
+      Alert.alert('Error', error?.message || 'Failed to add members');
+    } finally {
+      setIsAddingMembers(false);
+    }
+  };
+
+  const handleRemoveMember = (memberId: string, memberName: string) => {
+    Alert.alert(
+      'Remove Member',
+      `Are you sure you want to remove ${memberName} from this group?`,
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Remove',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await removeMember(id, memberId);
+              Alert.alert('Success', `${memberName} has been removed from the group`);
+            } catch (error) {
+              console.error('Error removing member:', error);
+              Alert.alert('Error', 'Failed to remove member');
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  const toggleUserSelection = (userId: string) => {
+    setSelectedUsers(prev => 
+      prev.includes(userId) 
+        ? prev.filter(id => id !== userId)
+        : [...prev, userId]
+    );
+  };
+
+  const handleEditGroup = () => {
+    if (!activeGroup) return;
+    setEditGiftName(activeGroup.giftName);
+    setEditDescription(activeGroup.description || '');
+    setEditTotalPrice(activeGroup.totalPrice.toString());
+    setShowEditModal(true);
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editGiftName.trim() || !editTotalPrice.trim()) {
+      Alert.alert('Error', 'Gift name and price are required');
+      return;
+    }
+
+    const price = parseFloat(editTotalPrice);
+    if (isNaN(price) || price <= 0) {
+      Alert.alert('Error', 'Please enter a valid price');
+      return;
+    }
+
+    try {
+      setIsUpdating(true);
+      const updates: Partial<any> = {};
+      
+      if (editGiftName !== activeGroup?.giftName) {
+        updates.giftName = editGiftName;
+      }
+      if (editDescription !== (activeGroup?.description || '')) {
+        updates.description = editDescription;
+      }
+      if (price !== activeGroup?.totalPrice) {
+        updates.totalPrice = price;
+      }
+
+      if (Object.keys(updates).length > 0) {
+        await updateGroupDetails(id, updates);
+        Alert.alert('Success', 'Group updated successfully');
+      }
+      
+      setShowEditModal(false);
+    } catch (error: any) {
+      console.error('Error updating group:', error);
+      Alert.alert('Error', error?.message || 'Failed to update group');
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  const handleDeleteGroup = () => {
+    Alert.alert(
+      'Delete Group',
+      'Are you sure you want to permanently delete this group? This action cannot be undone.',
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await deleteGroup(id);
+              router.back();
+            } catch (error) {
+              console.error('Error deleting group:', error);
+              Alert.alert('Error', 'Failed to delete group');
             }
           },
         },
@@ -348,14 +490,30 @@ export default function GroupDetailScreen() {
             </View>
           </View>
 
-          {/* Close Group Button (Admin only, Active groups only) */}
+          {/* Admin Actions (Active groups only) */}
           {isCreator && activeGroup.status === 'active' && (
-            <Pressable
-              onPress={handleCloseGroup}
-              style={[styles.closeButton, { backgroundColor: '#EF4444', borderColor: '#EF4444' }]}
-            >
-              <AppText style={styles.closeButtonText}>{t('group_close_button')}</AppText>
-            </Pressable>
+            <View style={styles.adminActions}>
+              <Pressable
+                onPress={handleEditGroup}
+                style={[styles.actionButton, styles.editButton, { backgroundColor: theme.primary, borderColor: theme.primary }]}
+              >
+                <AppText style={styles.actionButtonText}>✏️ Edit Group</AppText>
+              </Pressable>
+              
+              <Pressable
+                onPress={handleCloseGroup}
+                style={[styles.actionButton, styles.closeButton, { backgroundColor: '#F59E0B', borderColor: '#F59E0B' }]}
+              >
+                <AppText style={styles.actionButtonText}>{t('group_close_button')}</AppText>
+              </Pressable>
+              
+              <Pressable
+                onPress={handleDeleteGroup}
+                style={[styles.actionButton, styles.deleteButton, { backgroundColor: '#EF4444', borderColor: '#EF4444' }]}
+              >
+                <AppText style={styles.actionButtonText}>🗑️ Delete Group</AppText>
+              </Pressable>
+            </View>
           )}
         </ScrollView>
       )}
@@ -363,9 +521,19 @@ export default function GroupDetailScreen() {
       {/* Members Tab Content */}
       {activeTab === 'members' && (
         <ScrollView style={styles.tabContent}>
-          <AppText style={[styles.sectionTitle, { color: theme.text }]}>
-            {t('group_members_title', { count: acceptedMembers.length.toString() })}
-          </AppText>
+          <View style={styles.membersHeader}>
+            <AppText style={[styles.sectionTitle, { color: theme.text }]}>
+              {t('group_members_title', { count: acceptedMembers.length.toString() })}
+            </AppText>
+            {isCreator && activeGroup.status === 'active' && (
+              <Pressable
+                onPress={() => setShowAddMembersModal(true)}
+                style={[styles.addMemberButton, { backgroundColor: theme.primary }]}
+              >
+                <AppText style={styles.addMemberButtonText}>+ Add Members</AppText>
+              </Pressable>
+            )}
+          </View>
           {groupMembers.map((member) => (
             <View
               key={member.id}
@@ -391,26 +559,194 @@ export default function GroupDetailScreen() {
                 )}
               </View>
 
-              {isCreator && member.status === 'accepted' && (
-                <Pressable
-                  onPress={() => handleTogglePaid(member.userId, member.hasPaid)}
-                  style={[
-                    styles.paidCheckbox,
-                    {
-                      backgroundColor: member.hasPaid ? theme.primary : 'transparent',
-                      borderColor: member.hasPaid ? theme.primary : theme.border,
-                    }
-                  ]}
-                >
-                  {member.hasPaid && (
-                    <AppText style={styles.checkmark}>✓</AppText>
-                  )}
-                </Pressable>
-              )}
+              <View style={styles.memberActions}>
+                {isCreator && member.status === 'accepted' && (
+                  <Pressable
+                    onPress={() => handleTogglePaid(member.userId, member.hasPaid)}
+                    style={[
+                      styles.paidCheckbox,
+                      {
+                        backgroundColor: member.hasPaid ? theme.primary : 'transparent',
+                        borderColor: member.hasPaid ? theme.primary : theme.border,
+                      }
+                    ]}
+                  >
+                    {member.hasPaid && (
+                      <AppText style={styles.checkmark}>✓</AppText>
+                    )}
+                  </Pressable>
+                )}
+                {isCreator && member.userId !== user?.id && activeGroup.status === 'active' && (
+                  <Pressable
+                    onPress={() => handleRemoveMember(member.userId, member.username)}
+                    style={[styles.removeButton, { backgroundColor: '#EF4444' }]}
+                  >
+                    <AppText style={styles.removeButtonText}>Remove</AppText>
+                  </Pressable>
+                )}
+              </View>
             </View>
           ))}
         </ScrollView>
       )}
+
+      {/* Add Members Modal */}
+      <Modal
+        visible={showAddMembersModal}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setShowAddMembersModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalContent, { backgroundColor: theme.cardBg }]}>
+            <View style={styles.modalHeader}>
+              <AppTitle style={[styles.modalTitle, { color: theme.text }]}>Add Members</AppTitle>
+              <Pressable onPress={() => setShowAddMembersModal(false)}>
+                <AppText style={[styles.modalClose, { color: theme.textSecondary }]}>✕</AppText>
+              </Pressable>
+            </View>
+
+            <AppText style={[styles.modalSubtitle, { color: theme.textSecondary }]}>
+              Select users to invite to this group
+            </AppText>
+
+            <ScrollView style={styles.usersList}>
+              {connectedUsers
+                .filter(connectedUser => {
+                  // Filter out users already in the group
+                  const isAlreadyMember = groupMembers.some(m => m.userId === connectedUser.id);
+                  // Filter out the recipient
+                  const isRecipient = connectedUser.id === activeGroup.recipientUserId;
+                  return !isAlreadyMember && !isRecipient;
+                })
+                .map((connectedUser) => (
+                  <Pressable
+                    key={connectedUser.id}
+                    onPress={() => toggleUserSelection(connectedUser.id)}
+                    style={[
+                      styles.userItem,
+                      {
+                        backgroundColor: selectedUsers.includes(connectedUser.id) ? theme.primary + '20' : theme.surface,
+                        borderColor: selectedUsers.includes(connectedUser.id) ? theme.primary : theme.border,
+                      }
+                    ]}
+                  >
+                    <AppText style={styles.userAvatar}>{connectedUser.avatar}</AppText>
+                    <AppText style={[styles.userName, { color: theme.text }]}>
+                      {connectedUser.name}
+                    </AppText>
+                    {selectedUsers.includes(connectedUser.id) && (
+                      <AppText style={[styles.selectedCheck, { color: theme.primary }]}>✓</AppText>
+                    )}
+                  </Pressable>
+                ))}
+            </ScrollView>
+
+            <View style={styles.modalActions}>
+              <Pressable
+                onPress={() => setShowAddMembersModal(false)}
+                style={[styles.modalButton, styles.cancelButton, { borderColor: theme.border }]}
+              >
+                <AppText style={[styles.cancelButtonText, { color: theme.text }]}>Cancel</AppText>
+              </Pressable>
+              <Pressable
+                onPress={handleAddMembers}
+                disabled={selectedUsers.length === 0 || isAddingMembers}
+                style={[
+                  styles.modalButton,
+                  styles.confirmButton,
+                  {
+                    backgroundColor: selectedUsers.length > 0 && !isAddingMembers ? theme.primary : theme.border,
+                  }
+                ]}
+              >
+                <AppText style={styles.confirmButtonText}>
+                  {isAddingMembers ? 'Adding...' : `Add ${selectedUsers.length > 0 ? `(${selectedUsers.length})` : ''}`}
+                </AppText>
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Edit Group Modal */}
+      <Modal
+        visible={showEditModal}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setShowEditModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalContent, { backgroundColor: theme.cardBg }]}>
+            <View style={styles.modalHeader}>
+              <AppTitle style={[styles.modalTitle, { color: theme.text }]}>Edit Group</AppTitle>
+              <Pressable onPress={() => setShowEditModal(false)}>
+                <AppText style={[styles.modalClose, { color: theme.textSecondary }]}>✕</AppText>
+              </Pressable>
+            </View>
+
+            <ScrollView style={styles.editForm}>
+              <View style={styles.formGroup}>
+                <AppText style={[styles.formLabel, { color: theme.text }]}>Gift Name *</AppText>
+                <TextInput
+                  style={[styles.formInput, { backgroundColor: theme.inputBg, color: theme.text, borderColor: theme.border }]}
+                  value={editGiftName}
+                  onChangeText={setEditGiftName}
+                  placeholder="e.g., Birthday Gift"
+                  placeholderTextColor={theme.textMuted}
+                />
+              </View>
+
+              <View style={styles.formGroup}>
+                <AppText style={[styles.formLabel, { color: theme.text }]}>Description</AppText>
+                <TextInput
+                  style={[styles.formInput, styles.textArea, { backgroundColor: theme.inputBg, color: theme.text, borderColor: theme.border }]}
+                  value={editDescription}
+                  onChangeText={setEditDescription}
+                  placeholder="What are we getting?"
+                  placeholderTextColor={theme.textMuted}
+                  multiline
+                  numberOfLines={4}
+                />
+              </View>
+
+              <View style={styles.formGroup}>
+                <AppText style={[styles.formLabel, { color: theme.text }]}>Total Price (€) *</AppText>
+                <TextInput
+                  style={[styles.formInput, { backgroundColor: theme.inputBg, color: theme.text, borderColor: theme.border }]}
+                  value={editTotalPrice}
+                  onChangeText={setEditTotalPrice}
+                  placeholder="0.00"
+                  placeholderTextColor={theme.textMuted}
+                  keyboardType="decimal-pad"
+                />
+              </View>
+            </ScrollView>
+
+            <View style={styles.modalActions}>
+              <Pressable
+                onPress={() => setShowEditModal(false)}
+                style={[styles.modalButton, styles.cancelButton, { borderColor: theme.border }]}
+              >
+                <AppText style={[styles.cancelButtonText, { color: theme.text }]}>Cancel</AppText>
+              </Pressable>
+              <Pressable
+                onPress={handleSaveEdit}
+                disabled={isUpdating}
+                style={[
+                  styles.modalButton,
+                  styles.confirmButton,
+                  { backgroundColor: !isUpdating ? theme.primary : theme.border }
+                ]}
+              >
+                <AppText style={styles.confirmButtonText}>
+                  {isUpdating ? 'Saving...' : 'Save Changes'}
+                </AppText>
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </KeyboardAvoidingView>
   );
 }
@@ -828,5 +1164,168 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontFamily: fonts.text,
     fontWeight: '600',
+  },
+  membersHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  addMemberButton: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 8,
+  },
+  addMemberButtonText: {
+    color: '#fff',
+    fontSize: 14,
+    fontFamily: fonts.text,
+    fontWeight: '600',
+  },
+  memberActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  removeButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 6,
+    marginLeft: 8,
+  },
+  removeButtonText: {
+    color: '#fff',
+    fontSize: 12,
+    fontFamily: fonts.text,
+    fontWeight: '600',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  modalContent: {
+    width: '100%',
+    maxWidth: 400,
+    borderRadius: 16,
+    padding: 20,
+    maxHeight: '80%',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontFamily: fonts.title,
+    fontWeight: '600',
+  },
+  modalClose: {
+    fontSize: 24,
+    fontWeight: '300',
+  },
+  modalSubtitle: {
+    fontSize: 14,
+    fontFamily: fonts.text,
+    marginBottom: 16,
+  },
+  usersList: {
+    maxHeight: 300,
+    marginBottom: 16,
+  },
+  userItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    marginBottom: 8,
+  },
+  userAvatar: {
+    fontSize: 24,
+    marginRight: 12,
+  },
+  userName: {
+    flex: 1,
+    fontSize: 16,
+    fontFamily: fonts.text,
+  },
+  selectedCheck: {
+    fontSize: 20,
+    fontWeight: 'bold',
+  },
+  modalActions: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  modalButton: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  cancelButton: {
+    borderWidth: 1,
+  },
+  cancelButtonText: {
+    fontSize: 16,
+    fontFamily: fonts.text,
+    fontWeight: '600',
+  },
+  confirmButton: {
+  },
+  confirmButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontFamily: fonts.text,
+    fontWeight: '600',
+  },
+  adminActions: {
+    gap: 12,
+    marginTop: 8,
+  },
+  actionButton: {
+    borderWidth: 1,
+    borderRadius: 12,
+    padding: 16,
+    alignItems: 'center',
+  },
+  editButton: {
+  },
+  deleteButton: {
+  },
+  actionButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontFamily: fonts.text,
+    fontWeight: '600',
+  },
+  editForm: {
+    maxHeight: 400,
+    marginBottom: 16,
+  },
+  formGroup: {
+    marginBottom: 16,
+  },
+  formLabel: {
+    fontSize: 14,
+    fontFamily: fonts.text,
+    fontWeight: '600',
+    marginBottom: 8,
+  },
+  formInput: {
+    borderWidth: 1,
+    borderRadius: 8,
+    padding: 12,
+    fontSize: 16,
+    fontFamily: fonts.text,
+  },
+  textArea: {
+    minHeight: 100,
+    textAlignVertical: 'top',
   },
 });

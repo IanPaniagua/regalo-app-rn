@@ -1,7 +1,7 @@
 import { useUser } from '@/src/context/UserContext';
 import { db } from '@/src/database/index';
 import { getFirebaseApp } from '@/src/services/firebase';
-import { addDoc, collection, deleteDoc, doc, getDoc, getFirestore, onSnapshot, orderBy, query, setDoc, Timestamp, Unsubscribe, updateDoc } from 'firebase/firestore';
+import { addDoc, collection, deleteDoc, doc, getDoc, getDocs, getFirestore, onSnapshot, orderBy, query, setDoc, Timestamp, Unsubscribe, updateDoc } from 'firebase/firestore';
 import { createContext, ReactNode, useCallback, useContext, useEffect, useState } from 'react';
 import { useNotifications } from './NotificationsContext';
 
@@ -79,6 +79,7 @@ interface GroupsContextType {
   updateGroupDetails: (groupId: string, updates: Partial<GiftGroup>) => Promise<void>;
   removeMember: (groupId: string, userId: string) => Promise<void>;
   closeGroup: (groupId: string) => Promise<void>;
+  deleteGroup: (groupId: string) => Promise<void>;
   
   // Real-time subscriptions
   subscribeToGroup: (groupId: string) => void;
@@ -501,13 +502,39 @@ export function GroupsProvider({ children }: { children: ReactNode }) {
       
       await updateDoc(groupRef, updateData);
       
-      // Send system message for price changes
+      // Send system messages for changes
       if (updates.totalPrice !== undefined) {
         await sendSystemMessage(groupId, `${user.name} updated the price to ${updates.totalPrice}€`);
       }
       
       if (updates.giftName !== undefined) {
         await sendSystemMessage(groupId, `${user.name} updated the gift name to "${updates.giftName}"`);
+      }
+      
+      if (updates.description !== undefined) {
+        await sendSystemMessage(groupId, `${user.name} updated the description`);
+      }
+      
+      if (updates.memberDeadline !== undefined) {
+        const deadlineStr = updates.memberDeadline 
+          ? updates.memberDeadline.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
+          : 'removed';
+        await sendSystemMessage(groupId, `${user.name} updated the member deadline to ${deadlineStr}`);
+      }
+      
+      if (updates.paymentLink !== undefined) {
+        await sendSystemMessage(groupId, `${user.name} ${updates.paymentLink ? 'added' : 'removed'} the payment link`);
+      }
+      
+      // Send a generic message at the end to notify all members (in admin's language)
+      if (Object.keys(updates).length > 0) {
+        const userLang = user.preferredLanguage || 'en';
+        const messages = {
+          es: '🔄 La información del grupo ha sido editada. Revísala.',
+          en: '🔄 Group information has been updated. Please review the details.',
+          de: '🔄 Die Gruppeninformationen wurden aktualisiert. Bitte überprüfen Sie die Details.'
+        };
+        await sendSystemMessage(groupId, messages[userLang]);
       }
       
       await loadMyGroups();
@@ -571,6 +598,58 @@ export function GroupsProvider({ children }: { children: ReactNode }) {
       console.log('✅ Group closed');
     } catch (error) {
       console.error('❌ Error closing group:', error);
+      throw error;
+    }
+  };
+  
+  // ==================== Delete Group ====================
+  
+  const deleteGroup = async (groupId: string): Promise<void> => {
+    if (!user?.id) throw new Error('User not authenticated');
+    
+    try {
+      const firestore = getFirestore(getFirebaseApp());
+      
+      // Get all members to remove groupId from their documents
+      const membersSnapshot = await getDocs(collection(firestore, `giftGroups/${groupId}/members`));
+      const memberIds = membersSnapshot.docs.map(doc => doc.data().userId);
+      
+      // Remove groupId from all members' documents
+      for (const memberId of memberIds) {
+        const memberUser = await db.getAdapter().getUser(memberId);
+        if (memberUser && memberUser.groupIds) {
+          await db.getAdapter().updateUser(memberId, {
+            groupIds: memberUser.groupIds.filter(id => id !== groupId)
+          });
+        }
+      }
+      
+      // Delete all subcollections (members and messages)
+      const membersRef = collection(firestore, `giftGroups/${groupId}/members`);
+      const messagesRef = collection(firestore, `giftGroups/${groupId}/messages`);
+      
+      const membersDocs = await getDocs(membersRef);
+      const messagesDocs = await getDocs(messagesRef);
+      
+      // Delete all members
+      for (const memberDoc of membersDocs.docs) {
+        await deleteDoc(memberDoc.ref);
+      }
+      
+      // Delete all messages
+      for (const messageDoc of messagesDocs.docs) {
+        await deleteDoc(messageDoc.ref);
+      }
+      
+      // Finally, delete the group document
+      const groupRef = doc(firestore, `giftGroups/${groupId}`);
+      await deleteDoc(groupRef);
+      
+      await loadMyGroups();
+      
+      console.log('✅ Group deleted completely');
+    } catch (error) {
+      console.error('❌ Error deleting group:', error);
       throw error;
     }
   };
@@ -748,6 +827,7 @@ export function GroupsProvider({ children }: { children: ReactNode }) {
     updateGroupDetails,
     removeMember,
     closeGroup,
+    deleteGroup,
     
     // Real-time
     subscribeToGroup,
