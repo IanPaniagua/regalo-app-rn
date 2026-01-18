@@ -1,27 +1,42 @@
-import { useEffect } from 'react';
-import { useRouter } from 'expo-router';
-import { View, ActivityIndicator } from 'react-native';
 import { useUser } from '@/src/context/UserContext';
 import { colors } from '@/src/theme';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useRouter } from 'expo-router';
+import { useEffect, useState } from 'react';
+import { ActivityIndicator, View } from 'react-native';
 
 export default function Index() {
   const router = useRouter();
   const { user, isLoading } = useUser();
+  const [checkingOnboarding, setCheckingOnboarding] = useState(true);
 
   useEffect(() => {
-    if (!isLoading) {
-      if (user) {
-        // Usuario ya autenticado, ir directamente a la app
-        console.log('✅ User already logged in, redirecting to app');
-        // @ts-ignore - Expo Router typed routes
-        router.replace('/(drawer)/(tabs)/calendar');
-      } else {
-        // No hay usuario, ir a bienvenida
-        console.log('ℹ️ No user found, redirecting to welcome');
-        // @ts-ignore - Expo Router typed routes
-        router.replace('/welcome');
+    const checkOnboardingAndRedirect = async () => {
+      if (!isLoading) {
+        if (user) {
+          // Usuario autenticado, verificar si completó onboarding
+          const onboardingCompleted = await AsyncStorage.getItem('ONBOARDING_COMPLETED');
+          
+          if (onboardingCompleted === 'true') {
+            console.log('✅ User already logged in, redirecting to app');
+            // @ts-ignore - Expo Router typed routes
+            router.replace('/(drawer)/(tabs)/calendar');
+          } else {
+            console.log('ℹ️ User logged in but onboarding not completed, redirecting to onboarding');
+            // @ts-ignore - Expo Router typed routes
+            router.replace('/onboarding');
+          }
+        } else {
+          // No hay usuario, ir a bienvenida
+          console.log('ℹ️ No user found, redirecting to welcome');
+          // @ts-ignore - Expo Router typed routes
+          router.replace('/welcome');
+        }
+        setCheckingOnboarding(false);
       }
-    }
+    };
+
+    checkOnboardingAndRedirect();
   }, [isLoading, user]);
 
   // Mostrar loading mientras se carga el usuario

@@ -15,6 +15,7 @@ import { NotificationsProvider } from '@/src/context/NotificationsContext';
 import { UserProvider } from '@/src/context/UserContext';
 import { db } from '@/src/database';
 import { DATABASE_TYPE } from '@/src/database/database.config';
+import { analytics } from '@/src/services/analytics.service';
 import { colors } from '@/src/theme';
 import { ThemeProvider } from '@/src/theme/ThemeProvider';
 
@@ -40,6 +41,11 @@ export default function RootLayout() {
         if (isMounted) {
           const dbType = db.getCurrentType();
           console.log('✅ Database ready:', dbType);
+          
+          // Initialize Analytics
+          analytics.initialize();
+          analytics.trackAppOpen();
+          
           setDbInitialized(true);
         }
       } catch (error) {

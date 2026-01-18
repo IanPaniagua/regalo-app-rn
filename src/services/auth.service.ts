@@ -1,16 +1,17 @@
-import {
-  getAuth,
-  createUserWithEmailAndPassword,
-  signInWithEmailAndPassword,
-  signOut,
-  sendPasswordResetEmail,
-  User as FirebaseUser,
-  updateProfile,
-  Auth,
-  initializeAuth,
-  browserLocalPersistence,
-} from 'firebase/auth';
 import { db } from '@/src/database';
+import {
+    Auth,
+    browserLocalPersistence,
+    createUserWithEmailAndPassword,
+    User as FirebaseUser,
+    getAuth,
+    initializeAuth,
+    sendPasswordResetEmail,
+    signInWithEmailAndPassword,
+    signOut,
+    updateProfile,
+} from 'firebase/auth';
+import { analytics } from './analytics.service';
 import { getFirebaseApp } from './firebase';
 
 export type { FirebaseUser };
@@ -71,7 +72,12 @@ export class AuthService {
     try {
       const auth = this.getAuthInstance();
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      console.log('✅ User signed in:', userCredential.user.uid);
+      
+      // Track login
+      analytics.trackLogin('email');
+      analytics.setUser(userCredential.user.uid);
+      
+      console.log('✅ User logged in:', userCredential.user.email);
       return userCredential.user;
     } catch (error: any) {
       console.error('❌ Error signing in:', error);
@@ -85,8 +91,12 @@ export class AuthService {
   async signOut(): Promise<void> {
     try {
       const auth = this.getAuthInstance();
+      
+      // Track logout
+      analytics.trackLogout();
+      
       await signOut(auth);
-      console.log('✅ User signed out');
+      console.log('✅ User logged out');
     } catch (error) {
       console.error('❌ Error signing out:', error);
       throw error;

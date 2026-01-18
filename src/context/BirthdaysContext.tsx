@@ -1,5 +1,6 @@
 import { db } from '@/src/database';
 import { User } from '@/src/database/types';
+import { analytics } from '@/src/services/analytics.service';
 import { ManualBirthdayEntry } from '@/src/types/birthday';
 import { createContext, ReactNode, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { useConnections } from './ConnectionsContext';
@@ -356,6 +357,10 @@ export function BirthdaysProvider({ children }: { children: ReactNode }) {
 
       // Actualizar estado local
       setManualEntries(prev => [...prev, newEntry]);
+      
+      // Track analytics
+      analytics.trackAddManualBirthday();
+      
       console.log('✅ Manual birthday entry added:', name);
     } catch (error) {
       console.error('❌ Error adding manual birthday entry:', error);
@@ -381,6 +386,10 @@ export function BirthdaysProvider({ children }: { children: ReactNode }) {
 
       // Actualizar estado local
       setManualEntries(updatedManual);
+      
+      // Track analytics
+      analytics.trackDeleteManualBirthday();
+      
       console.log('✅ Manual birthday entry deleted:', id);
     } catch (error) {
       console.error('❌ Error deleting manual birthday entry:', error);

@@ -44,8 +44,8 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
   const [birthdayUserId, setBirthdayUserId] = useState<string | undefined>();
   const [groupNotificationCount, setGroupNotificationCount] = useState(0);
   
-  const notificationListener = useRef<Notifications.Subscription>();
-  const responseListener = useRef<Notifications.Subscription>();
+  const notificationListener = useRef<Notifications.Subscription | undefined>(undefined);
+  const responseListener = useRef<Notifications.Subscription | undefined>(undefined);
 
   const NOTIFICATIONS_ENABLED_KEY = '@regalo_app_notifications_enabled';
 

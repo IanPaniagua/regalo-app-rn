@@ -363,7 +363,7 @@ We promise to:
 
 ---
 
-## 🎊 Join Thousands of Happy Users
+## 🎊 Start Making Birthdays Memorable
 
 **Download RegaloApp today and never miss another birthday!**
 

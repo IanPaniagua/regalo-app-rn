@@ -1,8 +1,8 @@
-import React, { useEffect, useRef } from 'react';
-import { View, StyleSheet, Pressable, Animated, Platform, useColorScheme } from 'react-native';
+import { colors, darkTheme, lightTheme } from '@/src/theme';
 import { Ionicons } from '@expo/vector-icons';
+import React, { useEffect, useRef } from 'react';
+import { Animated, Platform, Pressable, StyleSheet, useColorScheme, View } from 'react-native';
 import { AppText } from './ui/AppText';
-import { colors, lightTheme, darkTheme } from '@/src/theme';
 
 interface InAppNotificationProps {
   visible: boolean;
@@ -24,7 +24,7 @@ export function InAppNotification({
   const colorScheme = useColorScheme();
   const theme = colorScheme === 'dark' ? darkTheme : lightTheme;
   const slideAnim = useRef(new Animated.Value(-100)).current;
-  const timeoutRef = useRef<NodeJS.Timeout>();
+  const timeoutRef = useRef<number | undefined>(undefined);
 
   useEffect(() => {
     if (visible) {

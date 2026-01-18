@@ -349,6 +349,19 @@ const translations = {
     group_closed_badge: 'Cerrado',
     group_details_tab: 'Detalles',
     group_members_tab: 'Miembros',
+
+    // Onboarding
+    onboarding_skip: 'Saltar',
+    onboarding_next: 'Siguiente',
+    onboarding_get_started: 'Comenzar',
+    onboarding_welcome_title: '¡Bienvenido a RegaloApp!',
+    onboarding_welcome_description: 'Nunca más olvides un cumpleaños. Organiza regalos grupales y haz que cada celebración sea especial.',
+    onboarding_birthdays_title: 'Recordatorios Inteligentes',
+    onboarding_birthdays_description: 'Recibe notificaciones de cumpleaños de tus amigos y familiares. Añade fechas manualmente o conecta con otros usuarios.',
+    onboarding_connections_title: 'Conecta con Amigos',
+    onboarding_connections_description: 'Invita a tus amigos y familia. Comparte cumpleaños y coordina regalos juntos.',
+    onboarding_groups_title: 'Regalos Grupales',
+    onboarding_groups_description: 'Organiza regalos en grupo fácilmente. Divide costos, chatea y sorprende a tus seres queridos.',
   },
   en: {
     // Commons
@@ -689,6 +702,19 @@ const translations = {
     group_closed_badge: 'Closed',
     group_details_tab: 'Details',
     group_members_tab: 'Members',
+
+    // Onboarding
+    onboarding_skip: 'Skip',
+    onboarding_next: 'Next',
+    onboarding_get_started: 'Get Started',
+    onboarding_welcome_title: 'Welcome to RegaloApp!',
+    onboarding_welcome_description: 'Never forget a birthday again. Organize group gifts and make every celebration special.',
+    onboarding_birthdays_title: 'Smart Reminders',
+    onboarding_birthdays_description: 'Get birthday notifications for your friends and family. Add dates manually or connect with other users.',
+    onboarding_connections_title: 'Connect with Friends',
+    onboarding_connections_description: 'Invite your friends and family. Share birthdays and coordinate gifts together.',
+    onboarding_groups_title: 'Group Gifts',
+    onboarding_groups_description: 'Organize group gifts easily. Split costs, chat, and surprise your loved ones.',
   },
   de: {
     // Commons
@@ -1029,6 +1055,19 @@ const translations = {
     group_closed_badge: 'Geschlossen',
     group_details_tab: 'Details',
     group_members_tab: 'Mitglieder',
+
+    // Onboarding
+    onboarding_skip: 'Überspringen',
+    onboarding_next: 'Weiter',
+    onboarding_get_started: 'Loslegen',
+    onboarding_welcome_title: 'Willkommen bei RegaloApp!',
+    onboarding_welcome_description: 'Vergiss nie wieder einen Geburtstag. Organisiere Gruppengeschenke und mache jede Feier besonders.',
+    onboarding_birthdays_title: 'Intelligente Erinnerungen',
+    onboarding_birthdays_description: 'Erhalte Geburtstagserinnerungen für deine Freunde und Familie. Füge Daten manuell hinzu oder verbinde dich mit anderen Nutzern.',
+    onboarding_connections_title: 'Mit Freunden verbinden',
+    onboarding_connections_description: 'Lade deine Freunde und Familie ein. Teile Geburtstage und koordiniere Geschenke zusammen.',
+    onboarding_groups_title: 'Gruppengeschenke',
+    onboarding_groups_description: 'Organisiere Gruppengeschenke einfach. Teile Kosten, chatte und überrasche deine Liebsten.',
   },
 } as const;
 

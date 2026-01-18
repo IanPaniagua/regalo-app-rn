@@ -1,13 +1,16 @@
-import { View, StyleSheet, Switch, Pressable, Modal, Alert, ScrollView } from 'react-native';
 import { AppContainer } from '@/src/components/ui/AppContainer';
-import { AppTitle } from '@/src/components/ui/AppTitle';
 import { AppText } from '@/src/components/ui/AppText';
-import { useNotifications } from '@/src/context/NotificationsContext';
-import { useAppTheme } from '@/src/theme/ThemeProvider';
+import { AppTitle } from '@/src/components/ui/AppTitle';
 import { useLanguage, type Lang } from '@/src/context/LanguageContext';
+import { useNotifications } from '@/src/context/NotificationsContext';
+import { useUser } from '@/src/context/UserContext';
+import { accountService } from '@/src/services/account.service';
+import { useAppTheme } from '@/src/theme/ThemeProvider';
 import { Ionicons } from '@expo/vector-icons';
-import { useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { router } from 'expo-router';
+import { useEffect, useState } from 'react';
+import { ActivityIndicator, Alert, Modal, Pressable, ScrollView, StyleSheet, Switch, View } from 'react-native';
 
 export default function SettingsScreen() {
   const {
@@ -18,8 +21,10 @@ export default function SettingsScreen() {
   } = useNotifications();
   const { theme, themeMode, setThemeMode } = useAppTheme();
   const { lang, t, setLanguage } = useLanguage();
+  const { user } = useUser();
   const [showLanguageModal, setShowLanguageModal] = useState(false);
   const [pendingLanguage, setPendingLanguage] = useState<Lang | null>(null);
+  const [isDeletingAccount, setIsDeletingAccount] = useState(false);
 
   // Check if there's a pending language change
   useEffect(() => {
@@ -122,6 +127,79 @@ export default function SettingsScreen() {
     }
   };
 
+  const handleDeleteAccount = async () => {
+    if (!user?.id) {
+      Alert.alert('Error', 'No user logged in');
+      return;
+    }
+
+    // First, validate and show warnings
+    const validation = await accountService.validateAccountDeletion(user.id);
+    
+    if (!validation.canDelete) {
+      Alert.alert('Cannot Delete Account', validation.blockers.join('\n'));
+      return;
+    }
+
+    // Build warning message
+    let warningMessage = 'This action is permanent and cannot be undone.\n\nYou will lose:\n• All your data\n• All your connections\n• All your groups\n• All your manual birthdays';
+    
+    if (validation.warnings.length > 0) {
+      warningMessage += '\n\n' + validation.warnings.join('\n');
+    }
+
+    // Show confirmation dialog
+    Alert.alert(
+      'Delete Account',
+      warningMessage,
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: () => {
+            // Second confirmation
+            Alert.alert(
+              'Are you absolutely sure?',
+              'Type DELETE to confirm',
+              [
+                {
+                  text: 'Cancel',
+                  style: 'cancel',
+                },
+                {
+                  text: 'DELETE ACCOUNT',
+                  style: 'destructive',
+                  onPress: async () => {
+                    if (!user?.id) return;
+                    
+                    try {
+                      setIsDeletingAccount(true);
+                      await accountService.deleteAccount(user.id);
+                      
+                      // Navigate to login screen
+                      router.replace('/login');
+                      
+                      Alert.alert('Account Deleted', 'Your account has been permanently deleted.');
+                    } catch (error: any) {
+                      console.error('Error deleting account:', error);
+                      Alert.alert('Error', error?.message || 'Failed to delete account');
+                    } finally {
+                      setIsDeletingAccount(false);
+                    }
+                  },
+                },
+              ]
+            );
+          },
+        },
+      ]
+    );
+  };
+
   return (
     <AppContainer>
       <ScrollView 
@@ -208,6 +286,67 @@ export default function SettingsScreen() {
               </AppText>
             </View>
           )}
+        </View>
+
+        {/* Legal */}
+        <View style={styles.section}>
+          <AppText style={styles.sectionTitle}>Legal</AppText>
+          
+          <Pressable 
+            style={[styles.legalButton, { backgroundColor: theme.surface, borderColor: theme.border }]} 
+            onPress={() => {
+              Alert.alert(
+                'Privacy Policy',
+                'Our Privacy Policy explains how we collect, use, and protect your data.\n\nYou can view the full policy in the DOCS folder or contact us at privacy@regaloapp.com'
+              );
+            }}
+          >
+            <View style={styles.legalButtonContent}>
+              <Ionicons name="shield-checkmark-outline" size={20} color={theme.primary} />
+              <AppText style={styles.legalButtonText}>Privacy Policy</AppText>
+            </View>
+            <Ionicons name="chevron-forward" size={20} color={theme.textMuted} />
+          </Pressable>
+
+          <Pressable 
+            style={[styles.legalButton, { backgroundColor: theme.surface, borderColor: theme.border }]} 
+            onPress={() => {
+              Alert.alert(
+                'Terms of Service',
+                'Our Terms of Service outline the rules and guidelines for using RegaloApp.\n\nYou can view the full terms in the DOCS folder or contact us at legal@regaloapp.com'
+              );
+            }}
+          >
+            <View style={styles.legalButtonContent}>
+              <Ionicons name="document-text-outline" size={20} color={theme.primary} />
+              <AppText style={styles.legalButtonText}>Terms of Service</AppText>
+            </View>
+            <Ionicons name="chevron-forward" size={20} color={theme.textMuted} />
+          </Pressable>
+        </View>
+
+        {/* Danger Zone */}
+        <View style={styles.section}>
+          <AppText style={[styles.sectionTitle, { color: '#FF3B30' }]}>Danger Zone</AppText>
+          
+          <Pressable 
+            style={[styles.deleteButton, { backgroundColor: '#FF3B3015', borderColor: '#FF3B30' }]} 
+            onPress={handleDeleteAccount}
+            disabled={isDeletingAccount}
+          >
+            <View style={styles.deleteButtonContent}>
+              <Ionicons name="trash-outline" size={20} color="#FF3B30" />
+              <View style={{ flex: 1 }}>
+                <AppText style={[styles.deleteButtonText, { color: '#FF3B30' }]}>
+                  Delete Account
+                </AppText>
+                <AppText style={[styles.deleteButtonHelper, { color: '#FF3B30' }]}>
+                  Permanently delete your account and all data
+                </AppText>
+              </View>
+              {isDeletingAccount && <ActivityIndicator color="#FF3B30" />}
+            </View>
+          </Pressable>
         </View>
 
         {/* Language Selection Modal */}
@@ -421,5 +560,41 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 13,
     lineHeight: 18,
+  },
+  deleteButton: {
+    borderRadius: 12,
+    borderWidth: 2,
+    padding: 16,
+  },
+  deleteButtonContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  deleteButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  deleteButtonHelper: {
+    fontSize: 13,
+    marginTop: 2,
+    opacity: 0.8,
+  },
+  legalButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+    marginBottom: 8,
+  },
+  legalButtonContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  legalButtonText: {
+    fontSize: 16,
   },
 });

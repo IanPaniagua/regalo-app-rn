@@ -1,28 +1,28 @@
-import { useState } from 'react';
-import {
-  View,
-  StyleSheet,
-  TextInput,
-  Alert,
-  KeyboardAvoidingView,
-  ScrollView,
-  TouchableWithoutFeedback,
-  Keyboard,
-  Platform,
-  Pressable,
-} from 'react-native';
-import { useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
-import { AppContainer } from '@/src/components/ui/AppContainer';
-import { AppTitle } from '@/src/components/ui/AppTitle';
-import { AppText } from '@/src/components/ui/AppText';
 import { AppButton } from '@/src/components/ui/AppButton';
+import { AppContainer } from '@/src/components/ui/AppContainer';
+import { AppText } from '@/src/components/ui/AppText';
+import { AppTitle } from '@/src/components/ui/AppTitle';
+import { useBirthdays } from '@/src/context/BirthdaysContext';
 import { useLanguage } from '@/src/context/LanguageContext';
+import { useUser } from '@/src/context/UserContext';
+import { authService } from '@/src/services/auth.service';
 import { colors, fonts } from '@/src/theme';
 import { useAppTheme } from '@/src/theme/ThemeProvider';
-import { useUser } from '@/src/context/UserContext';
-import { useBirthdays } from '@/src/context/BirthdaysContext';
-import { authService } from '@/src/services/auth.service';
+import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
+import { useState } from 'react';
+import {
+    Alert,
+    Keyboard,
+    KeyboardAvoidingView,
+    Platform,
+    Pressable,
+    ScrollView,
+    StyleSheet,
+    TextInput,
+    TouchableWithoutFeedback,
+    View,
+} from 'react-native';
 
 export default function CreateProfileStep3() {
   const router = useRouter();
@@ -110,6 +110,7 @@ export default function CreateProfileStep3() {
         avatar: tempUser.avatar!,
         birthdate: tempUser.birthdate!,
         hobbies: tempUser.hobbies!,
+        giftPreferences: tempUser.giftPreferences ? tempUser.giftPreferences : [],
         email: email,
       });
 
