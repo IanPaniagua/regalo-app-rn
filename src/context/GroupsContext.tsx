@@ -217,15 +217,15 @@ export function GroupsProvider({ children }: { children: ReactNode }) {
       const groupsRef = collection(firestore, 'giftGroups');
       const groupDoc = await addDoc(groupsRef, {
         giftName: data.giftName,
-        description: data.description || null,
+        ...(data.description && { description: data.description }),
         totalPrice: data.totalPrice,
         recipientUserId: data.recipientUserId,
         recipientName: recipientData?.name || 'Unknown',
         recipientAvatar: recipientData?.avatar || '🎁',
-        recipientBirthdate: recipientData?.birthdate || null,
+        ...(recipientData?.birthdate && { recipientBirthdate: recipientData.birthdate }),
         creatorId: user.id,
-        status: 'active',
-        memberDeadline: data.memberDeadline ? Timestamp.fromDate(data.memberDeadline) : null,
+        status: 'active' as const,
+        ...(data.memberDeadline && { memberDeadline: Timestamp.fromDate(data.memberDeadline) }),
         createdAt: Timestamp.now(),
         updatedAt: Timestamp.now(),
       });

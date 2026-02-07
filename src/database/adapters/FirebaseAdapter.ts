@@ -166,12 +166,19 @@ export class FirebaseAdapter implements DatabaseAdapter {
     };
 
     // Convertir Date a Timestamp para Firebase
-    const firestoreData = {
+    const firestoreData: any = {
       ...user,
       birthdate: this.dateToTimestamp(user.birthdate),
       createdAt: this.dateToTimestamp(user.createdAt!),
       updatedAt: this.dateToTimestamp(user.updatedAt!),
     };
+
+    // Filtrar campos undefined (Firestore no los permite)
+    Object.keys(firestoreData).forEach(key => {
+      if (firestoreData[key] === undefined) {
+        delete firestoreData[key];
+      }
+    });
 
     await setDoc(newUserRef, firestoreData);
     console.log('✅ User created in Firestore:', user.id);

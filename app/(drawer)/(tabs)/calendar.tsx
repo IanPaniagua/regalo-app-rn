@@ -11,7 +11,7 @@ import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Alert, Keyboard, Modal, Platform, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
+import { Alert, Keyboard, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StyleSheet, TextInput, TouchableWithoutFeedback, View } from 'react-native';
 
 // Usar porcentaje en lugar de cálculos fijos para mejor compatibilidad cross-platform
 const DAY_WIDTH_PERCENT = 14.28; // 100% / 7 días ≈ 14.28%
@@ -472,109 +472,126 @@ export default function CalendarTabScreen() {
         animationType="slide"
         onRequestClose={() => setShowAddManualModal(false)}
       >
-        <Pressable style={styles.modalOverlay} onPress={() => setShowAddManualModal(false)}>
-          <Pressable style={[styles.modalContent, { backgroundColor: theme.modalBg }]} onPress={(e) => e.stopPropagation()}>
-            <View style={[styles.modalHeader, { borderBottomColor: theme.border }]}>
-              <AppText style={[styles.modalTitle, { color: theme.text }]}>
-                {t('calendar_manual_modal_title')}
-              </AppText>
-              <Pressable onPress={() => setShowAddManualModal(false)}>
-                <Ionicons name="close" size={24} color={theme.text} />
-              </Pressable>
-            </View>
-
-            <View style={styles.addManualForm}>
-              <View style={styles.formGroup}>
-                <AppText style={[styles.formLabel, { color: theme.text }]}>
-                  {t('calendar_manual_name_label')}
-                </AppText>
-                <TextInput
-                  style={[styles.input, { backgroundColor: theme.inputBg, color: theme.text, borderColor: theme.border }]}
-                  placeholder={t('calendar_manual_name_placeholder')}
-                  placeholderTextColor={theme.textMuted}
-                  value={manualName}
-                  onChangeText={setManualName}
-                  autoFocus
-                />
-              </View>
-
-              <View style={styles.formGroup}>
-                <AppText style={[styles.formLabel, { color: theme.text }]}>
-                  Email (opcional)
-                </AppText>
-                <TextInput
-                  style={[styles.input, { backgroundColor: theme.inputBg, color: theme.text, borderColor: theme.border }]}
-                  placeholder="email@ejemplo.com"
-                  placeholderTextColor={theme.textMuted}
-                  value={manualEmail}
-                  onChangeText={setManualEmail}
-                  keyboardType="email-address"
-                  autoCapitalize="none"
-                  autoCorrect={false}
-                />
-              </View>
-
-              <View style={styles.formGroup}>
-                <AppText style={[styles.formLabel, { color: theme.text }]}>
-                  {t('calendar_manual_date_label')}
-                </AppText>
-                <Pressable
-                  style={[styles.dateButton, { backgroundColor: theme.inputBg, borderColor: theme.border }]}
-                  onPress={() => {
-                    Keyboard.dismiss(); // Cerrar teclado antes de abrir el picker
-                    setShowDatePicker(true);
-                  }}
-                >
-                  <Ionicons name="calendar-outline" size={20} color={colors.primary} />
-                  <AppText style={[styles.dateButtonText, { color: theme.text }]}>
-                    {manualBirthdate.toLocaleDateString(
-                      lang === 'es' ? 'es-ES' : lang === 'de' ? 'de-DE' : 'en-US',
-                      { day: '2-digit', month: 'long', year: 'numeric' }
-                    )}
+        <KeyboardAvoidingView 
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={styles.modalOverlay}
+        >
+          <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+            <Pressable style={styles.modalOverlay} onPress={() => setShowAddManualModal(false)}>
+              <Pressable style={[styles.modalContent, { backgroundColor: theme.modalBg }]} onPress={(e) => e.stopPropagation()}>
+                <View style={[styles.modalHeader, { borderBottomColor: theme.border }]}>
+                  <AppText style={[styles.modalTitle, { color: theme.text }]}>
+                    {t('calendar_manual_modal_title')}
                   </AppText>
-                </Pressable>
-              </View>
-
-              {showDatePicker && (
-                <View style={styles.datePickerContainer}>
-                  <DateTimePicker
-                    value={manualBirthdate}
-                    mode="date"
-                    display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-                    themeVariant={themeMode} // Usar el tema correcto para iOS
-                    onChange={(event, selectedDate) => {
-                      // En Android, cerrar automáticamente
-                      if (Platform.OS === 'android') {
-                        setShowDatePicker(false);
-                      }
-                      if (selectedDate) {
-                        setManualBirthdate(selectedDate);
-                      }
-                    }}
-                  />
-                  {/* Botón Done para iOS */}
-                  {Platform.OS === 'ios' && (
-                    <View style={styles.datePickerActions}>
-                      <Pressable
-                        style={[styles.doneButton, { backgroundColor: colors.primary }]}
-                        onPress={() => setShowDatePicker(false)}
-                      >
-                        <AppText style={styles.doneButtonText}>{t('calendar_profile_close_button')}</AppText>
-                      </Pressable>
-                    </View>
-                  )}
+                  <Pressable onPress={() => setShowAddManualModal(false)}>
+                    <Ionicons name="close" size={24} color={theme.text} />
+                  </Pressable>
                 </View>
-              )}
 
-              <AppButton
-                title={isAddingManual ? t('calendar_manual_submit_button') : t('calendar_manual_submit_button')}
-                onPress={handleAddManualBirthday}
-                disabled={isAddingManual || !manualName.trim()}
-                style={styles.submitButton}
-              />
-            </View>
-          </Pressable>
-        </Pressable>
+                <ScrollView 
+                  style={styles.addManualForm}
+                  keyboardShouldPersistTaps="handled"
+                  showsVerticalScrollIndicator={false}
+                >
+                  <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+                    <View>
+                      <View style={styles.formGroup}>
+                        <AppText style={[styles.formLabel, { color: theme.text }]}>
+                          {t('calendar_manual_name_label')}
+                        </AppText>
+                        <TextInput
+                          style={[styles.input, { backgroundColor: theme.inputBg, color: theme.text, borderColor: theme.border }]}
+                          placeholder={t('calendar_manual_name_placeholder')}
+                          placeholderTextColor={theme.textMuted}
+                          value={manualName}
+                          onChangeText={setManualName}
+                          autoFocus
+                          returnKeyType="next"
+                          onSubmitEditing={() => Keyboard.dismiss()}
+                        />
+                      </View>
+
+                      <View style={styles.formGroup}>
+                        <AppText style={[styles.formLabel, { color: theme.text }]}>
+                          Email (opcional)
+                        </AppText>
+                        <TextInput
+                          style={[styles.input, { backgroundColor: theme.inputBg, color: theme.text, borderColor: theme.border }]}
+                          placeholder="email@ejemplo.com"
+                          placeholderTextColor={theme.textMuted}
+                          value={manualEmail}
+                          onChangeText={setManualEmail}
+                          keyboardType="email-address"
+                          autoCapitalize="none"
+                          autoCorrect={false}
+                          returnKeyType="done"
+                          onSubmitEditing={() => Keyboard.dismiss()}
+                        />
+                      </View>
+
+                      <View style={styles.formGroup}>
+                        <AppText style={[styles.formLabel, { color: theme.text }]}>
+                          {t('calendar_manual_date_label')}
+                        </AppText>
+                        <Pressable
+                          style={[styles.dateButton, { backgroundColor: theme.inputBg, borderColor: theme.border }]}
+                          onPress={() => {
+                            Keyboard.dismiss();
+                            setShowDatePicker(true);
+                          }}
+                        >
+                          <Ionicons name="calendar-outline" size={20} color={colors.primary} />
+                          <AppText style={[styles.dateButtonText, { color: theme.text }]}>
+                            {manualBirthdate.toLocaleDateString(
+                              lang === 'es' ? 'es-ES' : lang === 'de' ? 'de-DE' : 'en-US',
+                              { day: '2-digit', month: 'long', year: 'numeric' }
+                            )}
+                          </AppText>
+                        </Pressable>
+                      </View>
+
+                      {showDatePicker && (
+                        <View style={styles.datePickerContainer}>
+                          <DateTimePicker
+                            value={manualBirthdate}
+                            mode="date"
+                            display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                            themeVariant={themeMode}
+                            onChange={(event, selectedDate) => {
+                              if (Platform.OS === 'android') {
+                                setShowDatePicker(false);
+                              }
+                              if (selectedDate) {
+                                setManualBirthdate(selectedDate);
+                              }
+                            }}
+                          />
+                          {Platform.OS === 'ios' && (
+                            <View style={styles.datePickerActions}>
+                              <Pressable
+                                style={[styles.doneButton, { backgroundColor: colors.primary }]}
+                                onPress={() => setShowDatePicker(false)}
+                              >
+                                <AppText style={styles.doneButtonText}>{t('calendar_profile_close_button')}</AppText>
+                              </Pressable>
+                            </View>
+                          )}
+                        </View>
+                      )}
+
+                      <AppButton
+                        title={isAddingManual ? t('calendar_manual_submit_button') : t('calendar_manual_submit_button')}
+                        onPress={handleAddManualBirthday}
+                        disabled={isAddingManual || !manualName.trim()}
+                        style={styles.submitButton}
+                      />
+                    </View>
+                  </TouchableWithoutFeedback>
+                </ScrollView>
+              </Pressable>
+            </Pressable>
+          </TouchableWithoutFeedback>
+        </KeyboardAvoidingView>
       </Modal>
     </AppContainer>
   );

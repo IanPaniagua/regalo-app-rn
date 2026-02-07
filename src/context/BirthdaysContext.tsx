@@ -340,7 +340,7 @@ export function BirthdaysProvider({ children }: { children: ReactNode }) {
         birthdate,
         avatar: '🎂', // Avatar fijo para entradas manuales
         isManual: true,
-        email: email || undefined,
+        ...(email && { email }), // Solo incluir email si existe
       };
 
       // Obtener entradas actuales

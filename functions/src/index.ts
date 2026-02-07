@@ -17,7 +17,7 @@ const notificationTranslations = {
     birthday_title: (name: string) => `🎉 ¡Hoy es el cumpleaños de ${name}!`,
     birthday_body: (age: number) => `Cumple ${age} años. No olvides felicitarlo 🎂`,
     monthly_summary_title: (month: string) => `🎂 Cumpleaños en ${month}`,
-    monthly_summary_body: (count: number, list: string, more: string) => 
+    monthly_summary_body: (count: number, list: string, more: string) =>
       `Tienes ${count} cumpleaños: ${list}${more}`,
     friend_request_title: (name: string) => `👋 Nueva solicitud de ${name}`,
     friend_request_body: (name: string) => `${name} quiere conectar contigo`,
@@ -26,7 +26,7 @@ const notificationTranslations = {
     birthday_title: (name: string) => `🎉 It's ${name}'s birthday today!`,
     birthday_body: (age: number) => `Turns ${age} years old. Don't forget to wish them well 🎂`,
     monthly_summary_title: (month: string) => `🎂 Birthdays in ${month}`,
-    monthly_summary_body: (count: number, list: string, more: string) => 
+    monthly_summary_body: (count: number, list: string, more: string) =>
       `You have ${count} birthdays: ${list}${more}`,
     friend_request_title: (name: string) => `👋 New request from ${name}`,
     friend_request_body: (name: string) => `${name} wants to connect with you`,
@@ -35,7 +35,7 @@ const notificationTranslations = {
     birthday_title: (name: string) => `🎉 Heute hat ${name} Geburtstag!`,
     birthday_body: (age: number) => `Wird ${age} Jahre alt. Vergiss nicht zu gratulieren 🎂`,
     monthly_summary_title: (month: string) => `🎂 Geburtstage im ${month}`,
-    monthly_summary_body: (count: number, list: string, more: string) => 
+    monthly_summary_body: (count: number, list: string, more: string) =>
       `Du hast ${count} Geburtstage: ${list}${more}`,
     friend_request_title: (name: string) => `👋 Neue Anfrage von ${name}`,
     friend_request_body: (name: string) => `${name} möchte sich mit dir verbinden`,
@@ -119,40 +119,40 @@ export const sendDailyBirthdayReminders = functions
   .timeZone(TIMEZONE)
   .onRun(async (context) => {
     console.log('🎂 Starting daily birthday reminders...');
-    
+
     try {
       // Obtener la fecha actual en la zona horaria de Alemania
       const today = new Date(new Date().toLocaleString('en-US', { timeZone: TIMEZONE }));
       const todayMonth = today.getMonth(); // 0-11
       const todayDay = today.getDate(); // 1-31
-      
+
       console.log(`📅 Checking birthdays for: ${todayDay}/${todayMonth + 1}/${today.getFullYear()} (${TIMEZONE})`);
-      
+
       // 1. Obtener todos los usuarios
       const usersSnapshot = await db.collection('users').get();
       const users = usersSnapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
       })) as UserData[];
-      
+
       console.log(`👥 Total users: ${users.length}`);
-      
+
       // 2. Filtrar usuarios que cumplen años HOY
       const birthdayUsers = users.filter(user => {
         if (!user.birthdate) return false;
-        
+
         // Convertir el timestamp a fecha en la zona horaria de Alemania
         const birthdate = new Date(user.birthdate.toDate().toLocaleString('en-US', { timeZone: TIMEZONE }));
         const birthMonth = birthdate.getMonth();
         const birthDay = birthdate.getDate();
-        
+
         console.log(`  Checking ${user.name}: birthdate ${birthDay}/${birthMonth + 1} vs today ${todayDay}/${todayMonth + 1}`);
-        
+
         return birthMonth === todayMonth && birthDay === todayDay;
       });
-      
+
       console.log(`🎉 Users with birthday today: ${birthdayUsers.length}`);
-      
+
       // 3. Para cada usuario que cumple años, notificar a sus conexiones
       if (birthdayUsers.length > 0) {
         for (const birthdayUser of birthdayUsers) {
@@ -161,14 +161,14 @@ export const sendDailyBirthdayReminders = functions
       } else {
         console.log('ℹ️ No real user birthdays today');
       }
-      
+
       // 4. Revisar cumpleaños manuales de cada usuario (siempre ejecutar)
       console.log('🎂 Checking manual birthdays...');
       await notifyManualBirthdays(users, todayMonth, todayDay);
-      
+
       console.log('✅ Daily birthday reminders sent successfully');
       return null;
-      
+
     } catch (error) {
       console.error('❌ Error sending daily reminders:', error);
       throw error;
@@ -186,59 +186,59 @@ export const sendMonthlyBirthdaySummary = functions
   .timeZone(TIMEZONE)
   .onRun(async (context) => {
     console.log('📊 Starting monthly birthday summary...');
-    
+
     try {
       // Obtener la fecha actual en la zona horaria de Alemania
       const today = new Date(new Date().toLocaleString('en-US', { timeZone: TIMEZONE }));
       const nextMonth = new Date(today.getFullYear(), today.getMonth() + 1, 1);
       const nextMonthNumber = nextMonth.getMonth(); // 0-11
-      
+
       const monthNames = [
         'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
         'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
       ];
-      
+
       console.log(`📅 Preparing summary for: ${monthNames[nextMonthNumber]}`);
-      
+
       // 1. Obtener todos los usuarios
       const usersSnapshot = await db.collection('users').get();
       const users = usersSnapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
       })) as UserData[];
-      
+
       // 2. Obtener todas las conexiones aceptadas
       const connectionsSnapshot = await db
         .collection('connections')
         .where('status', '==', 'accepted')
         .get();
-      
+
       const connections = connectionsSnapshot.docs.map(doc => doc.data());
-      
+
       console.log(`🔗 Total connections: ${connections.length}`);
-      
+
       // 3. Para cada usuario, encontrar cumpleaños del mes siguiente en sus conexiones
       const userMap = new Map(users.map(u => [u.id, u]));
-      
+
       for (const user of users) {
         if (!user.fcmToken) continue; // Skip si no tiene token
-        
+
         // Encontrar conexiones del usuario
         const userConnections = connections.filter(
           conn => conn.userId1 === user.id || conn.userId2 === user.id
         );
-        
+
         // Obtener IDs de usuarios conectados
-        const connectedUserIds = userConnections.map(conn => 
+        const connectedUserIds = userConnections.map(conn =>
           conn.userId1 === user.id ? conn.userId2 : conn.userId1
         );
-        
+
         // Filtrar cumpleaños del mes siguiente
         const nextMonthBirthdays = connectedUserIds
           .map(id => userMap.get(id))
           .filter(connectedUser => {
             if (!connectedUser || !connectedUser.birthdate) return false;
-            
+
             const birthdate = connectedUser.birthdate.toDate();
             return birthdate.getMonth() === nextMonthNumber;
           })
@@ -247,7 +247,7 @@ export const sendMonthlyBirthdaySummary = functions
             const dateB = b!.birthdate.toDate().getDate();
             return dateA - dateB;
           });
-        
+
         if (nextMonthBirthdays.length > 0) {
           await sendMonthlySummaryNotification(
             user,
@@ -256,10 +256,10 @@ export const sendMonthlyBirthdaySummary = functions
           );
         }
       }
-      
+
       console.log('✅ Monthly summaries sent successfully');
       return null;
-      
+
     } catch (error) {
       console.error('❌ Error sending monthly summary:', error);
       throw error;
@@ -272,52 +272,52 @@ export const sendMonthlyBirthdaySummary = functions
 async function notifyConnectionsAboutBirthday(birthdayUser: any) {
   try {
     console.log(`🎂 Notifying connections about ${birthdayUser.name}'s birthday`);
-    
+
     // Obtener conexiones del usuario
     const connectionsSnapshot = await db
       .collection('connections')
       .where('status', '==', 'accepted')
       .get();
-    
+
     const connections = connectionsSnapshot.docs
       .map(doc => doc.data())
-      .filter(conn => 
+      .filter(conn =>
         conn.userId1 === birthdayUser.id || conn.userId2 === birthdayUser.id
       );
-    
+
     console.log(`🔗 Found ${connections.length} connections`);
-    
+
     // Obtener IDs de usuarios conectados
-    const connectedUserIds = connections.map(conn => 
+    const connectedUserIds = connections.map(conn =>
       conn.userId1 === birthdayUser.id ? conn.userId2 : conn.userId1
     );
-    
+
     // Obtener datos completos de usuarios conectados (incluyendo idioma preferido)
     const usersSnapshot = await db
       .collection('users')
       .where(admin.firestore.FieldPath.documentId(), 'in', connectedUserIds)
       .get();
-    
+
     const connectedUsers = usersSnapshot.docs
       .map(doc => ({ id: doc.id, ...doc.data() } as UserData))
       .filter(user => user.fcmToken && user.fcmToken.startsWith('ExponentPushToken[')); // Filtrar usuarios con tokens Expo válidos
-    
+
     if (connectedUsers.length === 0) {
       console.log('⚠️ No Expo Push tokens found for connections');
       return;
     }
-    
+
     console.log(`📱 Sending to ${connectedUsers.length} devices`);
-    
+
     // Calcular edad
     const birthdate = birthdayUser.birthdate.toDate();
     const age = new Date().getFullYear() - birthdate.getFullYear();
-    
+
     // Crear mensajes para Expo Push API con traducciones según idioma del usuario
     const messages: ExpoPushMessage[] = connectedUsers.map(user => {
       const lang = user.preferredLanguage || 'en'; // Default a inglés si no tiene idioma
       const translations = notificationTranslations[lang];
-      
+
       return {
         to: user.fcmToken!,
         sound: 'default',
@@ -332,22 +332,22 @@ async function notifyConnectionsAboutBirthday(birthdayUser: any) {
         priority: 'high',
       };
     });
-    
+
     // Enviar notificaciones
     const response = await sendExpoPushNotifications(messages);
-    
+
     const successCount = response.data.filter(r => r.status === 'ok').length;
     const failureCount = response.data.filter(r => r.status === 'error').length;
-    
+
     console.log(`✅ Successfully sent: ${successCount}`);
     console.log(`❌ Failed: ${failureCount}`);
-    
+
     // Limpiar tokens inválidos
     if (failureCount > 0) {
       const tokens = connectedUsers.map(u => u.fcmToken!);
       await cleanupInvalidExpoPushTokens(response, tokens);
     }
-    
+
   } catch (error) {
     console.error(`❌ Error notifying about ${birthdayUser.name}'s birthday:`, error);
   }
@@ -360,43 +360,43 @@ async function notifyManualBirthdays(users: UserData[], todayMonth: number, toda
   try {
     let manualBirthdaysFound = 0;
     let notificationsSent = 0;
-    
+
     // Para cada usuario, revisar sus cumpleaños manuales
     for (const user of users) {
       if (!user.fcmToken || !user.fcmToken.startsWith('ExponentPushToken[')) continue;
-      
+
       // Obtener cumpleaños manuales del usuario
       const manualBirthdays = (user as any).manualBirthdays || [];
-      
+
       if (manualBirthdays.length === 0) continue;
-      
+
       // Filtrar cumpleaños manuales que NO están vinculados y que cumplen HOY
       const todayManualBirthdays = manualBirthdays.filter((entry: any) => {
         // Si está vinculado a un usuario real, ya se notificó en el paso anterior
         if (entry.userId) return false;
-        
+
         // Verificar si cumple años hoy
         const birthdate = entry.birthdate.toDate ? entry.birthdate.toDate() : new Date(entry.birthdate);
         const birthMonth = birthdate.getMonth();
         const birthDay = birthdate.getDate();
-        
+
         return birthMonth === todayMonth && birthDay === todayDay;
       });
-      
+
       if (todayManualBirthdays.length === 0) continue;
-      
+
       manualBirthdaysFound += todayManualBirthdays.length;
-      
+
       // Enviar notificación por cada cumpleaños manual
       for (const manualEntry of todayManualBirthdays) {
         const birthdate = manualEntry.birthdate.toDate ? manualEntry.birthdate.toDate() : new Date(manualEntry.birthdate);
         const age = new Date().getFullYear() - birthdate.getFullYear();
-        
+
         const lang: Lang = user.preferredLanguage || 'en';
         const translations = notificationTranslations[lang];
-        
+
         console.log(`🎂 Sending manual birthday notification to ${user.name} for ${manualEntry.name}`);
-        
+
         const message: ExpoPushMessage = {
           to: user.fcmToken!,
           sound: 'default',
@@ -411,10 +411,10 @@ async function notifyManualBirthdays(users: UserData[], todayMonth: number, toda
           },
           priority: 'high',
         };
-        
+
         try {
           const response = await sendExpoPushNotifications([message]);
-          
+
           if (response.data[0].status === 'ok') {
             console.log(`✅ Manual birthday notification sent to ${user.name}`);
             notificationsSent++;
@@ -426,9 +426,9 @@ async function notifyManualBirthdays(users: UserData[], todayMonth: number, toda
         }
       }
     }
-    
+
     console.log(`🎂 Manual birthdays processed: ${manualBirthdaysFound} found, ${notificationsSent} notifications sent`);
-    
+
   } catch (error) {
     console.error('❌ Error processing manual birthdays:', error);
   }
@@ -444,13 +444,13 @@ async function sendMonthlySummaryNotification(
 ) {
   try {
     if (!user.fcmToken || !user.fcmToken.startsWith('ExponentPushToken[')) return;
-    
+
     const lang: Lang = user.preferredLanguage || 'en';
     const translations = notificationTranslations[lang];
     const monthName = monthNames[lang][monthIndex];
-    
+
     console.log(`📊 Sending summary to ${user.name}: ${birthdays.length} birthdays in ${monthName}`);
-    
+
     // Crear lista de cumpleaños
     const birthdayList = birthdays
       .slice(0, 3) // Máximo 3 en la notificación
@@ -459,9 +459,9 @@ async function sendMonthlySummaryNotification(
         return `${b.name} (${day} ${monthName.toLowerCase().slice(0, 3)})`;
       })
       .join(', ');
-    
+
     const moreText = birthdays.length > 3 ? ` y ${birthdays.length - 3} más` : '';
-    
+
     const message: ExpoPushMessage = {
       to: user.fcmToken,
       sound: 'default',
@@ -474,9 +474,9 @@ async function sendMonthlySummaryNotification(
       },
       priority: 'high',
     };
-    
+
     const response = await sendExpoPushNotifications([message]);
-    
+
     if (response.data[0].status === 'ok') {
       console.log(`✅ Summary sent to ${user.name}`);
     } else {
@@ -487,7 +487,7 @@ async function sendMonthlySummaryNotification(
       });
       console.log(`🧹 Cleaned invalid token for ${user.name}`);
     }
-    
+
   } catch (error: any) {
     console.error(`❌ Error sending summary to ${user.name}:`, error);
   }
@@ -498,21 +498,21 @@ async function sendMonthlySummaryNotification(
  */
 async function cleanupInvalidExpoPushTokens(response: ExpoPushResponse, tokens: string[]) {
   let cleanupCount = 0;
-  
+
   // Procesar cada respuesta
   for (let idx = 0; idx < response.data.length; idx++) {
     const resp = response.data[idx];
-    
+
     if (resp.status === 'error') {
       const invalidToken = tokens[idx];
-      
+
       // Buscar y limpiar el token inválido
       try {
         const snapshot = await db.collection('users')
           .where('fcmToken', '==', invalidToken)
           .limit(1)
           .get();
-        
+
         if (!snapshot.empty) {
           await snapshot.docs[0].ref.update({
             fcmToken: admin.firestore.FieldValue.delete()
@@ -525,7 +525,7 @@ async function cleanupInvalidExpoPushTokens(response: ExpoPushResponse, tokens: 
       }
     }
   }
-  
+
   if (cleanupCount > 0) {
     console.log(`✅ Total cleaned tokens: ${cleanupCount}`);
   }
@@ -541,32 +541,32 @@ export const testBirthdayNotifications = functions
   .onRequest(async (req, res) => {
     try {
       console.log('🧪 Testing birthday notifications manually...');
-      
+
       // Usar la misma zona horaria que el scheduler (Europe/Berlin)
       const today = new Date();
-      const berlinDateString = today.toLocaleString('en-US', { 
+      const berlinDateString = today.toLocaleString('en-US', {
         timeZone: 'Europe/Berlin',
         year: 'numeric',
         month: '2-digit',
         day: '2-digit'
       });
-      
+
       // Parse la fecha correctamente (formato: MM/DD/YYYY)
       const [month, day] = berlinDateString.split(',')[0].split('/');
       const todayMonth = parseInt(month) - 1; // 0-11
       const todayDay = parseInt(day); // 1-31
-      
+
       console.log(`📅 Manual test - Checking birthdays for: ${todayDay}/${todayMonth + 1} (Berlin time)`);
-      
+
       // 1. Obtener todos los usuarios
       const usersSnapshot = await db.collection('users').get();
       const users = usersSnapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
       })) as UserData[];
-      
+
       console.log(`👥 Total users: ${users.length}`);
-      
+
       // Log detallado de todos los usuarios y sus cumpleaños
       console.log('📋 All users birthdays:');
       const allBirthdays = users.map(user => {
@@ -582,30 +582,30 @@ export const testBirthdayNotifications = functions
         }
         return { name: user.name, error: 'NO BIRTHDATE' };
       });
-      
+
       allBirthdays.forEach(b => {
         console.log(`  - ${b.name}: ${b.formatted || b.error}`);
       });
-      
+
       // 2. Filtrar usuarios que cumplen años HOY
       const birthdayUsers = users.filter(user => {
         if (!user.birthdate) return false;
-        
+
         const birthdate = user.birthdate.toDate();
         const birthMonth = birthdate.getMonth();
         const birthDay = birthdate.getDate();
-        
+
         const matches = birthMonth === todayMonth && birthDay === todayDay;
-        
+
         if (matches) {
           console.log(`✅ MATCH: ${user.name} - ${birthDay}/${birthMonth + 1} matches ${todayDay}/${todayMonth + 1}`);
         }
-        
+
         return matches;
       });
-      
+
       console.log(`🎉 Users with birthday today: ${birthdayUsers.length}`);
-      
+
       if (birthdayUsers.length === 0) {
         console.log('✅ No birthdays today');
         res.status(200).send({
@@ -617,7 +617,7 @@ export const testBirthdayNotifications = functions
         });
         return;
       }
-      
+
       // 3. Para cada usuario que cumple años, notificar a sus conexiones
       const results = [];
       for (const birthdayUser of birthdayUsers) {
@@ -628,9 +628,9 @@ export const testBirthdayNotifications = functions
           id: birthdayUser.id
         });
       }
-      
+
       console.log('✅ Manual test completed - notifications sent');
-      
+
       res.status(200).send({
         success: true,
         message: 'Birthday notifications sent successfully',
@@ -638,7 +638,7 @@ export const testBirthdayNotifications = functions
         birthdayUsers: results,
         totalUsers: users.length
       });
-      
+
     } catch (error: any) {
       console.error('❌ Test failed:', error);
       res.status(500).send({
@@ -661,54 +661,54 @@ export const onConnectionCreated = functions
     try {
       const connection = snapshot.data();
       const connectionId = context.params.connectionId;
-      
+
       console.log('🔔 New connection created:', connectionId);
-      
+
       // Solo enviar notificación si está en estado pending
       if (connection.status !== 'pending') {
         console.log('⚠️ Connection is not pending, skipping notification');
         return null;
       }
-      
+
       // Obtener datos del usuario que envió la solicitud (userId1)
       const senderDoc = await db.collection('users').doc(connection.userId1).get();
       if (!senderDoc.exists) {
         console.log('⚠️ Sender user not found');
         return null;
       }
-      
+
       const sender = { id: senderDoc.id, ...senderDoc.data() } as UserData;
-      
+
       // Obtener datos del usuario que recibe la solicitud (userId2)
       const receiverDoc = await db.collection('users').doc(connection.userId2).get();
       if (!receiverDoc.exists) {
         console.log('⚠️ Receiver user not found');
         return null;
       }
-      
+
       const receiver = { id: receiverDoc.id, ...receiverDoc.data() } as UserData;
-      
+
       // Verificar que el receptor tenga token FCM
       if (!receiver.fcmToken || !receiver.fcmToken.startsWith('ExponentPushToken[')) {
         console.log('⚠️ Receiver has no valid Expo Push token');
         return null;
       }
-      
+
       // Obtener idioma preferido del receptor
       const lang: Lang = receiver.preferredLanguage || 'en';
       const translations = notificationTranslations[lang];
-      
+
       // Contar solicitudes pendientes del receptor para el badge
       const pendingConnectionsSnapshot = await db
         .collection('connections')
         .where('userId2', '==', receiver.id)
         .where('status', '==', 'pending')
         .get();
-      
+
       const badgeCount = pendingConnectionsSnapshot.size;
-      
+
       console.log(`📱 Sending friend request notification to ${receiver.name} (badge: ${badgeCount})`);
-      
+
       // Crear mensaje de notificación
       const message: ExpoPushMessage = {
         to: receiver.fcmToken,
@@ -724,10 +724,10 @@ export const onConnectionCreated = functions
         },
         priority: 'high',
       };
-      
+
       // Enviar notificación
       const response = await sendExpoPushNotifications([message]);
-      
+
       if (response.data[0].status === 'ok') {
         console.log(`✅ Friend request notification sent to ${receiver.name}`);
       } else {
@@ -740,9 +740,9 @@ export const onConnectionCreated = functions
           console.log(`🧹 Cleaned invalid token for ${receiver.name}`);
         }
       }
-      
+
       return null;
-      
+
     } catch (error) {
       console.error('❌ Error sending friend request notification:', error);
       return null;
@@ -760,42 +760,71 @@ export const onGroupMemberAdded = functions.firestore
   .onCreate(async (snap, context) => {
     try {
       const memberData = snap.data();
-      const { groupId } = context.params;
+      const { groupId, memberId } = context.params;
       const userId = memberData.userId;
-      
-      console.log(`📝 Adding groupId ${groupId} to user ${userId}`);
-      
+
+      // 🔍 DEBUG: Log complete member data
+      console.log(`📝 onGroupMemberAdded triggered:`, {
+        groupId,
+        memberId,
+        userId,
+        role: memberData.role,
+        status: memberData.status,
+        fullMemberData: JSON.stringify(memberData)
+      });
+
       // Get user document
       const userRef = db.collection('users').doc(userId);
       const userDoc = await userRef.get();
-      
+
       if (!userDoc.exists) {
         console.error(`❌ User ${userId} not found`);
         return null;
       }
-      
+
       const userData = userDoc.data();
       const currentGroupIds = userData?.groupIds || [];
-      
-      // Add groupId if not already present
+
+      // Add groupId if not already present (skip for creators as they're added during group creation)
       if (!currentGroupIds.includes(groupId)) {
-        await userRef.update({
-          groupIds: admin.firestore.FieldValue.arrayUnion(groupId)
-        });
-        console.log(`✅ Added groupId ${groupId} to user ${userId}`);
+        // Only add for non-creators to avoid double-adding
+        if (memberData.role !== 'creator') {
+          await userRef.update({
+            groupIds: admin.firestore.FieldValue.arrayUnion(groupId)
+          });
+          console.log(`✅ Added groupId ${groupId} to user ${userId}`);
+        } else {
+          console.log(`⏭️  Skipping groupIds update for creator ${userId} (already added during group creation)`);
+        }
       }
-      
-      // Send push notification if user has fcmToken
+
+      // 🔍 DEBUG: Check notification decision
       const fcmToken = userData?.fcmToken;
+      const hasToken = !!fcmToken;
+      const isPending = memberData.status === 'pending';
+      const isCreator = memberData.role === 'creator';
+
+      console.log(`🔔 Notification decision for ${userId}:`, {
+        hasToken,
+        status: memberData.status,
+        isPending,
+        isCreator,
+        fcmTokenPreview: fcmToken ? fcmToken.substring(0, 20) + '...' : 'none',
+        willSendNotification: hasToken && isPending
+      });
+
+      // Send push notification if user has fcmToken AND status is pending
       if (fcmToken && memberData.status === 'pending') {
+        console.log(`📨 Sending invitation notification to ${userId}...`);
+
         // Get group details
         const groupDoc = await db.collection('giftGroups').doc(groupId).get();
         const groupData = groupDoc.data();
-        
+
         // Get inviter details (creator)
         const creatorDoc = await db.collection('users').doc(groupData?.creatorId).get();
         const creatorName = creatorDoc.data()?.name || 'Someone';
-        
+
         const message = {
           to: fcmToken,
           sound: 'default',
@@ -807,7 +836,7 @@ export const onGroupMemberAdded = functions.firestore
             inviterId: groupData?.creatorId
           }
         };
-        
+
         const response = await fetch(EXPO_PUSH_API, {
           method: 'POST',
           headers: {
@@ -815,14 +844,20 @@ export const onGroupMemberAdded = functions.firestore
           },
           body: JSON.stringify(message),
         }).then(res => res.json()) as any;
-        
+
         if (response.data?.[0]?.status === 'ok') {
           console.log(`✅ Sent group invitation notification to ${userId}`);
         } else {
           console.error(`❌ Failed to send notification:`, response.data?.[0]);
         }
+      } else {
+        console.log(`⏭️  Skipped notification for ${userId}:`, {
+          reason: !fcmToken ? 'No FCM token' : 'Status is not pending',
+          status: memberData.status,
+          role: memberData.role
+        });
       }
-      
+
       return null;
     } catch (error) {
       console.error('❌ Error in onGroupMemberAdded:', error);
@@ -840,27 +875,27 @@ export const onGroupMemberAccepted = functions.firestore
       const beforeData = change.before.data();
       const afterData = change.after.data();
       const { groupId } = context.params;
-      
+
       // Check if status changed from pending to accepted
       if (beforeData.status === 'pending' && afterData.status === 'accepted') {
         console.log(`🎉 User ${afterData.userId} accepted invitation to group ${groupId}`);
-        
+
         // Get group details
         const groupDoc = await db.collection('giftGroups').doc(groupId).get();
         const groupData = groupDoc.data();
-        
+
         if (!groupData) return null;
-        
+
         // Get creator details
         const creatorDoc = await db.collection('users').doc(groupData.creatorId).get();
         const creatorData = creatorDoc.data();
-        
+
         if (!creatorData?.fcmToken) return null;
-        
+
         // Get member details
         const memberDoc = await db.collection('users').doc(afterData.userId).get();
         const memberName = memberDoc.data()?.name || 'Someone';
-        
+
         const message = {
           to: creatorData.fcmToken,
           sound: 'default',
@@ -872,7 +907,7 @@ export const onGroupMemberAccepted = functions.firestore
             userId: afterData.userId
           }
         };
-        
+
         const response = await fetch(EXPO_PUSH_API, {
           method: 'POST',
           headers: {
@@ -880,12 +915,12 @@ export const onGroupMemberAccepted = functions.firestore
           },
           body: JSON.stringify(message),
         }).then(res => res.json()) as any;
-        
+
         if (response.data?.[0]?.status === 'ok') {
           console.log(`✅ Sent acceptance notification to creator ${groupData.creatorId}`);
         }
       }
-      
+
       return null;
     } catch (error) {
       console.error('❌ Error in onGroupMemberAccepted:', error);
@@ -903,15 +938,15 @@ export const onGroupMemberRemoved = functions.firestore
       const memberData = snap.data();
       const { groupId } = context.params;
       const userId = memberData.userId;
-      
+
       console.log(`🗑️ Removing groupId ${groupId} from user ${userId}`);
-      
+
       // Remove groupId from user document
       const userRef = db.collection('users').doc(userId);
       await userRef.update({
         groupIds: admin.firestore.FieldValue.arrayRemove(groupId)
       });
-      
+
       console.log(`✅ Removed groupId ${groupId} from user ${userId}`);
       return null;
     } catch (error) {
@@ -929,31 +964,31 @@ export const onGroupMessageSent = functions.firestore
     try {
       const messageData = snap.data();
       const { groupId } = context.params;
-      
+
       // Don't send notifications for system messages
       if (messageData.type === 'system') {
         return null;
       }
-      
+
       console.log(`💬 New message in group ${groupId} from ${messageData.senderId}`);
-      
+
       // Get all group members
       const membersSnapshot = await db.collection(`giftGroups/${groupId}/members`).get();
       const members = membersSnapshot.docs.map(doc => doc.data());
-      
+
       // Get group details
       const groupDoc = await db.collection('giftGroups').doc(groupId).get();
       const groupData = groupDoc.data();
-      
+
       // Send notification to all members except the sender
       const notifications = members
         .filter(member => member.userId !== messageData.senderId && member.status === 'accepted')
         .map(async (member) => {
           const userDoc = await db.collection('users').doc(member.userId).get();
           const userData = userDoc.data();
-          
+
           if (!userData?.fcmToken) return null;
-          
+
           const message = {
             to: userData.fcmToken,
             sound: 'default',
@@ -965,7 +1000,7 @@ export const onGroupMessageSent = functions.firestore
               senderId: messageData.senderId
             }
           };
-          
+
           const response = await fetch(EXPO_PUSH_API, {
             method: 'POST',
             headers: {
@@ -973,14 +1008,14 @@ export const onGroupMessageSent = functions.firestore
             },
             body: JSON.stringify(message),
           }).then(res => res.json()) as any;
-          
+
           if (response.data?.[0]?.status === 'ok') {
             console.log(`✅ Sent message notification to ${member.userId}`);
           }
-          
+
           return null;
         });
-      
+
       await Promise.all(notifications);
       return null;
     } catch (error) {
@@ -999,21 +1034,21 @@ export const onMemberPaymentUpdated = functions.firestore
       const beforeData = change.before.data();
       const afterData = change.after.data();
       const { groupId } = context.params;
-      
+
       // Check if hasPaid changed from false to true
       if (!beforeData.hasPaid && afterData.hasPaid) {
         console.log(`💰 User ${afterData.userId} marked as paid in group ${groupId}`);
-        
+
         // Get user details
         const userDoc = await db.collection('users').doc(afterData.userId).get();
         const userData = userDoc.data();
-        
+
         if (!userData?.fcmToken) return null;
-        
+
         // Get group details
         const groupDoc = await db.collection('giftGroups').doc(groupId).get();
         const groupData = groupDoc.data();
-        
+
         const message = {
           to: userData.fcmToken,
           sound: 'default',
@@ -1025,7 +1060,7 @@ export const onMemberPaymentUpdated = functions.firestore
             userId: afterData.userId
           }
         };
-        
+
         const response = await fetch(EXPO_PUSH_API, {
           method: 'POST',
           headers: {
@@ -1033,12 +1068,12 @@ export const onMemberPaymentUpdated = functions.firestore
           },
           body: JSON.stringify(message),
         }).then(res => res.json()) as any;
-        
+
         if (response.data?.[0]?.status === 'ok') {
           console.log(`✅ Sent payment notification to ${afterData.userId}`);
         }
       }
-      
+
       return null;
     } catch (error) {
       console.error('❌ Error in onMemberPaymentUpdated:', error);
