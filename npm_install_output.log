@@ -1,0 +1,31 @@
+npm warn ERESOLVE overriding peer dependency
+npm warn While resolving: react-native-css-interop@0.2.1
+npm warn Found: tailwindcss@4.1.17
+npm warn node_modules/tailwindcss
+npm warn   dev tailwindcss@"^4.1.17" from the root project
+npm warn   1 more (nativewind)
+npm warn
+npm warn Could not resolve dependency:
+npm warn peer tailwindcss@"~3" from react-native-css-interop@0.2.1
+npm warn node_modules/nativewind/node_modules/react-native-css-interop
+npm warn   react-native-css-interop@"0.2.1" from nativewind@4.2.1
+npm warn   node_modules/nativewind
+npm warn
+npm warn Conflicting peer dependency: tailwindcss@3.4.19
+npm warn node_modules/tailwindcss
+npm warn   peer tailwindcss@"~3" from react-native-css-interop@0.2.1
+npm warn   node_modules/nativewind/node_modules/react-native-css-interop
+npm warn     react-native-css-interop@"0.2.1" from nativewind@4.2.1
+npm warn     node_modules/nativewind
+
+up to date, audited 1112 packages in 2s
+
+198 packages are looking for funding
+  run `npm fund` for details
+
+7 vulnerabilities (3 moderate, 4 high)
+
+To address all issues, run:
+  npm audit fix
+
+Run `npm audit` for details.
