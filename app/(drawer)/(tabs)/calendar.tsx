@@ -34,7 +34,7 @@ export default function CalendarTabScreen() {
   const [selectedDayBirthdays, setSelectedDayBirthdays] = useState<CalendarEntry[]>([]);
   const [selectedUser, setSelectedUser] = useState<CalendarEntry | null>(null);
   const [showMonthListModal, setShowMonthListModal] = useState(false);
-  
+
   // Estado para modal de añadir cumpleaños manual
   const [showAddManualModal, setShowAddManualModal] = useState(false);
   const [manualName, setManualName] = useState('');
@@ -42,10 +42,10 @@ export default function CalendarTabScreen() {
   const [manualBirthdate, setManualBirthdate] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [isAddingManual, setIsAddingManual] = useState(false);
-  
+
   // Estado para menú de opciones
   const [showAddMenu, setShowAddMenu] = useState(false);
-  
+
   const router = useRouter();
 
   const getDaysInMonth = (date: Date) => {
@@ -74,7 +74,7 @@ export default function CalendarTabScreen() {
     setSelectedDay(day);
     const date = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
     const birthdays = await getUsersByDate(date);
-    
+
     if (birthdays.length > 0) {
       setSelectedDayBirthdays(birthdays);
       setShowBirthdaysModal(true);
@@ -117,7 +117,7 @@ export default function CalendarTabScreen() {
     try {
       setIsAddingManual(true);
       await addManualEntry(manualName.trim(), manualBirthdate, manualEmail.trim() || undefined);
-      
+
       // Limpiar y cerrar
       setManualName('');
       setManualEmail('');
@@ -130,7 +130,7 @@ export default function CalendarTabScreen() {
       );
     } catch (error: any) {
       console.error('Error adding manual birthday:', error);
-      
+
       // Intentar parsear si es una sugerencia de conexión
       try {
         const suggestion = JSON.parse(error?.message);
@@ -165,7 +165,7 @@ export default function CalendarTabScreen() {
       } catch (parseError) {
         // No es JSON, es un error normal
       }
-      
+
       const errorMessage = error?.message || t('calendar_manual_error_generic');
       Alert.alert(t('calendar_manual_error_title'), errorMessage);
     } finally {
@@ -177,8 +177,8 @@ export default function CalendarTabScreen() {
     const daysInMonth = getDaysInMonth(currentDate);
     const firstDay = getFirstDayOfMonth(currentDate);
     const today = new Date();
-    const isCurrentMonth = 
-      today.getMonth() === currentDate.getMonth() && 
+    const isCurrentMonth =
+      today.getMonth() === currentDate.getMonth() &&
       today.getFullYear() === currentDate.getFullYear();
 
     const days = [];
@@ -194,7 +194,7 @@ export default function CalendarTabScreen() {
     for (let day = 1; day <= daysInMonth; day++) {
       const isToday = isCurrentMonth && day === today.getDate();
       const isSelected = day === selectedDay;
-      
+
       // Filtrar cumpleaños del mes actual para este día
       const date = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
       const birthdays = allEntries.filter(entry => {
@@ -222,7 +222,7 @@ export default function CalendarTabScreen() {
           ]}>
             {day}
           </AppText>
-          
+
           {/* Avatares de cumpleaños con contador */}
           {birthdays.length > 0 && (
             <View style={styles.iconsContainer}>
@@ -231,7 +231,7 @@ export default function CalendarTabScreen() {
                 <View style={styles.birthdayIndicator}>
                   <AppText style={styles.iconEmoji}>{birthdays[0].avatar}</AppText>
                 </View>
-                
+
                 {/* Si hay más de uno, mostrar contador */}
                 {birthdays.length > 1 && (
                   <View style={styles.counterBadgeSmall}>
@@ -254,21 +254,21 @@ export default function CalendarTabScreen() {
         {/* Título + botón Add en la misma fila */}
         <View style={styles.topHeader}>
           <AppTitle style={styles.title}>{t('calendar_title')}</AppTitle>
-          
+
           {/* Botón Add + con menú */}
           <View style={styles.addButtonContainer}>
-            <Pressable 
+            <Pressable
               style={[styles.addButton, { backgroundColor: colors.primary }]}
               onPress={() => setShowAddMenu(!showAddMenu)}
             >
               <AppText style={styles.addButtonText}>{t('calendar_add_button')}</AppText>
               <Ionicons name="add" size={20} color="#000" />
             </Pressable>
-            
+
             {/* Menú desplegable */}
             {showAddMenu && (
               <View style={[styles.addMenu, { backgroundColor: theme.cardBg, borderColor: theme.border }]}>
-                <Pressable 
+                <Pressable
                   style={[styles.menuItem, { borderBottomColor: theme.border }]}
                   onPress={() => {
                     setShowAddMenu(false);
@@ -281,8 +281,8 @@ export default function CalendarTabScreen() {
                     {t('calendar_add_menu_create_connection')}
                   </AppText>
                 </Pressable>
-                
-                <Pressable 
+
+                <Pressable
                   style={[styles.menuItem, { borderBottomWidth: 0 }]}
                   onPress={() => {
                     setShowAddMenu(false);
@@ -304,11 +304,11 @@ export default function CalendarTabScreen() {
           <Pressable onPress={previousMonth} style={styles.arrowButton}>
             <Ionicons name="chevron-back" size={28} color={colors.primary} />
           </Pressable>
-          
+
           <AppText style={[styles.monthText, { color: theme.text }]}>
             {MONTHS[currentDate.getMonth()]} {currentDate.getFullYear()}
           </AppText>
-          
+
           <Pressable onPress={nextMonth} style={styles.arrowButton}>
             <Ionicons name="chevron-forward" size={28} color={colors.primary} />
           </Pressable>
@@ -317,8 +317,8 @@ export default function CalendarTabScreen() {
         {/* Días de la semana */}
         <View style={styles.weekDaysContainer}>
           {DAYS_OF_WEEK.map((day, index) => (
-            <View 
-              key={day} 
+            <View
+              key={day}
               style={[
                 styles.weekDayCell,
                 index === 6 && styles.lastInRow
@@ -342,7 +342,7 @@ export default function CalendarTabScreen() {
               {t('calendar_month_birthdays_title').replace('{{month}}', MONTHS[currentDate.getMonth()])}
             </AppText>
           </View>
-          
+
           <View style={styles.summaryContent}>
             <View style={styles.totalCount}>
               <AppText style={styles.totalNumber}>{getMonthBirthdays().length}</AppText>
@@ -350,7 +350,7 @@ export default function CalendarTabScreen() {
                 {t('calendar_month_birthdays_count_label')}
               </AppText>
             </View>
-            
+
             <Pressable style={styles.viewListButton} onPress={handleShowMonthList}>
               <Ionicons name="list" size={18} color={colors.primary} />
               <AppText style={styles.viewListText}>{t('calendar_view_list')}</AppText>
@@ -483,7 +483,12 @@ export default function CalendarTabScreen() {
               </Pressable>
             </View>
 
-            <View style={styles.addManualForm}>
+            <ScrollView
+              style={{ width: '100%', maxHeight: '100%' }}
+              contentContainerStyle={[styles.addManualForm, { paddingBottom: 40 }]}
+              keyboardShouldPersistTaps="handled"
+              showsVerticalScrollIndicator={false}
+            >
               <View style={styles.formGroup}>
                 <AppText style={[styles.formLabel, { color: theme.text }]}>
                   {t('calendar_manual_name_label')}
@@ -572,7 +577,7 @@ export default function CalendarTabScreen() {
                 disabled={isAddingManual || !manualName.trim()}
                 style={styles.submitButton}
               />
-            </View>
+            </ScrollView>
           </Pressable>
         </Pressable>
       </Modal>

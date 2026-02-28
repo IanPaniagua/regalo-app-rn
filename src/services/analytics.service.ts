@@ -1,13 +1,21 @@
-import { getAnalytics, logEvent, setUserId, setUserProperties } from 'firebase/analytics';
+import { getAnalytics, isSupported, logEvent, setUserId, setUserProperties } from 'firebase/analytics';
 import { getFirebaseApp } from './firebase';
 
 class AnalyticsService {
   private analytics: any = null;
   private isInitialized = false;
 
-  initialize() {
+  async initialize() {
     try {
       const app = getFirebaseApp();
+      const supported = await isSupported();
+
+      if (!supported) {
+        this.isInitialized = false;
+        console.log('📊 Analytics no está soportado en React Native (corriendo en modo local)');
+        return;
+      }
+
       this.analytics = getAnalytics(app);
       this.isInitialized = true;
       console.log('✅ Analytics initialized');
