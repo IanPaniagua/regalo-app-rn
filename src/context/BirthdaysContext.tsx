@@ -27,6 +27,7 @@ interface BirthdaysContextType {
   getUsersByDate: (date: Date) => Promise<CalendarEntry[]>;
   addUser: (user: BirthdayUser) => Promise<void>;
   addManualEntry: (name: string, birthdate: Date, email?: string) => Promise<void>;
+  editManualEntry: (id: string, name: string, birthdate: Date, email?: string) => Promise<void>;
   deleteManualEntry: (id: string) => Promise<void>;
   refreshUsers: () => Promise<void>;
   findManualBirthdayCandidate: (newUser: User) => ManualBirthdayEntry | null;
@@ -88,30 +89,30 @@ export function BirthdaysProvider({ children }: { children: ReactNode }) {
 
           // Auto-vincular: Buscar entradas manuales que coincidan con usuarios recién conectados
           const unlinkedManual = manual.filter((entry: ManualBirthdayEntry) => !entry.userId);
-          
+
           for (const manualEntry of unlinkedManual) {
             const matchingUser = birthdayUsers.find(u => {
               // Coincidencia por email
-              if (manualEntry.email && u.email && 
-                  manualEntry.email.toLowerCase() === u.email.toLowerCase()) {
+              if (manualEntry.email && u.email &&
+                manualEntry.email.toLowerCase() === u.email.toLowerCase()) {
                 return true;
               }
-              
+
               // Coincidencia por nombre + fecha
               const nameMatch = manualEntry.name.toLowerCase().trim() === u.name.toLowerCase().trim();
-              const dateMatch = 
+              const dateMatch =
                 manualEntry.birthdate.getDate() === u.birthdate.getDate() &&
                 manualEntry.birthdate.getMonth() === u.birthdate.getMonth() &&
                 manualEntry.birthdate.getFullYear() === u.birthdate.getFullYear();
-              
+
               return nameMatch && dateMatch;
             });
 
             if (matchingUser) {
               console.log('🔗 Auto-linking manual birthday to user:', matchingUser.name);
               // Actualizar la entrada manual con el userId
-              const updatedManual = manual.map((entry: ManualBirthdayEntry) => 
-                entry.id === manualEntry.id 
+              const updatedManual = manual.map((entry: ManualBirthdayEntry) =>
+                entry.id === manualEntry.id
                   ? { ...entry, userId: matchingUser.id, isManual: true as const }
                   : entry
               );
@@ -154,7 +155,7 @@ export function BirthdaysProvider({ children }: { children: ReactNode }) {
   const allEntries = useMemo<CalendarEntry[]>(() => {
     // Filtrar entradas manuales que ya están vinculadas a un usuario conectado
     const connectedUserIds = new Set(users.map(u => u.id));
-    
+
     const filteredManual = manualEntries.filter(entry => {
       // Si tiene userId y ese usuario está en la lista de conectados, no mostrar el manual
       if (entry.userId && connectedUserIds.has(entry.userId)) {
@@ -218,7 +219,7 @@ export function BirthdaysProvider({ children }: { children: ReactNode }) {
 
       // Coincidencia por nombre + fecha de nacimiento
       const nameMatch = entry.name.toLowerCase().trim() === newUser.name.toLowerCase().trim();
-      const dateMatch = 
+      const dateMatch =
         entry.birthdate.getDate() === newUser.birthdate.getDate() &&
         entry.birthdate.getMonth() === newUser.birthdate.getMonth() &&
         entry.birthdate.getFullYear() === newUser.birthdate.getFullYear();
@@ -243,8 +244,8 @@ export function BirthdaysProvider({ children }: { children: ReactNode }) {
 
     try {
       // Actualizar la entrada manual con el userId
-      const updatedManual = manualEntries.map(entry => 
-        entry.id === manualEntryId 
+      const updatedManual = manualEntries.map(entry =>
+        entry.id === manualEntryId
           ? { ...entry, userId, isManual: true as const }
           : entry
       );
@@ -278,7 +279,7 @@ export function BirthdaysProvider({ children }: { children: ReactNode }) {
       // Si no se encuentra por email, buscar por nombre (menos confiable)
       if (name) {
         const allUsers = await db.getAdapter().getAllUsers();
-        const userByName = allUsers.find(u => 
+        const userByName = allUsers.find(u =>
           u.name.toLowerCase().trim() === name.toLowerCase().trim() && u.id !== user?.id
         );
         if (userByName) {
@@ -307,13 +308,13 @@ export function BirthdaysProvider({ children }: { children: ReactNode }) {
         if (email && u.email && email.toLowerCase() === u.email.toLowerCase()) {
           return true;
         }
-        
+
         const nameMatch = u.name.toLowerCase().trim() === name.toLowerCase().trim();
-        const dateMatch = 
+        const dateMatch =
           u.birthdate.getDate() === birthdate.getDate() &&
           u.birthdate.getMonth() === birthdate.getMonth() &&
           u.birthdate.getFullYear() === birthdate.getFullYear();
-        
+
         return nameMatch && dateMatch;
       });
 
@@ -323,7 +324,7 @@ export function BirthdaysProvider({ children }: { children: ReactNode }) {
 
       // 2. Buscar si existe un usuario registrado en la plataforma
       const existingPlatformUser = await searchUserByEmailOrName(email, name);
-      
+
       if (existingPlatformUser) {
         // Usuario existe en la plataforma - sugerir conexión
         const suggestion = {
@@ -340,8 +341,11 @@ export function BirthdaysProvider({ children }: { children: ReactNode }) {
         birthdate,
         avatar: '🎂', // Avatar fijo para entradas manuales
         isManual: true,
-        email: email || undefined,
       };
+
+      if (email) {
+        newEntry.email = email;
+      }
 
       // Obtener entradas actuales
       const currentUser = await db.getAdapter().getUser(user.id);
@@ -357,16 +361,59 @@ export function BirthdaysProvider({ children }: { children: ReactNode }) {
 
       // Actualizar estado local
       setManualEntries(prev => [...prev, newEntry]);
-      
+
       // Track analytics
       analytics.trackAddManualBirthday();
-      
+
       console.log('✅ Manual birthday entry added:', name);
     } catch (error) {
       console.error('❌ Error adding manual birthday entry:', error);
       throw error;
     }
   }, [user?.id, users]);
+
+  // Editar entrada manual
+  const editManualEntry = useCallback(async (id: string, name: string, birthdate: Date, email?: string) => {
+    if (!user?.id) {
+      console.error('❌ No user logged in');
+      return;
+    }
+
+    try {
+      // Find and update the entry
+      const updatedManual = manualEntries.map(entry => {
+        if (entry.id === id) {
+          const updatedEntry = {
+            ...entry,
+            name,
+            birthdate,
+          };
+
+          if (email) {
+            updatedEntry.email = email;
+          } else {
+            delete updatedEntry.email;
+          }
+
+          return updatedEntry;
+        }
+        return entry;
+      });
+
+      // Guardar en Firestore
+      await db.getAdapter().updateUser(user.id, {
+        manualBirthdays: updatedManual,
+      });
+
+      // Actualizar estado local
+      setManualEntries(updatedManual);
+
+      console.log('✅ Manual birthday entry edited:', name);
+    } catch (error) {
+      console.error('❌ Error editing manual birthday entry:', error);
+      throw error;
+    }
+  }, [user?.id, manualEntries]);
 
   // Eliminar entrada manual
   const deleteManualEntry = useCallback(async (id: string) => {
@@ -386,10 +433,10 @@ export function BirthdaysProvider({ children }: { children: ReactNode }) {
 
       // Actualizar estado local
       setManualEntries(updatedManual);
-      
+
       // Track analytics
       analytics.trackDeleteManualBirthday();
-      
+
       console.log('✅ Manual birthday entry deleted:', id);
     } catch (error) {
       console.error('❌ Error deleting manual birthday entry:', error);
@@ -399,21 +446,22 @@ export function BirthdaysProvider({ children }: { children: ReactNode }) {
 
   // ✅ Memoizar el value del contexto para evitar re-renders innecesarios
   const contextValue = useMemo(
-    () => ({ 
-      users, 
-      manualEntries, 
-      allEntries, 
-      getUsersByDate, 
-      addUser, 
-      addManualEntry, 
-      deleteManualEntry, 
+    () => ({
+      users,
+      manualEntries,
+      allEntries,
+      getUsersByDate,
+      addUser,
+      addManualEntry,
+      editManualEntry,
+      deleteManualEntry,
       refreshUsers,
       findManualBirthdayCandidate,
       linkManualBirthdayToUser,
       searchUserByEmailOrName,
-      loading 
+      loading
     }),
-    [users, manualEntries, allEntries, getUsersByDate, addUser, addManualEntry, deleteManualEntry, refreshUsers, findManualBirthdayCandidate, linkManualBirthdayToUser, searchUserByEmailOrName, loading]
+    [users, manualEntries, allEntries, getUsersByDate, addUser, addManualEntry, editManualEntry, deleteManualEntry, refreshUsers, findManualBirthdayCandidate, linkManualBirthdayToUser, searchUserByEmailOrName, loading]
   );
 
   return (

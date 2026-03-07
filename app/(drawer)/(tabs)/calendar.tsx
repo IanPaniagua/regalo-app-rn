@@ -17,7 +17,7 @@ import { Alert, Keyboard, Modal, Platform, Pressable, ScrollView, StyleSheet, Te
 const DAY_WIDTH_PERCENT = 14.28; // 100% / 7 días ≈ 14.28%
 
 export default function CalendarTabScreen() {
-  const { allEntries, getUsersByDate, addManualEntry } = useBirthdays();
+  const { allEntries, getUsersByDate, addManualEntry, editManualEntry, deleteManualEntry } = useBirthdays();
   const { t, lang } = useLanguage();
   const { theme, themeMode } = useAppTheme();
 
@@ -42,6 +42,11 @@ export default function CalendarTabScreen() {
   const [manualBirthdate, setManualBirthdate] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [isAddingManual, setIsAddingManual] = useState(false);
+
+  // Estado para modal de editar cumpleaños manual
+  const [showEditManualModal, setShowEditManualModal] = useState(false);
+  const [editingEntryId, setEditingEntryId] = useState<string | null>(null);
+  const [isEditingManual, setIsEditingManual] = useState(false);
 
   // Estado para menú de opciones
   const [showAddMenu, setShowAddMenu] = useState(false);
@@ -171,6 +176,79 @@ export default function CalendarTabScreen() {
     } finally {
       setIsAddingManual(false);
     }
+  };
+
+  const handleEditManualBirthday = async () => {
+    if (!editingEntryId) return;
+    if (!manualName.trim()) {
+      Alert.alert(t('calendar_manual_error_title'), t('calendar_manual_error_name_required'));
+      return;
+    }
+
+    try {
+      setIsEditingManual(true);
+      await editManualEntry(editingEntryId, manualName.trim(), manualBirthdate, manualEmail.trim() || undefined);
+
+      // Limpiar y cerrar
+      setEditingEntryId(null);
+      setManualName('');
+      setManualEmail('');
+      setManualBirthdate(new Date());
+      setShowEditManualModal(false);
+
+      Alert.alert(
+        t('calendar_manual_success_title'),
+        t('calendar_manual_edit_success')
+      );
+    } catch (error: any) {
+      console.error('Error editing manual birthday:', error);
+      const errorMessage = error?.message || t('calendar_manual_error_generic');
+      Alert.alert(t('calendar_manual_error_title'), errorMessage);
+    } finally {
+      setIsEditingManual(false);
+    }
+  };
+
+  const handleDeleteManualBirthday = (entry: CalendarEntry) => {
+    Alert.alert(
+      t('calendar_manual_delete_confirm_title'),
+      t('calendar_manual_delete_confirm_message').replace('{{name}}', entry.name),
+      [
+        { text: t('common_cancel'), style: 'cancel' },
+        {
+          text: t('calendar_manual_delete_button'),
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await deleteManualEntry(entry.id);
+              closeModals();
+              Alert.alert(
+                t('calendar_manual_success_title'),
+                t('calendar_manual_edit_success') // Funciona como genérico en este caso ("Cumpleaños actualizado correctamente" / o usar algo propio sí es que lo desean)
+              );
+            } catch (error) {
+              console.error('Error deleting manual birthday:', error);
+              Alert.alert(t('calendar_manual_error_title'), t('calendar_manual_error_generic'));
+            }
+          }
+        }
+      ]
+    );
+  };
+
+  const openEditModal = (entry: CalendarEntry) => {
+    // Cerrar the existing day modal to prevent overlapping modal issues on iOS (app freezing)
+    setShowBirthdaysModal(false);
+
+    setEditingEntryId(entry.id);
+    setManualName(entry.name);
+    setManualEmail(entry.email || '');
+    setManualBirthdate(entry.birthdate);
+
+    // Allow React Native to close the first modal completely before opening the second
+    setTimeout(() => {
+      setShowEditManualModal(true);
+    }, 150);
   };
 
   const renderCalendarDays = () => {
@@ -395,7 +473,24 @@ export default function CalendarTabScreen() {
                       </AppText>
                     )}
                   </View>
-                  <Ionicons name="chevron-forward" size={20} color={colors.primary} />
+                  {('isManual' in user && user.isManual) ? (
+                    <View style={{ flexDirection: 'row', gap: 16, alignItems: 'center' }}>
+                      <Pressable
+                        onPress={(e) => { e.stopPropagation(); openEditModal(user); }}
+                        hitSlop={10}
+                      >
+                        <Ionicons name="pencil" size={20} color={colors.primary} />
+                      </Pressable>
+                      <Pressable
+                        onPress={(e) => { e.stopPropagation(); handleDeleteManualBirthday(user); }}
+                        hitSlop={10}
+                      >
+                        <Ionicons name="trash" size={20} color="#ef4444" />
+                      </Pressable>
+                    </View>
+                  ) : (
+                    <Ionicons name="chevron-forward" size={20} color={colors.primary} />
+                  )}
                 </Pressable>
               ))}
             </ScrollView>
@@ -575,6 +670,126 @@ export default function CalendarTabScreen() {
                 title={isAddingManual ? t('calendar_manual_submit_button') : t('calendar_manual_submit_button')}
                 onPress={handleAddManualBirthday}
                 disabled={isAddingManual || !manualName.trim()}
+                style={styles.submitButton}
+              />
+            </ScrollView>
+          </Pressable>
+        </Pressable>
+      </Modal>
+
+      {/* Modal: Editar cumpleaños manual */}
+      <Modal
+        visible={showEditManualModal}
+        transparent
+        animationType="slide"
+        onRequestClose={() => {
+          setShowEditManualModal(false);
+          setEditingEntryId(null);
+        }}
+      >
+        <Pressable style={styles.modalOverlay} onPress={() => { setShowEditManualModal(false); setEditingEntryId(null); }}>
+          <Pressable style={[styles.modalContent, { backgroundColor: theme.modalBg }]} onPress={(e) => e.stopPropagation()}>
+            <View style={[styles.modalHeader, { borderBottomColor: theme.border }]}>
+              <AppText style={[styles.modalTitle, { color: theme.text }]}>
+                {t('calendar_manual_edit_title')}
+              </AppText>
+              <Pressable onPress={() => { setShowEditManualModal(false); setEditingEntryId(null); }}>
+                <Ionicons name="close" size={24} color={theme.text} />
+              </Pressable>
+            </View>
+
+            <ScrollView
+              style={{ width: '100%', maxHeight: '100%' }}
+              contentContainerStyle={[styles.addManualForm, { paddingBottom: 40 }]}
+              keyboardShouldPersistTaps="handled"
+              showsVerticalScrollIndicator={false}
+            >
+              <View style={styles.formGroup}>
+                <AppText style={[styles.formLabel, { color: theme.text }]}>
+                  {t('calendar_manual_name_label')}
+                </AppText>
+                <TextInput
+                  style={[styles.input, { backgroundColor: theme.inputBg, color: theme.text, borderColor: theme.border }]}
+                  placeholder={t('calendar_manual_name_placeholder')}
+                  placeholderTextColor={theme.textMuted}
+                  value={manualName}
+                  onChangeText={setManualName}
+                  autoFocus
+                />
+              </View>
+
+              <View style={styles.formGroup}>
+                <AppText style={[styles.formLabel, { color: theme.text }]}>
+                  Email (opcional)
+                </AppText>
+                <TextInput
+                  style={[styles.input, { backgroundColor: theme.inputBg, color: theme.text, borderColor: theme.border }]}
+                  placeholder="email@ejemplo.com"
+                  placeholderTextColor={theme.textMuted}
+                  value={manualEmail}
+                  onChangeText={setManualEmail}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                />
+              </View>
+
+              <View style={styles.formGroup}>
+                <AppText style={[styles.formLabel, { color: theme.text }]}>
+                  {t('calendar_manual_date_label')}
+                </AppText>
+                <Pressable
+                  style={[styles.dateButton, { backgroundColor: theme.inputBg, borderColor: theme.border }]}
+                  onPress={() => {
+                    Keyboard.dismiss(); // Cerrar teclado antes de abrir el picker
+                    setShowDatePicker(true);
+                  }}
+                >
+                  <Ionicons name="calendar-outline" size={20} color={colors.primary} />
+                  <AppText style={[styles.dateButtonText, { color: theme.text }]}>
+                    {manualBirthdate.toLocaleDateString(
+                      lang === 'es' ? 'es-ES' : lang === 'de' ? 'de-DE' : 'en-US',
+                      { day: '2-digit', month: 'long', year: 'numeric' }
+                    )}
+                  </AppText>
+                </Pressable>
+              </View>
+
+              {showDatePicker && (
+                <View style={styles.datePickerContainer}>
+                  <DateTimePicker
+                    value={manualBirthdate}
+                    mode="date"
+                    display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                    themeVariant={themeMode} // Usar el tema correcto para iOS
+                    onChange={(event, selectedDate) => {
+                      // En Android, cerrar automáticamente
+                      if (Platform.OS === 'android') {
+                        setShowDatePicker(false);
+                      }
+                      if (selectedDate) {
+                        setManualBirthdate(selectedDate);
+                      }
+                    }}
+                  />
+                  {/* Botón Done para iOS */}
+                  {Platform.OS === 'ios' && (
+                    <View style={styles.datePickerActions}>
+                      <Pressable
+                        style={[styles.doneButton, { backgroundColor: colors.primary }]}
+                        onPress={() => setShowDatePicker(false)}
+                      >
+                        <AppText style={styles.doneButtonText}>{t('calendar_profile_close_button')}</AppText>
+                      </Pressable>
+                    </View>
+                  )}
+                </View>
+              )}
+
+              <AppButton
+                title={isEditingManual ? t('calendar_manual_edit_submit') : t('calendar_manual_edit_submit')}
+                onPress={handleEditManualBirthday}
+                disabled={isEditingManual || !manualName.trim()}
                 style={styles.submitButton}
               />
             </ScrollView>

@@ -132,6 +132,12 @@ const translations = {
     calendar_manual_error_generic: 'No se pudo añadir el cumpleaños',
     calendar_manual_success_title: 'Éxito',
     calendar_manual_success_message: 'Cumpleaños de {{name}} añadido correctamente',
+    calendar_manual_edit_title: 'Editar cumpleaños',
+    calendar_manual_edit_submit: 'Guardar cambios',
+    calendar_manual_edit_success: 'Cumpleaños actualizado correctamente',
+    calendar_manual_delete_confirm_title: '¿Eliminar cumpleaños?',
+    calendar_manual_delete_confirm_message: '¿Estás seguro que deseas eliminar el cumpleaños de {{name}}?',
+    calendar_manual_delete_button: 'Eliminar',
     // Days of week (short)
     day_mon: 'Lun',
     day_tue: 'Mar',
@@ -290,7 +296,7 @@ const translations = {
     // In-app notifications
     notification_new_request_title: 'Nueva petición de conexión',
     notification_new_request_message: 'Tienes una nueva solicitud de conexión. Toca para ver.',
-    
+
     // Account Management
     account_section_title: 'Gestión de cuenta',
     account_logout_title: 'Cerrar sesión',
@@ -318,7 +324,7 @@ const translations = {
     account_logout_error: 'No se pudo cerrar sesión',
     account_warning: 'La eliminación de cuenta es permanente y no se puede deshacer',
     account_processing: 'Procesando...',
-    
+
     // Group Detail
     group_back: 'Volver',
     group_for: 'Para',
@@ -485,6 +491,12 @@ const translations = {
     calendar_manual_error_generic: 'Could not add the birthday',
     calendar_manual_success_title: 'Success',
     calendar_manual_success_message: "{{name}}'s birthday added successfully",
+    calendar_manual_edit_title: 'Edit birthday',
+    calendar_manual_edit_submit: 'Save changes',
+    calendar_manual_edit_success: 'Birthday updated successfully',
+    calendar_manual_delete_confirm_title: 'Delete birthday?',
+    calendar_manual_delete_confirm_message: "Are you sure you want to delete {{name}}'s birthday?",
+    calendar_manual_delete_button: 'Delete',
     // Days of week (short)
     day_mon: 'Mon',
     day_tue: 'Tue',
@@ -643,7 +655,7 @@ const translations = {
     // In-app notifications
     notification_new_request_title: 'New connection request',
     notification_new_request_message: 'You have a new connection request. Tap to view.',
-    
+
     // Account Management
     account_section_title: 'Account Management',
     account_logout_title: 'Logout',
@@ -671,7 +683,7 @@ const translations = {
     account_logout_error: 'Could not logout',
     account_warning: 'Account deletion is permanent and cannot be undone',
     account_processing: 'Processing...',
-    
+
     // Group Detail
     group_back: 'Back',
     group_for: 'For',
@@ -838,6 +850,12 @@ const translations = {
     calendar_manual_error_generic: 'Geburtstag konnte nicht hinzugefügt werden',
     calendar_manual_success_title: 'Erfolg',
     calendar_manual_success_message: 'Geburtstag von {{name}} wurde erfolgreich hinzugefügt',
+    calendar_manual_edit_title: 'Geburtstag bearbeiten',
+    calendar_manual_edit_submit: 'Änderungen speichern',
+    calendar_manual_edit_success: 'Geburtstag erfolgreich aktualisiert',
+    calendar_manual_delete_confirm_title: 'Geburtstag löschen?',
+    calendar_manual_delete_confirm_message: 'Bist du sicher, dass du den Geburtstag von {{name}} löschen möchtest?',
+    calendar_manual_delete_button: 'Löschen',
     // Days of week (short)
     day_mon: 'Mo',
     day_tue: 'Di',
@@ -996,7 +1014,7 @@ const translations = {
     // In-app notifications
     notification_new_request_title: 'Neue Verbindungsanfrage',
     notification_new_request_message: 'Du hast eine neue Verbindungsanfrage. Tippe zum Anzeigen.',
-    
+
     // Account Management
     account_section_title: 'Kontoverwaltung',
     account_logout_title: 'Abmelden',
@@ -1024,7 +1042,7 @@ const translations = {
     account_logout_error: 'Abmeldung fehlgeschlagen',
     account_warning: 'Die Kontolöschung ist dauerhaft und kann nicht rückgängig gemacht werden',
     account_processing: 'Verarbeitung...',
-    
+
     // Group Detail
     group_back: 'Zurück',
     group_for: 'Für',
@@ -1153,7 +1171,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
           const firestoreLang = user.preferredLanguage;
           if (firestoreLang === 'es' || firestoreLang === 'en' || firestoreLang === 'de') {
             const currentLang = await AsyncStorage.getItem(STORAGE_KEY);
-            
+
             // Only update if different from current
             if (currentLang !== firestoreLang) {
               await AsyncStorage.setItem(STORAGE_KEY, firestoreLang);
@@ -1184,7 +1202,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   const setLanguage = async (next: Lang) => {
     try {
       await AsyncStorage.setItem(STORAGE_KEY, next);
-      
+
       // Also save to Firestore if user is logged in
       if (user?.id) {
         await db.getAdapter().updateUser(user.id, {
@@ -1201,14 +1219,14 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   // Translation function with variable interpolation support
   const t = (key: TranslationKey, vars?: Record<string, string>): string => {
     let text: string = translations[lang][key] ?? translations.en[key];
-    
+
     // Replace variables like {{paid}} with actual values
     if (vars) {
       Object.keys(vars).forEach((varKey) => {
         text = text.replace(new RegExp(`{{${varKey}}}`, 'g'), vars[varKey]);
       });
     }
-    
+
     return text;
   };
 
